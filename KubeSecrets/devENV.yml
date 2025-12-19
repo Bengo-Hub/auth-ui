@@ -8,5 +8,6 @@ stringData:
   # Runtime env for Next.js server (standalone output). Build-time uses NEXT_PUBLIC_* args.
   NODE_ENV: "production"
   PORT: "3000"
-  NEXT_PUBLIC_AUTH_API_URL: "https://sso.codevertexitsolutions.com"
+  NEXT_PUBLIC_API_URL: "https://sso.codevertexitsolutions.com"
+  NEXT_PUBLIC_NOTIFICATIONS_URL: "https://notifications.codevertexitsolutions.com"
   NEXT_PUBLIC_APP_URL: "https://accounts.codevertexitsolutions.com"
