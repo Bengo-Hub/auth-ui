@@ -23,8 +23,8 @@ import Link from 'next/link';
 const SERVICES = [
   {
     id: 'cafe',
-    name: 'Urban Loft Cafe',
-    description: 'Premium dining, business hub, and event bookings. The central hub for the Urban Loft ecosystem.',
+    name: 'Cafe',
+    description: 'Premium dining, business hub, and event bookings. The central hub for the Cafe ecosystem.',
     icon: Coffee,
     logo: '/svgs/services/cafe.svg',
     url: 'https://cafe.codevertexitsolutions.com',
@@ -32,7 +32,7 @@ const SERVICES = [
   },
   {
     id: 'ordering',
-    name: 'Ordering Service',
+    name: 'BengoBox Ordering',
     description: 'Multi-tenant online ordering and delivery platform with real-time tracking and PWA support.',
     icon: Package,
     logo: '/svgs/services/ordering.svg',
@@ -41,7 +41,7 @@ const SERVICES = [
   },
   {
     id: 'logistics',
-    name: 'Logistics Service',
+    name: 'BengoBox Logistics',
     description: 'Fleet management and real-time rider orchestration. Specialized for delivery and logistics operations.',
     icon: Truck,
     logo: '/svgs/services/logistics.svg',
@@ -50,7 +50,7 @@ const SERVICES = [
   },
   {
     id: 'inventory',
-    name: 'Inventory Service',
+    name: 'BengoBox Inventory',
     description: 'Real-time stock management, procurement, and recipe/BOM management across all outlets.',
     icon: Box,
     logo: '/svgs/services/inventory.svg',
@@ -59,7 +59,7 @@ const SERVICES = [
   },
   {
     id: 'pos',
-    name: 'POS Service',
+    name: 'BengoBox POS',
     description: 'High-performance, offline-capable point of sale for retail and dining environments.',
     icon: Monitor,
     logo: '/svgs/services/pos.svg',
@@ -68,7 +68,7 @@ const SERVICES = [
   },
   {
     id: 'finance',
-    name: 'Finance Service',
+    name: 'BengoBox Books',
     description: 'Treasury, payments, and financial reconciliation. Manage payment intents and payouts.',
     icon: CreditCard,
     logo: '/svgs/services/finance.svg',
@@ -86,7 +86,7 @@ const SERVICES = [
   },
   {
     id: 'projects',
-    name: 'Projects Service',
+    name: 'BengoBox Projects',
     description: 'Collaborative project management and task tracking for internal and client initiatives.',
     icon: Briefcase,
     logo: '/svgs/services/projects.svg',

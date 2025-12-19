@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   title: "BengoBox Accounts - Unified Identity",
   description: "The central identity and access management portal for the BengoBox ecosystem.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/svgs/logo.svg",
+    shortcut: "/svgs/logo.svg",
+    apple: "/svgs/logo.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
