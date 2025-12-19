@@ -11,3 +11,5 @@ stringData:
   NEXT_PUBLIC_API_URL: "https://sso.codevertexitsolutions.com"
   NEXT_PUBLIC_NOTIFICATIONS_URL: "https://notifications.codevertexitsolutions.com"
   NEXT_PUBLIC_APP_URL: "https://accounts.codevertexitsolutions.com"
+  NEXT_PUBLIC_MAPBOX_TOKEN: "set-this-token"
+  NEXT_PUBLIC_SENTRY_DSN: ""

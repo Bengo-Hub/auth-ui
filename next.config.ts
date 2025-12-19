@@ -8,7 +8,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  // output: 'standalone', // Disabled for local Windows build compatibility (EPERM symlink issue)
+  output: 'standalone',
   images: {
     remotePatterns: [
       {
