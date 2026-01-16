@@ -92,31 +92,62 @@ if [[ -n ${REGISTRY_USERNAME:-} && -n ${REGISTRY_PASSWORD:-} ]]; then
     --dry-run=client -o yaml | kubectl apply -f - || warn "registry secret creation failed"
 fi
 
-# Clone devops-k8s for Helm values update
-if [[ ! -d "$DEVOPS_DIR" ]]; then
-  info "Cloning devops-k8s repo"
-  git clone "https://${GH_PAT}@github.com/${DEVOPS_REPO}.git" "$DEVOPS_DIR"
+# Update Helm values in devops-k8s repo
+# Resolve token from available sources (priority: GH_PAT > GIT_SECRET > GIT_TOKEN > GITHUB_TOKEN)
+TOKEN="${GH_PAT:-${GIT_SECRET:-${GIT_TOKEN:-${GITHUB_TOKEN:-}}}}"
+
+if [[ -n "${GH_PAT:-}" ]]; then
+  info "Using GH_PAT for git operations"
+elif [[ -n "${GIT_SECRET:-}" ]]; then
+  info "Using GIT_SECRET for git operations"
+elif [[ -n "${GIT_TOKEN:-}" ]]; then
+  info "Using GIT_TOKEN for git operations"
+elif [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  info "Using GITHUB_TOKEN for git operations (may lack cross-repo write)"
 else
-  info "Updating devops-k8s repo"
-  cd "$DEVOPS_DIR" && git pull && cd -
+  warn "No GitHub token found for devops-k8s update"
 fi
 
-# Update image tag in values.yaml
-if [[ -f "$DEVOPS_DIR/$VALUES_FILE_PATH" ]]; then
-  info "Updating image tag in $VALUES_FILE_PATH"
-  yq eval ".image.tag = \"${GIT_COMMIT_ID}\"" -i "$DEVOPS_DIR/$VALUES_FILE_PATH"
-  
+if [[ -n "$TOKEN" ]]; then
+  info "Updating Helm values in devops-k8s"
+
+  CLONE_URL="https://x-access-token:${TOKEN}@github.com/${DEVOPS_REPO}.git"
+
+  # Clone devops-k8s repo if it doesn't exist
+  if [[ ! -d "$DEVOPS_DIR" ]]; then
+    info "Cloning devops-k8s repo..."
+    git clone "$CLONE_URL" "$DEVOPS_DIR" || { error "Failed to clone devops-k8s"; exit 1; }
+  fi
+
   cd "$DEVOPS_DIR"
   git config user.email "$GIT_EMAIL"
   git config user.name "$GIT_USER"
-  git add "$VALUES_FILE_PATH"
-  git commit -m "chore(deploy): update ${APP_NAME} image to ${GIT_COMMIT_ID}" || info "No changes to commit"
-  git push origin main
-  cd -
-  success "Helm values updated"
+
+  # Ensure we have the latest changes
+  git fetch origin main || true
+  git checkout main || git checkout -b main
+  git reset --hard origin/main
+
+  if [[ -f "$VALUES_FILE_PATH" ]]; then
+    # Update image tag using yq
+    IMAGE_TAG_ENV="$GIT_COMMIT_ID" yq e -i '.image.tag = env(IMAGE_TAG_ENV)' "$VALUES_FILE_PATH"
+
+    git add "$VALUES_FILE_PATH"
+    git commit -m "${APP_NAME}:${GIT_COMMIT_ID} released" || info "No changes to commit"
+    git pull --rebase origin main || true
+
+    # Push using token
+    if git remote | grep -q push-origin; then git remote remove push-origin || true; fi
+    git remote add push-origin "$CLONE_URL"
+    git push push-origin HEAD:main || warn "Failed to push to devops repo"
+    success "Helm values updated - ArgoCD will auto-sync"
+  else
+    warn "Values file not found at ${VALUES_FILE_PATH}"
+  fi
+
+  cd - > /dev/null
 else
-  error "Values file not found at $DEVOPS_DIR/$VALUES_FILE_PATH"
-  exit 1
+  warn "No GitHub token set - skipping devops-k8s update"
 fi
 
 success "Build and deploy process finished for ${APP_NAME}"
