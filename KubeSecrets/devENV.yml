@@ -8,8 +8,29 @@ stringData:
   # Runtime env for Next.js server (standalone output). Build-time uses NEXT_PUBLIC_* args.
   NODE_ENV: "production"
   PORT: "3000"
+
+  # API URLs
   NEXT_PUBLIC_API_URL: "https://sso.codevertexitsolutions.com"
-  NEXT_PUBLIC_NOTIFICATIONS_URL: "https://notifications.codevertexitsolutions.com"
+  NEXT_PUBLIC_NOTIFICATIONS_URL: "https://notificationsapi.codevertexitsolutions.com"
   NEXT_PUBLIC_APP_URL: "https://accounts.codevertexitsolutions.com"
-  NEXT_PUBLIC_MAPBOX_TOKEN: "set-this-token"
+
+  # Google OAuth - Set via GitHub Secrets or kubectl
+  GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+  GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET}"
+
+  # GitHub OAuth - Set via GitHub Secrets or kubectl
+  GITHUB_ID: "${GITHUB_ID}"
+  GITHUB_SECRET: "${GITHUB_SECRET}"
+
+  # Microsoft OAuth (Azure AD) - Set valid credentials when ready
+  MICROSOFT_CLIENT_ID: ""
+  MICROSOFT_CLIENT_SECRET: ""
+  MICROSOFT_TENANT_ID: "common"
+
+  # Apple Sign-In - Set valid credentials when ready
+  APPLE_CLIENT_ID: ""
+  APPLE_CLIENT_SECRET: ""
+
+  # Third-party services
+  NEXT_PUBLIC_MAPBOX_TOKEN: ""
   NEXT_PUBLIC_SENTRY_DSN: ""
