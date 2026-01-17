@@ -25,6 +25,16 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+# IMPORTANT: Next.js bakes NEXT_PUBLIC_* env vars at build time
+# These MUST be set during docker build for production
+ARG NEXT_PUBLIC_API_URL=https://sso.codevertexitsolutions.com
+ARG NEXT_PUBLIC_APP_URL=https://accounts.codevertexitsolutions.com
+ARG NEXT_PUBLIC_NOTIFICATIONS_URL=https://notificationsapi.codevertexitsolutions.com
+
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_NOTIFICATIONS_URL=$NEXT_PUBLIC_NOTIFICATIONS_URL
+
 RUN pnpm build
 
 # Production image, copy all the files and run next
