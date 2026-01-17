@@ -101,7 +101,7 @@ export default function DeveloperPortal() {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Register New Application</h2>
-              <p className="text-slate-500 dark:text-slate-400">Create a new OAuth client to integrate with BengoBox SSO.</p>
+              <p className="text-slate-500 dark:text-slate-400">Create a new OAuth client to integrate with Codevertex SSO.</p>
             </div>
           </div>
 

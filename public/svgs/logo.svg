@@ -1,6 +1,28 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="128" fill="#FF5C00"/>
-  <path d="M156 156H356V356H156V156Z" fill="white"/>
-  <path d="M206 206H306V306H206V206Z" fill="#FF5C00"/>
-  <circle cx="256" cy="256" r="30" fill="white"/>
+  <!-- Codevertex Logo - Modern Tech Identity -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EC4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DB2777;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0284C7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGradient)"/>
+
+  <!-- Code bracket symbol stylized as CV -->
+  <g transform="translate(90, 120)">
+    <!-- Left bracket < -->
+    <path d="M150 40L60 136L150 232" stroke="white" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <!-- Right bracket > -->
+    <path d="M182 40L272 136L182 232" stroke="white" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <!-- Vertex diamond/connection point in center -->
+    <circle cx="166" cy="136" r="28" fill="url(#accentGradient)"/>
+  </g>
 </svg>

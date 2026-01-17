@@ -50,7 +50,7 @@ export default function DashboardPage() {
             Welcome back, <span className="text-primary">{user?.name || user?.email?.split('@')[0]}</span>
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 font-light">
-            Manage your BengoBox account, security, and organization settings.
+            Manage your Codevertex account, security, and organization settings.
           </p>
         </motion.div>
       </header>

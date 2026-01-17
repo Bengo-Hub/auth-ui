@@ -50,14 +50,17 @@ const config: Config = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
+        // Codevertex brand colors
         brand: {
-          orange: '#ea8022',
-          gold: '#ae6221',
-          brown: '#663209',
-          taupe: '#958c80',
-          beige: '#f5f1ec',
-          dark: '#2c1a02',
-        }
+          pink: '#EC4899',
+          'pink-dark': '#DB2777',
+          sky: '#0EA5E9',
+          'sky-dark': '#0284C7',
+          teal: '#14B8A6',
+          amber: '#FBBF24',
+          orange: '#FB923C',
+        },
+        'creamy-white': 'hsl(var(--creamy-white))',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

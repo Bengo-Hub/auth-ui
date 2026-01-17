@@ -68,10 +68,12 @@ export function DashboardSidebar() {
       <div className="flex items-center justify-between p-6">
         {!isCollapsed && (
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-black text-xl">B</span>
-            </div>
-            <span className="font-black text-xl tracking-tighter text-slate-900 dark:text-white">BengoBox</span>
+            <img
+              src="/images/logo/codevertex.png"
+              alt="Codevertex"
+              className="w-8 h-8 object-contain"
+            />
+            <span className="font-black text-xl tracking-tighter text-slate-900 dark:text-white">Codevertex</span>
           </Link>
         )}
         <div className="flex items-center gap-1 ml-auto">

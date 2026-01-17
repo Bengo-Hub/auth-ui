@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth-store';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
@@ -13,16 +14,17 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setUser = useAuthStore((state) => state.setUser);
-  
+
   // OIDC / Redirect parameters
   const returnTo = searchParams.get('return_to');
   const clientId = searchParams.get('client_id');
   const redirectUri = searchParams.get('redirect_uri');
   const stateParam = searchParams.get('state');
   const scope = searchParams.get('scope');
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +49,7 @@ export function LoginForm() {
         authorizeUrl.searchParams.set('redirect_uri', redirectUri);
         if (stateParam) authorizeUrl.searchParams.set('state', stateParam);
         if (scope) authorizeUrl.searchParams.set('scope', scope);
-        
+
         window.location.href = authorizeUrl.toString();
         return;
       }
@@ -62,44 +64,71 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
-        <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
+        <div className="p-4 text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl">
           {error}
         </div>
       )}
+
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="name@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <Label htmlFor="email" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+          Email Address
+        </Label>
+        <div className="relative">
+          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <Input
+            id="email"
+            type="email"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary"
+            required
+          />
+        </div>
       </div>
+
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
-          <a href="#" className="text-sm text-[#ea8022] hover:underline">
+          <Label htmlFor="password" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            Password
+          </Label>
+          <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 font-medium transition-colors">
             Forgot password?
-          </a>
+          </Link>
         </div>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className="relative">
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <Input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="h-12 pl-12 pr-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary"
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+          >
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
+
       <Button
         type="submit"
-        className="w-full bg-[#ea8022] hover:bg-[#d6701d]"
+        className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
         disabled={isLoading}
       >
-        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign In'}
+        {isLoading ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : (
+          'Sign In'
+        )}
       </Button>
     </form>
   );

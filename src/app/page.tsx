@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useServiceHealth, ServiceWithHealth } from '@/hooks/useServiceHealth';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
-import { SERVICES, SERVICE_CATEGORIES, getServiceUrl, type Service } from '@/config/services';
+import { SERVICE_CATEGORIES, getServiceUrl } from '@/config/services';
 
 // Animation variants
 const fadeInUp = {
@@ -72,7 +73,7 @@ const SECURITY_FEATURES = [
 
 // Service card component
 function ServiceCard({ service, isAuthenticated, index }: {
-  service: Service;
+  service: ServiceWithHealth;
   isAuthenticated: boolean;
   index: number;
 }) {
@@ -81,11 +82,13 @@ function ServiceCard({ service, isAuthenticated, index }: {
     live: 'bg-green-500',
     beta: 'bg-amber-500',
     'coming-soon': 'bg-slate-400',
+    offline: 'bg-rose-500',
   };
   const statusLabels = {
     live: 'Live',
     beta: 'Beta',
     'coming-soon': 'Coming Soon',
+    offline: 'Offline',
   };
 
   return (
@@ -99,7 +102,7 @@ function ServiceCard({ service, isAuthenticated, index }: {
       <Link
         href={getServiceUrl(service.id, isAuthenticated)}
         className={`group relative block p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-primary/30 dark:hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 ${
-          service.status === 'coming-soon' ? 'opacity-75 pointer-events-none' : ''
+          service.status === 'coming-soon' || service.status === 'offline' ? 'opacity-75 pointer-events-none' : ''
         }`}
       >
         {/* Status badge */}
@@ -124,7 +127,7 @@ function ServiceCard({ service, isAuthenticated, index }: {
         </p>
 
         {/* Action */}
-        {service.status !== 'coming-soon' && (
+        {service.status !== 'coming-soon' && service.status !== 'offline' && (
           <div className="flex items-center gap-1.5 text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
             {isAuthenticated ? 'Launch' : 'Sign in to access'}
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -174,12 +177,13 @@ function CategoryFilter({
 
 export default function LandingPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { services, isLoading: isLoadingHealth } = useServiceHealth();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const filteredServices = useMemo(() => {
-    if (!activeCategory) return SERVICES;
-    return SERVICES.filter((s) => s.category === activeCategory);
-  }, [activeCategory]);
+    if (!activeCategory) return services;
+    return services.filter((s) => s.category === activeCategory);
+  }, [activeCategory, services]);
 
   return (
     <div className="relative overflow-hidden bg-slate-50 dark:bg-slate-900">
@@ -213,7 +217,7 @@ export default function LandingPage() {
                 variants={fadeInUp}
                 className="text-lg text-slate-600 dark:text-slate-400 max-w-xl mx-auto lg:mx-0 mb-8"
               >
-                Securely access all BengoBox services with a single login. Manage your profile,
+                Securely access all Codevertex services with a single login. Manage your profile,
                 security settings, and connected applications in one place.
               </motion.p>
 
@@ -317,7 +321,7 @@ export default function LandingPage() {
               Integrated Services
             </h2>
             <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Access the complete BengoBox ecosystem with your single account.
+              Access the complete Codevertex ecosystem with your single account.
               Click any service to get started.
             </p>
           </motion.div>
@@ -412,7 +416,7 @@ export default function LandingPage() {
                 Ready to Get Started?
               </h2>
               <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-                Join thousands of businesses already using BengoBox to streamline
+                Join thousands of businesses already using Codevertex to streamline
                 their operations. Create your account in seconds.
               </p>
               <div className="flex flex-wrap gap-4 justify-center">

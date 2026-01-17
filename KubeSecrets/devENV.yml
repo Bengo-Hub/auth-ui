@@ -19,8 +19,8 @@ stringData:
   GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET}"
 
   # GitHub OAuth - Set via GitHub Secrets or kubectl
-  GITHUB_ID: "${GITHUB_ID}"
-  GITHUB_SECRET: "${GITHUB_SECRET}"
+  GIT_APP_ID: "${GIT_APP_ID}"
+  GIT_APP_SECRET: "${GIT_APP_SECRET}"
 
   # Microsoft OAuth (Azure AD) - Set valid credentials when ready
   MICROSOFT_CLIENT_ID: ""

@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BengoBox Accounts - Unified Identity",
-  description: "The central identity and access management portal for the BengoBox ecosystem.",
+  title: "Codevertex SSO - Unified Identity",
+  description: "The central identity and access management portal for the Codevertex ecosystem.",
   manifest: "/manifest.json",
   icons: {
     icon: "/svgs/logo.svg",
@@ -28,12 +28,12 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "BengoBox Accounts",
+    title: "Codevertex SSO",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ea8022",
+  themeColor: "#EC4899",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

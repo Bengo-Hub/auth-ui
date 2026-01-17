@@ -1,6 +1,6 @@
-// BengoBox Services Configuration
+// Codevertex Services Configuration
 // Production domains sourced from devops-k8s apps values.yaml files
-// This file centralizes all service URLs for the BengoBox ecosystem.
+// This file centralizes all service URLs for the Codevertex ecosystem.
 // Services are grouped by category for easy navigation.
 
 import {
@@ -18,6 +18,8 @@ import {
   Zap,
 } from 'lucide-react';
 
+export type ServiceStatus = 'live' | 'beta' | 'coming-soon' | 'offline';
+
 export interface Service {
   id: string;
   name: string;
@@ -29,7 +31,7 @@ export interface Service {
   color: string;
   gradient: string;
   category: 'core' | 'operations' | 'enterprise' | 'specialized';
-  status: 'live' | 'beta' | 'coming-soon';
+  status: ServiceStatus;
 }
 
 export interface ServiceCategory {
@@ -88,7 +90,7 @@ export const SERVICES: Service[] = [
   // Core Services - Customer-facing
   {
     id: 'cafe',
-    name: 'Urban Cafe',
+    name: 'Codevertex Cafe',
     shortName: 'Cafe',
     description: 'Premium dining, business hub, and event bookings. The central hub for the Urban Cafe ecosystem.',
     icon: Coffee,
@@ -100,7 +102,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: 'ordering',
-    name: 'BengoBox Ordering',
+    name: 'Codevertex Ordering App',
     shortName: 'Ordering',
     description: 'Multi-tenant online ordering and delivery platform with real-time tracking and PWA support.',
     icon: ShoppingCart,
@@ -113,7 +115,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: 'pos',
-    name: 'BengoBox POS',
+    name: 'Codevertex POS',
     shortName: 'POS',
     description: 'High-performance, offline-capable point of sale for retail and dining environments.',
     icon: Monitor,
@@ -128,7 +130,7 @@ export const SERVICES: Service[] = [
   // Operations - Backend services
   {
     id: 'logistics',
-    name: 'BengoBox Logistics',
+    name: 'Codevertex Logistics',
     shortName: 'Logistics',
     description: 'Fleet management and real-time rider orchestration. Specialized for delivery and logistics operations.',
     icon: Truck,
@@ -141,7 +143,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: 'inventory',
-    name: 'BengoBox Inventory',
+    name: 'Codevertex Inventory',
     shortName: 'Inventory',
     description: 'Real-time stock management, procurement, and recipe/BOM management across all outlets.',
     icon: Box,
@@ -156,7 +158,7 @@ export const SERVICES: Service[] = [
   // Enterprise - Finance & Management
   {
     id: 'books',
-    name: 'BengoBox Books',
+    name: 'Codevertex Books',
     shortName: 'Books',
     description: 'Treasury, payments, and financial reconciliation. Manage payment intents and payouts.',
     icon: CreditCard,
@@ -169,7 +171,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: 'erp',
-    name: 'MasterSpace ERP',
+    name: 'Codevertex ERP',
     shortName: 'ERP',
     description: 'Enterprise resource planning and back-office operations including HRM, Finance, and CRM.',
     icon: LayoutDashboard,
@@ -182,7 +184,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: 'projects',
-    name: 'BengoBox Projects',
+    name: 'Codevertex Projects',
     shortName: 'Projects',
     description: 'Collaborative project management and task tracking for internal and client initiatives.',
     icon: Briefcase,
@@ -195,7 +197,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: 'ticketing',
-    name: 'Support Desk',
+    name: 'Codevertex Ticketing',
     shortName: 'Support',
     description: 'Multi-tenant customer support and helpdesk with real-time updates and knowledge base.',
     icon: Ticket,
@@ -210,7 +212,7 @@ export const SERVICES: Service[] = [
   // Specialized - Industry-specific
   {
     id: 'isp',
-    name: 'ISP Billing',
+    name: 'Codevertex ISP Billing',
     shortName: 'ISP',
     description: 'Comprehensive billing and management for ISPs, including captive portals and SaaS marketing.',
     icon: Wifi,
@@ -223,7 +225,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: 'truload',
-    name: 'TruLoad',
+    name: 'Codevertex TruLoad',
     shortName: 'TruLoad',
     description: 'Axle load weighing, prosecution management, and analytics for transport authorities.',
     icon: Zap,
