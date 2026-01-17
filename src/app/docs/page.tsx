@@ -158,7 +158,7 @@ export default function DocsPage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12"
           >
             <a
-              href={`${PRODUCTION_API_URL}/v1/docs`}
+              href={`${PRODUCTION_API_URL}/v1/docs/`}
               target="_blank"
               rel="noopener noreferrer"
               className="group p-5 sm:p-6 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
@@ -529,7 +529,7 @@ claims, err := client.ValidateToken(accessToken)`}
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <a
-                  href={`${PRODUCTION_API_URL}/v1/docs`}
+                  href={`${PRODUCTION_API_URL}/v1/docs/`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold rounded-2xl hover:border-primary/50 hover:shadow-lg transition-all"
