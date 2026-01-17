@@ -26,6 +26,7 @@ export interface Service {
   shortName?: string;
   description: string;
   icon: LucideIcon;
+  svgIcon?: string; // Path to SVG in /public/svgs/services/
   url: string;
   apiUrl?: string;
   color: string;
@@ -94,6 +95,7 @@ export const SERVICES: Service[] = [
     shortName: 'Cafe',
     description: 'Premium dining, business hub, and event bookings. The central hub for the Urban Cafe ecosystem.',
     icon: Coffee,
+    svgIcon: '/svgs/services/cafe.svg',
     url: PRODUCTION_DOMAINS.cafe,
     color: 'bg-orange-500',
     gradient: 'from-orange-500 to-amber-500',
@@ -106,6 +108,7 @@ export const SERVICES: Service[] = [
     shortName: 'Ordering',
     description: 'Multi-tenant online ordering and delivery platform with real-time tracking and PWA support.',
     icon: ShoppingCart,
+    svgIcon: '/svgs/services/ordering.svg',
     url: PRODUCTION_DOMAINS.ordering,
     apiUrl: PRODUCTION_DOMAINS.orderingApi,
     color: 'bg-blue-500',
@@ -119,6 +122,7 @@ export const SERVICES: Service[] = [
     shortName: 'POS',
     description: 'High-performance, offline-capable point of sale for retail and dining environments.',
     icon: Monitor,
+    svgIcon: '/svgs/services/pos.svg',
     url: PRODUCTION_DOMAINS.pos,
     apiUrl: PRODUCTION_DOMAINS.posApi,
     color: 'bg-indigo-600',
@@ -134,6 +138,7 @@ export const SERVICES: Service[] = [
     shortName: 'Logistics',
     description: 'Fleet management and real-time rider orchestration. Specialized for delivery and logistics operations.',
     icon: Truck,
+    svgIcon: '/svgs/services/logistics.svg',
     url: PRODUCTION_DOMAINS.logistics,
     apiUrl: PRODUCTION_DOMAINS.logisticsApi,
     color: 'bg-green-500',
@@ -147,6 +152,7 @@ export const SERVICES: Service[] = [
     shortName: 'Inventory',
     description: 'Real-time stock management, procurement, and recipe/BOM management across all outlets.',
     icon: Box,
+    svgIcon: '/svgs/services/inventory.svg',
     url: PRODUCTION_DOMAINS.inventory,
     apiUrl: PRODUCTION_DOMAINS.inventoryApi,
     color: 'bg-amber-600',
@@ -162,6 +168,7 @@ export const SERVICES: Service[] = [
     shortName: 'Books',
     description: 'Treasury, payments, and financial reconciliation. Manage payment intents and payouts.',
     icon: CreditCard,
+    svgIcon: '/svgs/services/finance.svg',
     url: PRODUCTION_DOMAINS.books,
     apiUrl: PRODUCTION_DOMAINS.booksApi,
     color: 'bg-purple-500',
@@ -175,6 +182,7 @@ export const SERVICES: Service[] = [
     shortName: 'ERP',
     description: 'Enterprise resource planning and back-office operations including HRM, Finance, and CRM.',
     icon: LayoutDashboard,
+    svgIcon: '/svgs/services/erp.svg',
     url: PRODUCTION_DOMAINS.erp,
     apiUrl: PRODUCTION_DOMAINS.erpApi,
     color: 'bg-slate-700',
@@ -188,6 +196,7 @@ export const SERVICES: Service[] = [
     shortName: 'Projects',
     description: 'Collaborative project management and task tracking for internal and client initiatives.',
     icon: Briefcase,
+    svgIcon: '/svgs/services/projects.svg',
     url: PRODUCTION_DOMAINS.projects,
     apiUrl: PRODUCTION_DOMAINS.projectsApi,
     color: 'bg-cyan-600',
@@ -201,6 +210,7 @@ export const SERVICES: Service[] = [
     shortName: 'Support',
     description: 'Multi-tenant customer support and helpdesk with real-time updates and knowledge base.',
     icon: Ticket,
+    svgIcon: '/svgs/services/ticketing.svg',
     url: PRODUCTION_DOMAINS.ticketing,
     apiUrl: PRODUCTION_DOMAINS.ticketingApi,
     color: 'bg-rose-500',
@@ -216,6 +226,7 @@ export const SERVICES: Service[] = [
     shortName: 'ISP',
     description: 'Comprehensive billing and management for ISPs, including captive portals and SaaS marketing.',
     icon: Wifi,
+    svgIcon: '/svgs/services/isp.svg',
     url: PRODUCTION_DOMAINS.ispBilling,
     apiUrl: PRODUCTION_DOMAINS.ispBillingApi,
     color: 'bg-sky-500',
@@ -229,6 +240,7 @@ export const SERVICES: Service[] = [
     shortName: 'TruLoad',
     description: 'Axle load weighing, prosecution management, and analytics for transport authorities.',
     icon: Zap,
+    svgIcon: '/svgs/services/truload.svg',
     url: PRODUCTION_DOMAINS.truload,
     apiUrl: PRODUCTION_DOMAINS.truloadApi,
     color: 'bg-yellow-500',

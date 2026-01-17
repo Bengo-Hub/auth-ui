@@ -98,10 +98,11 @@ function ServiceCard({ service, isAuthenticated, index }: {
       whileInView="visible"
       viewport={{ once: true, margin: '-50px' }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
+      className="h-full"
     >
       <Link
         href={getServiceUrl(service.id, isAuthenticated)}
-        className={`group relative block p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-primary/30 dark:hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 ${
+        className={`group relative flex flex-col h-full min-h-[220px] p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-primary/30 dark:hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 ${
           service.status === 'coming-soon' || service.status === 'offline' ? 'opacity-75 pointer-events-none' : ''
         }`}
       >
@@ -113,22 +114,32 @@ function ServiceCard({ service, isAuthenticated, index }: {
           </span>
         </div>
 
-        {/* Icon */}
-        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${service.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-          <Icon className="h-6 w-6 text-white" />
+        {/* Icon - SVG or Lucide fallback */}
+        <div className="w-14 h-14 rounded-xl overflow-hidden mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+          {service.svgIcon ? (
+            <img
+              src={service.svgIcon}
+              alt={`${service.name} icon`}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-br ${service.gradient} flex items-center justify-center`}>
+              <Icon className="h-7 w-7 text-white" />
+            </div>
+          )}
         </div>
 
         {/* Content */}
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors">
           {service.name}
         </h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-4">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 flex-grow">
           {service.description}
         </p>
 
         {/* Action */}
         {service.status !== 'coming-soon' && service.status !== 'offline' && (
-          <div className="flex items-center gap-1.5 text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
             {isAuthenticated ? 'Launch' : 'Sign in to access'}
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </div>
