@@ -9,28 +9,28 @@ stringData:
   NODE_ENV: "production"
   PORT: "3000"
 
-  # API URLs
-  NEXT_PUBLIC_API_URL: "https://sso.codevertexitsolutions.com"
-  NEXT_PUBLIC_NOTIFICATIONS_URL: "https://notificationsapi.codevertexitsolutions.com"
-  NEXT_PUBLIC_APP_URL: "https://accounts.codevertexitsolutions.com"
+  # API URLs - Set via GitHub Secrets or defaults
+  NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL}"
+  NEXT_PUBLIC_NOTIFICATIONS_URL: "${NEXT_PUBLIC_NOTIFICATIONS_URL}"
+  NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL}"
 
-  # Google OAuth - Set via GitHub Secrets or kubectl
+  # Google OAuth - Set via GitHub Secrets
   GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
   GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET}"
 
-  # GitHub OAuth - Set via GitHub Secrets or kubectl
+  # GitHub OAuth - Set via GitHub Secrets (use same names as local dev: GIT_APP_ID, GIT_APP_SECRET)
   GIT_APP_ID: "${GIT_APP_ID}"
   GIT_APP_SECRET: "${GIT_APP_SECRET}"
 
-  # Microsoft OAuth (Azure AD) - Set valid credentials when ready
-  MICROSOFT_CLIENT_ID: ""
-  MICROSOFT_CLIENT_SECRET: ""
-  MICROSOFT_TENANT_ID: "common"
+  # Microsoft OAuth (Azure AD) - Set via GitHub Secrets
+  MICROSOFT_CLIENT_ID: "${MICROSOFT_CLIENT_ID}"
+  MICROSOFT_CLIENT_SECRET: "${MICROSOFT_CLIENT_SECRET}"
+  MICROSOFT_TENANT_ID: "${MICROSOFT_TENANT_ID}"
 
-  # Apple Sign-In - Set valid credentials when ready
-  APPLE_CLIENT_ID: ""
-  APPLE_CLIENT_SECRET: ""
+  # Apple Sign-In - Set via GitHub Secrets
+  APPLE_CLIENT_ID: "${APPLE_CLIENT_ID}"
+  APPLE_CLIENT_SECRET: "${APPLE_CLIENT_SECRET}"
 
-  # Third-party services
-  NEXT_PUBLIC_MAPBOX_TOKEN: ""
-  NEXT_PUBLIC_SENTRY_DSN: ""
+  # Third-party services - Set via GitHub Secrets
+  NEXT_PUBLIC_MAPBOX_TOKEN: "${NEXT_PUBLIC_MAPBOX_TOKEN}"
+  NEXT_PUBLIC_SENTRY_DSN: "${NEXT_PUBLIC_SENTRY_DSN}"
