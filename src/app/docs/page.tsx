@@ -437,27 +437,29 @@ export default function DocsPage() {
               <CodeBlock
                 title="Installation & Usage"
                 language="typescript"
-                code={`// Install the SDK
-npm install @codevertex/auth-client
+                code={`// Example: TypeScript/Next.js with axios
+import axios from 'axios';
 
-// Initialize the client
-import { AuthClient } from '@codevertex/auth-client';
-
-const auth = new AuthClient({
-  baseUrl: '${PRODUCTION_API_URL}',
-  clientId: 'your_client_id',
+const api = axios.create({
+  baseURL: '${PRODUCTION_API_URL}/api/v1',
+  withCredentials: true, // for httpOnly cookies
 });
 
-// Login
-const { accessToken, user } = await auth.login({
+// Login endpoint
+const response = await api.post('/auth/login', {
   email: 'user@example.com',
   password: 'password',
-  tenantSlug: 'your-tenant',
+  tenant_slug: 'your-tenant',
 });
 
-// Use the token
-auth.setAccessToken(accessToken);
-const me = await auth.getMe();`}
+const { access_token, user } = response.data;
+
+// Use token in subsequent requests
+api.defaults.headers.common['Authorization'] = \`Bearer \${access_token}\`;
+
+// Get current user
+const meResponse = await api.get('/auth/me');
+console.log(meResponse.data.user);`}
               />
             </motion.div>
 
@@ -475,26 +477,27 @@ const me = await auth.getMe();`}
               <CodeBlock
                 title="Installation & Usage"
                 language="go"
-                code={`// Install the SDK
-go get github.com/codevertex/auth-client-go
+                code={`// Install Shared Auth Client (JWT validation)
+go get github.com/Bengo-Hub/shared-auth-client
 
-// Initialize the client
-import authclient "github.com/codevertex/auth-client-go"
+// Use with Chi router middleware
+import authclient "github.com/Bengo-Hub/shared-auth-client"
 
-client := authclient.New(authclient.Config{
-    BaseURL:  "${PRODUCTION_API_URL}",
-    ClientID: "your_client_id",
+// Initialize JWT validator
+validator := authclient.NewValidator(authclient.Config{
+    IssuerURL: "${PRODUCTION_API_URL}",
+    Audience:  "your-service",
 })
 
-// Login
-result, err := client.Login(ctx, authclient.LoginRequest{
-    Email:      "user@example.com",
-    Password:   "password",
-    TenantSlug: "your-tenant",
-})
+// Add to router middleware
+router.Use(authclient.AuthMiddleware(validator))
 
-// Validate JWT tokens
-claims, err := client.ValidateToken(accessToken)`}
+// Access claims in handlers
+router.Get("/api/v1/protected", func(w http.ResponseWriter, r *http.Request) {
+    claims := authclient.ClaimsFromContext(r.Context())
+    userID := claims.Subject
+    // ... handle request
+})`}
               />
             </motion.div>
           </div>
