@@ -1,29 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-  Book,
-  Code2,
-  Copy,
-  Check,
-  ExternalLink,
-  Key,
-  Lock,
-  Shield,
-  Terminal,
-  Zap,
-  ChevronRight,
-  FileJson,
-  Users,
-  RefreshCw,
-  LogIn,
-  Settings,
-  Smartphone,
-  Globe,
-  ArrowRight,
+    ArrowRight,
+    Book,
+    Check,
+    ChevronRight,
+    Code2,
+    Copy,
+    ExternalLink,
+    FileJson,
+    Globe,
+    Key,
+    Lock,
+    LogIn,
+    Package,
+    RefreshCw,
+    Settings,
+    Smartphone,
+    Terminal,
+    Zap
 } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
 
 const PRODUCTION_API_URL = 'https://sso.codevertexitsolutions.com';
 
@@ -499,6 +498,104 @@ claims, err := client.ValidateToken(accessToken)`}
               />
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* SDK & Libraries */}
+      <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            className="flex items-center gap-3 mb-8 sm:mb-12"
+          >
+            <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
+              <Package className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">SDK & Libraries</h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {/* Auth API */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              transition={{ delay: 0.05 }}
+              className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-sky-100 dark:bg-sky-900/30 rounded-xl">
+                  <Code2 className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+                </div>
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Auth API</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                Backend REST API for authentication, user management, and OAuth/OIDC flows.
+              </p>
+              <a
+                href="https://github.com/Bengo-Hub/auth-api"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
+              >
+                View on GitHub
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </motion.div>
+
+            {/* Shared Auth Client (Go SDK) */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              transition={{ delay: 0.1 }}
+              className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
+                  <Package className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Shared Auth Client (Go)</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                Go SDK for JWT validation, JWKS support, and auth middleware integration.
+              </p>
+              <a
+                href="https://github.com/Bengo-Hub/shared-auth-client"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
+              >
+                View on GitHub
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </motion.div>
+          </div>
+
+          {/* Installation & Usage */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            transition={{ delay: 0.15 }}
+            className="mt-8 sm:mt-10"
+          >
+            <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary"></span>
+              Quick Installation
+            </h3>
+            <CodeBlock
+              title="Go SDK Installation"
+              language="bash"
+              code={`go get github.com/Bengo-Hub/shared-auth-client`}
+            />
+          </motion.div>
         </div>
       </section>
 

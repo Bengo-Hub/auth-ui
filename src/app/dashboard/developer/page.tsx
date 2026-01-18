@@ -6,14 +6,17 @@ import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api-client';
 import { motion } from 'framer-motion';
 import {
+    BookOpen,
     Check,
+    Code2,
     Copy,
     ExternalLink,
     Globe,
+    Package,
     Plus,
     ShieldAlert,
     Terminal,
-    Trash2
+    Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -224,6 +227,140 @@ export default function DeveloperPortal() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* Resources & Documentation */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Resources & Documentation</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* API Documentation */}
+            <motion.a
+              href="/docs"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center">
+                  <Code2 className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                </div>
+                <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">API Documentation</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Complete API reference with endpoints, authentication, and code examples.
+              </p>
+            </motion.a>
+
+            {/* Auth API Repository */}
+            <motion.a
+              href="https://github.com/Bengo-Hub/auth-api"
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center">
+                  <BookOpen className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                </div>
+                <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Auth API</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Backend authentication service source code and implementation details.
+              </p>
+            </motion.a>
+
+            {/* Go SDK */}
+            <motion.a
+              href="https://github.com/Bengo-Hub/shared-auth-client"
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
+                  <Package className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Go SDK</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Shared Auth Client for Go services. JWT validation, middleware, and JWKS support.
+              </p>
+            </motion.a>
+
+            {/* RBAC Guide */}
+            <motion.a
+              href="https://github.com/Bengo-Hub/bengobox/blob/main/docs/RBAC_IMPLEMENTATION_GUIDE.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
+                  <ShieldAlert className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+                </div>
+                <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">RBAC Guide</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Role-based access control patterns and permission enforcement implementation.
+              </p>
+            </motion.a>
+
+            {/* Swagger UI */}
+            <motion.a
+              href="https://sso.codevertexitsolutions.com/v1/docs/"
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+                  <Terminal className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Swagger UI</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Interactive API explorer with try-it-out functionality for all endpoints.
+              </p>
+            </motion.a>
+
+            {/* Quick Start Guide */}
+            <motion.a
+              href="/docs#quick-start"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
+                  <Code2 className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Quick Start</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Get started with example requests, authentication, and SDK integration.
+              </p>
+            </motion.a>
+          </div>
         </section>
       </div>
     </div>
