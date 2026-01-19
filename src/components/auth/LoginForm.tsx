@@ -21,6 +21,7 @@ export function LoginForm() {
   const redirectUri = searchParams.get('redirect_uri');
   const stateParam = searchParams.get('state');
   const scope = searchParams.get('scope');
+  const tenantSlug = searchParams.get('tenant') || 'codevertex'; // Default tenant
 
   // Demo credentials for easy testing (view-only access)
   const [email, setEmail] = useState('demo@bengobox.dev');
@@ -38,6 +39,7 @@ export function LoginForm() {
       const response = await apiClient.post('/api/v1/auth/login', {
         email,
         password,
+        tenant_slug: tenantSlug,
       });
 
       setUser(response.data.user);

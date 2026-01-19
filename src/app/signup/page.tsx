@@ -114,10 +114,12 @@ function OAuthButton({
     try {
       // Get return_to from URL params or default to dashboard
       const returnTo = searchParams.get('return_to') || '/dashboard';
+      const tenantSlug = searchParams.get('tenant') || 'codevertex';
 
       // Call the OAuth start endpoint
       const response = await apiClient.post(`/api/v1/auth/oauth/${provider}/start`, {
         return_to: returnTo,
+        tenant_slug: tenantSlug,
       });
 
       // The backend returns an authorization URL to redirect to

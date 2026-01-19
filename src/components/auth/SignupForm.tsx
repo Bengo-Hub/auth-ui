@@ -18,6 +18,7 @@ export function SignupForm() {
   const redirectUri = searchParams.get('redirect_uri');
   const stateParam = searchParams.get('state');
   const scope = searchParams.get('scope');
+  const tenantSlug = searchParams.get('tenant') || 'codevertex'; // Default tenant
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -48,6 +49,7 @@ export function SignupForm() {
         name,
         email,
         password,
+        tenant_slug: tenantSlug,
       });
 
       // After signup, redirect to login with all parameters preserved
@@ -57,6 +59,7 @@ export function SignupForm() {
       if (redirectUri) loginUrl.searchParams.set('redirect_uri', redirectUri);
       if (stateParam) loginUrl.searchParams.set('state', stateParam);
       if (scope) loginUrl.searchParams.set('scope', scope);
+      loginUrl.searchParams.set('tenant', tenantSlug);
       loginUrl.searchParams.set('message', 'Account created successfully. Please sign in.');
 
       router.push(loginUrl.pathname + loginUrl.search);
