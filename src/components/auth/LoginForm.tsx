@@ -22,8 +22,9 @@ export function LoginForm() {
   const stateParam = searchParams.get('state');
   const scope = searchParams.get('scope');
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Demo credentials for easy testing (view-only access)
+  const [email, setEmail] = useState('demo@bengobox.dev');
+  const [password, setPassword] = useState('DemoUser2024!');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
