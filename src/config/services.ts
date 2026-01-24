@@ -76,8 +76,8 @@ export const PRODUCTION_DOMAINS = {
   // Specialized
   ispBilling: 'https://ispbilling.codevertexitsolutions.com',
   ispBillingApi: 'https://ispbillingapi.codevertexitsolutions.com',
-  truload: 'https://truloadtest.masterspace.co.ke',
-  truloadApi: 'https://truloadapitest.masterspace.co.ke',
+  truload: 'https://kuraweightest.masterspace.co.ke',
+  truloadApi: 'https://kuraweighapitest.masterspace.co.ke',
   iot: 'https://iot.codevertexitsolutions.com',
 
   // Infrastructure

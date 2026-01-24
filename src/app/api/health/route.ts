@@ -43,7 +43,7 @@ const SERVICE_HEALTH_CONFIG: Record<string, { url: string; healthPath: string }>
     healthPath: '/healthz',
   },
   truload: {
-    url: 'https://truloadtest.masterspace.co.ke',
+    url: 'https://kuraweightest.masterspace.co.ke',
     healthPath: '/',
   },
 };
