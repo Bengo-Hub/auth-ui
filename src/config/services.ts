@@ -49,7 +49,7 @@ export const PRODUCTION_DOMAINS = {
   accounts: 'https://accounts.codevertexitsolutions.com',
 
   // Core Services
-  cafe: 'https://cafe.codevertexitsolutions.com',
+  cafe: 'https://theurbanloftcafe.com',
   ordering: 'https://ordersapp.codevertexitsolutions.com',
   orderingApi: 'https://orderapi.codevertexitsolutions.com',
   pos: 'https://pos.codevertexitsolutions.com',

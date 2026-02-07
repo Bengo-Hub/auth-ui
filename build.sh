@@ -93,8 +93,8 @@ if [[ -n ${REGISTRY_USERNAME:-} && -n ${REGISTRY_PASSWORD:-} ]]; then
 fi
 
 # Update Helm values in devops-k8s repo
-# Resolve token from available sources (priority: GH_PAT > GIT_SECRET > GIT_TOKEN > GITHUB_TOKEN)
-TOKEN="${GH_PAT:-${GIT_SECRET:-${GIT_TOKEN:-${GITHUB_TOKEN:-}}}}"
+# Resolve token from available sources (priority: GH_PAT > GIT_SECRET > GIT_TOKEN)
+TOKEN="${GH_PAT:-${GIT_SECRET:-${GIT_TOKEN:-}}}"
 
 if [[ -n "${GH_PAT:-}" ]]; then
   info "Using GH_PAT for git operations"
@@ -102,8 +102,8 @@ elif [[ -n "${GIT_SECRET:-}" ]]; then
   info "Using GIT_SECRET for git operations"
 elif [[ -n "${GIT_TOKEN:-}" ]]; then
   info "Using GIT_TOKEN for git operations"
-elif [[ -n "${GITHUB_TOKEN:-}" ]]; then
-  info "Using GITHUB_TOKEN for git operations (may lack cross-repo write)"
+elif [[ -n "${GIT_TOKEN:-}" ]]; then
+  info "Using GIT_TOKEN for git operations"
 else
   warn "No GitHub token found for devops-k8s update"
 fi

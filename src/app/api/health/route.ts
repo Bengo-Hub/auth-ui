@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 // Service health configuration mapping service IDs to their health endpoints
 const SERVICE_HEALTH_CONFIG: Record<string, { url: string; healthPath: string }> = {
   cafe: {
-    url: 'https://cafe.codevertexitsolutions.com',
+    url: 'https://theurbanloftcafe.com',
     healthPath: '/',
   },
   ordering: {
