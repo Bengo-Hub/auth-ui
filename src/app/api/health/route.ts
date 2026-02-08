@@ -40,7 +40,7 @@ const SERVICE_HEALTH_CONFIG: Record<string, { url: string; healthPath: string }>
   },
   isp: {
     url: 'https://ispbilling.codevertexitsolutions.com',
-    healthPath: '/healthz',
+    healthPath: '/',
   },
   truload: {
     url: 'https://kuraweightest.masterspace.co.ke',

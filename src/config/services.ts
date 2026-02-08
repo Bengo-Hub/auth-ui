@@ -232,7 +232,7 @@ export const SERVICES: Service[] = [
     color: 'bg-sky-500',
     gradient: 'from-sky-500 to-blue-500',
     category: 'specialized',
-    status: 'coming-soon',
+    status: 'live',
   },
   {
     id: 'truload',
