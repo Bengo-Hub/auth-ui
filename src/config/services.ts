@@ -290,14 +290,17 @@ export const getLiveServices = (): Service[] => {
   return SERVICES.filter(s => s.status === 'live');
 };
 
-export const getServiceUrl = (serviceId: string, isAuthenticated: boolean, returnPath?: string): string => {
+export const getServiceUrl = (serviceId: string, isAuthenticated: boolean, returnPath?: string, tenantSlug?: string): string => {
   const service = getServiceById(serviceId);
   if (!service) return '/';
 
+  // Build the base URL with tenant slug in the path when available
+  const baseUrl = tenantSlug ? `${service.url}/${tenantSlug}` : service.url;
+
   if (isAuthenticated) {
-    return service.url;
+    return baseUrl;
   }
 
-  const returnTo = returnPath || service.url;
+  const returnTo = returnPath || baseUrl;
   return `/login?return_to=${encodeURIComponent(returnTo)}`;
 };
