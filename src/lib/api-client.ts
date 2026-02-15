@@ -28,11 +28,13 @@ api.interceptors.request.use(
 // Public routes that should NOT redirect on 401
 // These pages handle unauthenticated users gracefully
 const PUBLIC_ROUTES = [
-  '/',           // Landing page
-  '/login',      // Login page
-  '/signup',     // Signup page
-  '/status',     // Status page
-  '/docs',       // Documentation
+  '/',                // Landing page
+  '/login',           // Login page
+  '/signup',          // Signup page
+  '/forgot-password', // Forgot password page
+  '/reset-password',  // Reset password page
+  '/status',          // Status page
+  '/docs',            // Documentation
 ];
 
 // Check if current path is a public route

@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation';
 
 import { LoginForm } from '@/components/auth/LoginForm';
 import apiClient from '@/lib/api-client';
+import { getSafeReturnUrl } from '@/lib/utils';
 
 // Official OAuth Provider Logos (SVG)
 function GoogleLogo({ className }: { className?: string }) {
@@ -112,8 +113,8 @@ function OAuthButton({
     setError(null);
 
     try {
-      // Get return_to from URL params or default to dashboard
-      const returnTo = searchParams.get('return_to') || '/dashboard';
+      // Get return_to from URL params, validated to prevent open redirect
+      const returnTo = getSafeReturnUrl(searchParams.get('return_to'), '/dashboard');
       const tenantSlug = searchParams.get('tenant') || 'codevertex';
 
       // Call the OAuth start endpoint

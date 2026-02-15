@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api-client';
+import { isValidReturnUrl } from '@/lib/utils';
 import { Loader2, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -54,7 +55,7 @@ export function SignupForm() {
 
       // After signup, redirect to login with all parameters preserved
       const loginUrl = new URL('/login', window.location.origin);
-      if (returnTo) loginUrl.searchParams.set('return_to', returnTo);
+      if (isValidReturnUrl(returnTo)) loginUrl.searchParams.set('return_to', returnTo!);
       if (clientId) loginUrl.searchParams.set('client_id', clientId);
       if (redirectUri) loginUrl.searchParams.set('redirect_uri', redirectUri);
       if (stateParam) loginUrl.searchParams.set('state', stateParam);

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api-client';
+import { getSafeReturnUrl } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
 import { Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
@@ -57,8 +58,8 @@ export function LoginForm() {
         return;
       }
 
-      // Otherwise redirect to returnTo or dashboard
-      router.push(returnTo || '/');
+      // Otherwise redirect to returnTo or dashboard (validated to prevent open redirect)
+      router.push(getSafeReturnUrl(returnTo));
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || 'Failed to sign in');
     } finally {

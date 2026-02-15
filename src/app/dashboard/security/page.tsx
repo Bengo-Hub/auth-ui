@@ -3,18 +3,114 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import apiClient from '@/lib/api-client';
 import { motion } from 'framer-motion';
 import {
     AlertTriangle,
     History,
     Key,
+    Loader2,
     Monitor,
     Smartphone
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+
+interface Session {
+  id: string;
+  status: string;
+  ip_address: string;
+  user_agent: string;
+  issued_at: string;
+  expires_at: string;
+  is_current: boolean;
+}
+
+function parseUserAgent(ua: string): { device: string; browser: string } {
+  const isPhone = /mobile|iphone|android|phone/i.test(ua);
+  let browser = 'Unknown Browser';
+  if (/chrome/i.test(ua) && !/edg/i.test(ua)) browser = 'Chrome';
+  else if (/firefox/i.test(ua)) browser = 'Firefox';
+  else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = 'Safari';
+  else if (/edg/i.test(ua)) browser = 'Edge';
+
+  let os = '';
+  if (/windows/i.test(ua)) os = 'Windows';
+  else if (/mac/i.test(ua)) os = 'macOS';
+  else if (/linux/i.test(ua)) os = 'Linux';
+  else if (/iphone|ipad/i.test(ua)) os = 'iOS';
+  else if (/android/i.test(ua)) os = 'Android';
+
+  return {
+    device: isPhone ? 'phone' : 'desktop',
+    browser: `${browser}${os ? ' on ' + os : ''}`,
+  };
+}
+
+function timeAgo(date: string): string {
+  const now = new Date();
+  const past = new Date(date);
+  const diffMs = now.getTime() - past.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  if (diffMinutes < 1) return 'Just now';
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
 
 export default function SecurityPage() {
+  const router = useRouter();
+  const { toast } = useToast();
   const [isMfaEnabled, setIsMfaEnabled] = useState(false);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [revokingAll, setRevokingAll] = useState(false);
+
+  const fetchSessions = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/api/v1/auth/sessions');
+      setSessions(response.data.sessions || []);
+    } catch {
+      // Silently handle — sessions may not be available yet
+      setSessions([]);
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
+  const revokeSession = async (sessionId: string) => {
+    setRevokingId(sessionId);
+    try {
+      await apiClient.post('/api/v1/auth/sessions/revoke', { session_id: sessionId });
+      toast({ title: 'Session revoked', description: 'The session has been signed out.' });
+      fetchSessions();
+    } catch {
+      toast({ title: 'Error', description: 'Failed to revoke session.', variant: 'destructive' });
+    } finally {
+      setRevokingId(null);
+    }
+  };
+
+  const revokeAllSessions = async () => {
+    setRevokingAll(true);
+    try {
+      await apiClient.post('/api/v1/auth/sessions/revoke-all');
+      toast({ title: 'Sessions revoked', description: 'All other sessions have been signed out.' });
+      fetchSessions();
+    } catch {
+      toast({ title: 'Error', description: 'Failed to revoke sessions.', variant: 'destructive' });
+    } finally {
+      setRevokingAll(false);
+    }
+  };
 
   return (
     <div className="space-y-12">
@@ -78,10 +174,16 @@ export default function SecurityPage() {
                 <p className="text-slate-500 dark:text-slate-400">Add an extra layer of security to your account.</p>
               </div>
             </div>
-            <Button 
+            <Button
               variant={isMfaEnabled ? "outline" : "default"}
               className={`h-14 px-8 rounded-2xl font-bold ${!isMfaEnabled ? 'bg-primary hover:bg-primary/90' : 'dark:border-slate-700 dark:text-white'}`}
-              onClick={() => setIsMfaEnabled(!isMfaEnabled)}
+              onClick={() => {
+                if (!isMfaEnabled) {
+                  router.push('/dashboard/security/2fa-setup');
+                } else {
+                  setIsMfaEnabled(false);
+                }
+              }}
             >
               {isMfaEnabled ? 'Disable 2FA' : 'Enable 2FA'}
             </Button>
@@ -116,39 +218,84 @@ export default function SecurityPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shadow-sm">
-                  <Monitor className="h-5 w-5 text-slate-400" />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white">Chrome on Windows <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 text-[10px] uppercase font-black">Current</span></p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Nairobi, Kenya • 192.168.1.1</p>
-                </div>
+            {sessionsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
               </div>
-            </div>
+            ) : sessions.length === 0 ? (
+              <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                No active sessions found.
+              </div>
+            ) : (
+              sessions.map((s) => {
+                const ua = parseUserAgent(s.user_agent);
+                const isPhone = ua.device === 'phone';
+                return (
+                  <div
+                    key={s.id}
+                    className={`flex items-center justify-between p-6 rounded-2xl border ${
+                      s.is_current
+                        ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800'
+                        : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shadow-sm">
+                        {isPhone ? (
+                          <Smartphone className="h-5 w-5 text-slate-400" />
+                        ) : (
+                          <Monitor className="h-5 w-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-white">
+                          {ua.browser}
+                          {s.is_current && (
+                            <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 text-[10px] uppercase font-black">
+                              Current
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          {s.ip_address} &middot; {timeAgo(s.issued_at)}
+                        </p>
+                      </div>
+                    </div>
+                    {!s.is_current && (
+                      <Button
+                        variant="ghost"
+                        className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 font-bold"
+                        disabled={revokingId === s.id}
+                        onClick={() => revokeSession(s.id)}
+                      >
+                        {revokingId === s.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          'Sign Out'
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
 
-            <div className="flex items-center justify-between p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-                  <Smartphone className="h-5 w-5 text-slate-400" />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white">Safari on iPhone 15</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Mombasa, Kenya • 10.0.0.5 • 2 days ago</p>
-                </div>
-              </div>
-              <Button variant="ghost" className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 font-bold">
-                Sign Out
+          {sessions.length > 1 && (
+            <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                variant="outline"
+                className="h-14 px-8 rounded-2xl border-rose-200 dark:border-rose-900/30 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 font-bold"
+                disabled={revokingAll}
+                onClick={revokeAllSessions}
+              >
+                {revokingAll ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : null}
+                Sign Out of All Other Sessions
               </Button>
             </div>
-          </div>
-
-          <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
-            <Button variant="outline" className="h-14 px-8 rounded-2xl border-rose-200 dark:border-rose-900/30 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 font-bold">
-              Sign Out of All Other Sessions
-            </Button>
-          </div>
+          )}
         </motion.div>
       </div>
     </div>
