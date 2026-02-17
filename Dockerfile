@@ -11,7 +11,10 @@ RUN npm install -g pnpm
 
 # Copy package files
 COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+
+# Install with shamefully-hoist to avoid dependency resolution issues
+# This ensures nested dependencies like side-channel-list are properly accessible
+RUN pnpm install --frozen-lockfile --shamefully-hoist
 
 # Rebuild the source code only when needed
 FROM base AS builder
