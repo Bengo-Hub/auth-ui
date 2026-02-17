@@ -4,22 +4,32 @@ import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
+import { useAuth } from '@/hooks/useAuth';
 import {
+    Bell,
     Building2,
     ChevronLeft,
     Code2,
+    CreditCard,
     LayoutDashboard,
     LogOut,
     Menu,
     Settings,
     Shield,
-    User
+    User,
+    Wrench
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
-const NAV_ITEMS = [
+interface NavItem {
+  title: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const NAV_ITEMS: NavItem[] = [
   {
     title: 'Overview',
     href: '/dashboard',
@@ -52,11 +62,27 @@ const NAV_ITEMS = [
   },
 ];
 
+const PLATFORM_ADMIN_ITEMS: NavItem[] = [
+  {
+    title: 'Gateways',
+    href: '/dashboard/platform/gateways',
+    icon: CreditCard,
+  },
+  {
+    title: 'Notifications',
+    href: '/dashboard/platform/notifications',
+    icon: Bell,
+  },
+];
+
 export function DashboardSidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
+  const { hasRole } = useAuth();
+
+  const isPlatformAdmin = hasRole('admin') || hasRole('super_admin');
 
   return (
     <aside
@@ -107,6 +133,39 @@ export function DashboardSidebar() {
             </Link>
           );
         })}
+
+        {/* Platform Admin Section */}
+        {isPlatformAdmin && (
+          <>
+            <div className="pt-4 pb-2">
+              {!isCollapsed && (
+                <div className="flex items-center gap-2 px-4">
+                  <Wrench className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Platform</span>
+                </div>
+              )}
+              {isCollapsed && <div className="border-t border-slate-200 dark:border-slate-700 mx-2" />}
+            </div>
+            {PLATFORM_ADMIN_ITEMS.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group',
+                    isActive
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary'
+                  )}
+                >
+                  <item.icon className={cn('h-5 w-5', isActive ? 'text-white' : 'group-hover:text-primary')} />
+                  {!isCollapsed && <span className="font-bold">{item.title}</span>}
+                </Link>
+              );
+            })}
+          </>
+        )}
       </nav>
 
       <div className="p-4 border-t border-slate-100 dark:border-slate-800">
