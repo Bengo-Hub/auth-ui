@@ -248,6 +248,20 @@ export const SERVICES: Service[] = [
     category: 'specialized',
     status: 'beta',
   },
+  {
+    id: 'notifications',
+    name: 'Codevertex Notifications',
+    shortName: 'Notifications',
+    description: 'Centralized notification engine for email, SMS, and push. Manage templates and delivery rules.',
+    icon: Bell,
+    svgIcon: '/svgs/services/notifications.svg',
+    url: PRODUCTION_DOMAINS.notifications,
+    apiUrl: PRODUCTION_DOMAINS.notificationsApi,
+    color: 'bg-blue-600',
+    gradient: 'from-blue-600 to-indigo-600',
+    category: 'specialized',
+    status: 'live',
+  },
 ];
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
