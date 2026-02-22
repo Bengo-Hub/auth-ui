@@ -4,6 +4,7 @@
 // Services are grouped by category for easy navigation.
 
 import {
+  Bell,
   Box,
   Briefcase,
   Coffee,
