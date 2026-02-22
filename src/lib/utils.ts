@@ -13,21 +13,30 @@ export function cn(...inputs: ClassValue[]) {
 export function isValidReturnUrl(url: string | null | undefined): boolean {
   if (!url) return false;
 
-  // Must start with a single forward slash (relative path)
-  if (!url.startsWith('/')) return false;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  // Reject protocol-relative URLs (//evil.com)
-  if (url.startsWith('//')) return false;
+  // Allow relative paths
+  if (url.startsWith('/')) {
+    // Reject protocol-relative URLs (//evil.com)
+    if (url.startsWith('//')) return false;
 
-  // Reject backslash tricks (/\evil.com gets normalized to //evil.com in some browsers)
-  if (url.startsWith('/\\')) return false;
+    // Reject backslash tricks (/\evil.com gets normalized to //evil.com in some browsers)
+    if (url.startsWith('/\\')) return false;
 
-  // Reject any URL with a colon before the first slash (e.g., javascript:, data:, etc.)
-  const colonIndex = url.indexOf(':');
-  const slashIndex = url.indexOf('/', 1);
-  if (colonIndex !== -1 && (slashIndex === -1 || colonIndex < slashIndex)) return false;
+    // Reject any URL with a colon before the first slash (e.g., javascript:, data:, etc.)
+    const colonIndex = url.indexOf(':');
+    const slashIndex = url.indexOf('/', 1);
+    if (colonIndex !== -1 && (slashIndex === -1 || colonIndex < slashIndex)) return false;
 
-  return true;
+    return true;
+  }
+
+  // Allow absolute URLs that start with our API URL (for OIDC flows)
+  if (apiUrl && url.startsWith(apiUrl)) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
