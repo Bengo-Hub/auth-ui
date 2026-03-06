@@ -1,5 +1,7 @@
 # Sprint MVP Launch (March 17, 2026)
 
+**Progress (March 2026)**: **RBAC & TanStack Query:** useAuth uses TanStack Query for GET /me (5 min staleTime); hasRole/hasPermission for nav and ProtectedRoute; /unauthorized page exists. All auth/me fetches via TanStack Query. — Tenant/brand: TenantProvider added; tenant slug from `NEXT_PUBLIC_TENANT_SLUG` or `?tenant=`; fetches GET /api/v1/tenants/by-slug/{slug} from auth-api (public); applies --tenant-primary, --tenant-secondary, --tenant-logo-url; Settings page includes "Tenant & Branding" section.
+
 **Duration**: March 6 -- March 17, 2026 (10 working days)
 **Status**: In Progress
 **Goal**: Ship a production-ready SSO portal at `auth.codevertexitsolutions.com` supporting all BengoBox service logins, tenant admin, and platform admin for the `urban-loft` tenant.
