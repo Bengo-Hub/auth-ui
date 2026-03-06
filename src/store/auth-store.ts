@@ -6,6 +6,7 @@ interface User {
   email: string;
   name?: string;
   roles: string[];
+  permissions?: string[];
   tenants: Array<{
     id: string;
     name: string;

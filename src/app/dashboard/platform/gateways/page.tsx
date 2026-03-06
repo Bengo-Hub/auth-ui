@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { treasuryApi } from '@/lib/service-clients';
+import { usePlatformGateways } from '@/hooks/use-dashboard-api';
 import { motion } from 'framer-motion';
 import {
   AlertTriangle,
@@ -19,7 +19,7 @@ import {
   Wifi,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -97,26 +97,10 @@ const CREDENTIAL_FIELDS: Record<string, { label: string; placeholder: string; se
 // ── Main Component ───────────────────────────────────────────────────────────
 
 export default function PlatformGatewaysPage() {
-  const [gateways, setGateways] = useState<GatewayConfig[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchGateways = useCallback(async () => {
-    try {
-      setError(null);
-      const response = await treasuryApi.get('/api/v1/platform/gateways');
-      setGateways(Array.isArray(response.data) ? response.data : []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load gateways');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchGateways();
-  }, [fetchGateways]);
+  const { data: gateways = [], isLoading, error: queryError, refetch: fetchGateways } = usePlatformGateways();
+  const gatewaysList = gateways as GatewayConfig[];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'Failed to load gateways') : null;
 
   return (
     <div className="space-y-12">
@@ -166,7 +150,7 @@ export default function PlatformGatewaysPage() {
         <div className="flex justify-center py-20">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
-      ) : gateways.length === 0 ? (
+      ) : gatewaysList.length === 0 ? (
         <div className="p-20 rounded-[3rem] bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
           <CreditCard className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
           <p className="text-slate-500 dark:text-slate-400 font-medium">No payment gateways configured yet.</p>
@@ -176,7 +160,7 @@ export default function PlatformGatewaysPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
-          {gateways.map((gw) => (
+          {gatewaysList.map((gw) => (
             <GatewayCard key={gw.id} gateway={gw} onRefresh={fetchGateways} />
           ))}
         </div>

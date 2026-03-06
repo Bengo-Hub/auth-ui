@@ -1,7 +1,9 @@
 # Auth UI - Implementation Status & Architecture Details
 
-**Last Updated**: January 2026  
+**Last Updated**: March 2026  
 **Status**: Sprint 5 Completed, Sprint 6 In Progress
+
+**RBAC & TanStack Query (March 2026):** Profile/me from GET /api/v1/auth/me via `useAuth` with TanStack Query (5 min staleTime, gcTime 10 min). `hasRole` and `hasPermission` helpers; dashboard layout redirects to `/unauthorized` when accessing `/dashboard/platform/*` without admin/super_admin. 404 (`not-found.tsx`) and `/unauthorized` pages exist. Dashboard data fetches use TanStack Query: `useSessions`, `useRevokeSession`, `usePlatformGateways` in `use-dashboard-api.ts`; security and platform gateways pages refactored to use these hooks.
 
 ---
 

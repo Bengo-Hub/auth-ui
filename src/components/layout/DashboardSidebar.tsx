@@ -82,7 +82,7 @@ export function DashboardSidebar() {
   const user = useAuthStore((state) => state.user);
   const { hasRole } = useAuth();
 
-  const isPlatformAdmin = hasRole('admin') || hasRole('super_admin');
+  const isPlatformAdmin = hasRole('superuser') || hasRole('admin') || hasRole('super_admin');
 
   return (
     <aside

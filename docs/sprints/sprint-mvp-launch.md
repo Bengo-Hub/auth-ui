@@ -1,6 +1,6 @@
 # Sprint MVP Launch (March 17, 2026)
 
-**Progress (March 2026)**: **RBAC & TanStack Query:** useAuth uses TanStack Query for GET /me (5 min staleTime); hasRole/hasPermission for nav and ProtectedRoute; /unauthorized page exists. All auth/me fetches via TanStack Query. — Tenant/brand: TenantProvider added; tenant slug from `NEXT_PUBLIC_TENANT_SLUG` or `?tenant=`; fetches GET /api/v1/tenants/by-slug/{slug} from auth-api (public); applies --tenant-primary, --tenant-secondary, --tenant-logo-url; Settings page includes "Tenant & Branding" section.
+**Progress (March 2026)**: **RBAC & TanStack Query:** useAuth (useMe) uses TanStack Query for GET /me (5 min staleTime/gcTime); hasRole/hasPermission for nav and ProtectedRoute; 404 (not-found.tsx) and 403 (unauthorized page) in place. Unauthenticated → redirect to login; lacking permission → redirect to /unauthorized. Platform section (Gateways, Notifications) gated by superuser, admin, or super_admin (seed uses `superuser`). Auth-store User includes `permissions`. All auth/me fetches via TanStack Query. — Tenant/brand: TenantProvider added; tenant slug from `NEXT_PUBLIC_TENANT_SLUG` or `?tenant=`; fetches GET /api/v1/tenants/by-slug/{slug} from auth-api (public); applies --tenant-primary, --tenant-secondary, --tenant-logo-url; Settings page includes "Tenant & Branding" section. **DevOps reference**: build.sh, deploy.yml, Dockerfile in auth-ui repo; Helm values in devops-k8s/apps/auth-ui/ (and auth-api in devops-k8s/apps/auth-api/).
 
 **Duration**: March 6 -- March 17, 2026 (10 working days)
 **Status**: In Progress
@@ -73,7 +73,7 @@
 **Priority**: P1
 **Owner**: Frontend
 
-- [ ] Verify `/dashboard/platform/gateways` is accessible only to `super_admin`
+- [ ] Verify `/dashboard/platform/gateways` is accessible only to platform roles (UI: superuser, admin, super_admin; seed uses superuser)
 - [ ] Verify gateway list loads from auth-api
 - [ ] Verify add/edit gateway form works
 - [ ] Verify `/dashboard/platform/notifications` loads for `super_admin`

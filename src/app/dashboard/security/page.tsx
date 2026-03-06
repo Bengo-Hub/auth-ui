@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useRevokeSession, useSessions, type Session } from '@/hooks/use-dashboard-api';
 import { useToast } from '@/hooks/use-toast';
 import apiClient from '@/lib/api-client';
 import { motion } from 'framer-motion';
@@ -15,17 +16,7 @@ import {
     Smartphone
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-
-interface Session {
-  id: string;
-  status: string;
-  ip_address: string;
-  user_agent: string;
-  issued_at: string;
-  expires_at: string;
-  is_current: boolean;
-}
+import { useState } from 'react';
 
 function parseUserAgent(ua: string): { device: string; browser: string } {
   const isPhone = /mobile|iphone|android|phone/i.test(ua);
@@ -65,33 +56,17 @@ export default function SecurityPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isMfaEnabled, setIsMfaEnabled] = useState(false);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [sessionsLoading, setSessionsLoading] = useState(true);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [revokingAll, setRevokingAll] = useState(false);
 
-  const fetchSessions = useCallback(async () => {
-    try {
-      const response = await apiClient.get('/api/v1/auth/sessions');
-      setSessions(response.data.sessions || []);
-    } catch {
-      // Silently handle — sessions may not be available yet
-      setSessions([]);
-    } finally {
-      setSessionsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
+  const { data: sessions = [], isLoading: sessionsLoading, refetch: fetchSessions } = useSessions();
+  const revokeMutation = useRevokeSession();
 
   const revokeSession = async (sessionId: string) => {
     setRevokingId(sessionId);
     try {
-      await apiClient.post('/api/v1/auth/sessions/revoke', { session_id: sessionId });
+      await revokeMutation.mutateAsync(sessionId);
       toast({ title: 'Session revoked', description: 'The session has been signed out.' });
-      fetchSessions();
     } catch {
       toast({ title: 'Error', description: 'Failed to revoke session.', variant: 'destructive' });
     } finally {

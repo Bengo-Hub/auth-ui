@@ -75,6 +75,22 @@ Auth-ui is the central Single Sign-On (SSO) portal for all BengoBox services. It
 
 ---
 
+## MVP verification (Auth & RBAC)
+
+- **Profile / me**: `useAuth` (in `src/hooks/useAuth.ts`) fetches profile via GET /api/v1/auth/me using **TanStack Query** with 5 min `staleTime`/TTL; response includes `roles` and `permissions`; store updated via `setUser`.
+- **RBAC**: `hasRole(role, tenantSlug?)` and `hasPermission(permission)`; platform/superuser-style access treats `superuser`, `admin`, and `super_admin` as full access (aligned with auth-api seed which uses `superuser`).
+- **Navigation**: Dashboard sidebar shows Platform section (Gateways, Notifications) only when `hasRole('superuser')` or `hasRole('admin')` or `hasRole('super_admin')`.
+- **Route protection**: Unauthenticated users redirected to `/login?return_to=...`; insufficient role redirects to `/unauthorized` (403). Implemented in `ProtectedRoute`, dashboard layout, and layout-level platform-route check.
+- **Error pages**: `src/app/not-found.tsx` (404); `src/app/unauthorized/page.tsx` (403 Access Denied).
+- **Data fetching**: Auth and dashboard data use TanStack Query (`useQuery`/`useMutation`) via `useAuth` and `use-dashboard-api.ts`.
+
+## DevOps reference (structure only — do not change in this task)
+
+- **auth-api**: `build.sh`, `.github/workflows/deploy.yml`, `Dockerfile` in repo; Helm chart values at `devops-k8s/apps/auth-api/values.yaml` (image, env, Redis AUTH_REDIS_*, DB, replicas, ingress).
+- **auth-ui**: `build.sh`, `.github/workflows/deploy.yml`, `Dockerfile` in repo; Helm values at `devops-k8s/apps/auth-ui/values.yaml` (image, env, NEXT_PUBLIC_*, ingress accounts.codevertexitsolutions.com).
+
+---
+
 ## Key Risks
 
 | Risk | Mitigation |

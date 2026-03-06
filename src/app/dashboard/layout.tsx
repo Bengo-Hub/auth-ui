@@ -1,8 +1,9 @@
 'use client';
 
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
+import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/auth-store';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function DashboardLayout({
@@ -11,15 +12,25 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { isAuthenticated, isLoading } = useAuthStore();
+  const { user, isLoading: meLoading, hasRole } = useAuth(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !meLoading) {
       router.push('/login?return_to=/dashboard');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, meLoading, router]);
 
-  if (isLoading) {
+  useEffect(() => {
+    const isPlatformRoute = pathname?.startsWith('/dashboard/platform');
+    const canAccessPlatform = user && (hasRole('superuser') || hasRole('admin') || hasRole('super_admin'));
+    if (user && isPlatformRoute && !canAccessPlatform) {
+      router.replace('/unauthorized');
+    }
+  }, [user, pathname, router, hasRole]);
+
+  if (isLoading || meLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -27,7 +38,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !user) {
     return null;
   }
 
