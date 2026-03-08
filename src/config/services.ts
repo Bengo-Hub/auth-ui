@@ -4,19 +4,19 @@
 // Services are grouped by category for easy navigation.
 
 import {
-  Bell,
-  Box,
-  Briefcase,
-  Coffee,
-  CreditCard,
-  LayoutDashboard,
-  LucideIcon,
-  Monitor,
-  ShoppingCart,
-  Ticket,
-  Truck,
-  Wifi,
-  Zap,
+    Bell,
+    Box,
+    Briefcase,
+    Coffee,
+    CreditCard,
+    LayoutDashboard,
+    LucideIcon,
+    Monitor,
+    ShoppingCart,
+    Ticket,
+    Truck,
+    Wifi,
+    Zap,
 } from 'lucide-react';
 
 export type ServiceStatus = 'live' | 'beta' | 'coming-soon' | 'offline';
@@ -52,7 +52,7 @@ export const PRODUCTION_DOMAINS = {
   // Core Services
   cafe: 'https://theurbanloftcafe.com',
   ordering: 'https://ordersapp.codevertexitsolutions.com',
-  orderingApi: 'https://orderapi.codevertexitsolutions.com',
+  orderingApi: 'https://orderingapi.codevertexitsolutions.com',
   pos: 'https://pos.codevertexitsolutions.com',
   posApi: 'https://posapi.codevertexitsolutions.com',
 
