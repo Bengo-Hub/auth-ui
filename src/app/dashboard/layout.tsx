@@ -23,12 +23,13 @@ export default function DashboardLayout({
   }, [isAuthenticated, isLoading, meLoading, router]);
 
   useEffect(() => {
+    if (meLoading) return; // Skip check while user data is loading
     const isPlatformRoute = pathname?.startsWith('/dashboard/platform');
     const canAccessPlatform = user && (hasRole('superuser') || hasRole('admin') || hasRole('super_admin'));
     if (user && isPlatformRoute && !canAccessPlatform) {
       router.replace('/unauthorized');
     }
-  }, [user, pathname, router, hasRole]);
+  }, [user, pathname, router, hasRole, meLoading]);
 
   if (isLoading || meLoading) {
     return (

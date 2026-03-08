@@ -1,9 +1,11 @@
 'use client';
 
+import { PermissionActionButton } from '@/components/auth/permission-action-button';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePlatformGateways } from '@/hooks/use-dashboard-api';
+import apiClient from '@/lib/api-client';
 import { motion } from 'framer-motion';
 import {
   AlertTriangle,
@@ -114,17 +116,21 @@ export default function PlatformGatewaysPage() {
         <div className="flex gap-3">
           <Button
             variant="outline"
-            onClick={fetchGateways}
+            onClick={() => fetchGateways()}
             className="h-14 px-6 rounded-2xl border-slate-200 dark:border-slate-700 font-bold dark:text-white"
           >
             <RefreshCw className="h-5 w-5 mr-2" /> Refresh
           </Button>
-          <Button
+          <PermissionActionButton
+            permission="integrations:write"
+            icon={Plus}
+            label="Add Gateway"
             onClick={() => setShowCreate(true)}
+            variant="default"
+            size="default"
             className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20"
-          >
-            <Plus className="h-5 w-5 mr-2" /> Add Gateway
-          </Button>
+            hideWhenUnauthorized={true}
+          />
         </div>
       </header>
 
@@ -183,7 +189,7 @@ function GatewayCard({ gateway, onRefresh }: { gateway: GatewayConfig; onRefresh
     setIsTesting(true);
     setTestResult(null);
     try {
-      await treasuryApi.post(`/api/v1/platform/gateways/${gateway.id}/test`);
+      await apiClient.post(`/api/v1/admin/integrations/${gateway.id}/test`);
       setTestResult('success');
     } catch {
       setTestResult('error');
@@ -195,7 +201,7 @@ function GatewayCard({ gateway, onRefresh }: { gateway: GatewayConfig; onRefresh
 
   const handleDeactivate = async () => {
     try {
-      await treasuryApi.delete(`/api/v1/platform/gateways/${gateway.id}`);
+      await apiClient.delete(`/api/v1/admin/integrations/${gateway.id}`);
       onRefresh();
     } catch (err) {
       console.error('Failed to deactivate gateway', err);
@@ -282,14 +288,15 @@ function GatewayCard({ gateway, onRefresh }: { gateway: GatewayConfig; onRefresh
               </Button>
             </div>
           ) : (
-            <Button
+            <PermissionActionButton
+              permission="integrations:write"
+              icon={Trash2}
+              onClick={() => setIsDeleting(true)}
               variant="ghost"
               size="icon"
+              hideWhenUnauthorized={true}
               className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl"
-              onClick={() => setIsDeleting(true)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            />
           )}
         </div>
       </div>
@@ -363,7 +370,7 @@ function CreateGatewayForm({ onClose, onCreated }: { onClose: () => void; onCrea
     };
 
     try {
-      await treasuryApi.post('/api/v1/platform/gateways', payload);
+      await apiClient.post('/api/v1/admin/integrations', { service: 'payment_gateway', config_data: payload });
       onCreated();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Failed to create gateway');

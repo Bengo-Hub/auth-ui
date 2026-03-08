@@ -1,13 +1,14 @@
 'use client';
 
+import { TenantMembersDialog } from '@/components/tenant/tenant-members-dialog';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,14 +17,13 @@ import apiClient from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth-store';
 import { motion } from 'framer-motion';
 import {
-  ArrowRight,
-  Building2,
-  ExternalLink,
-  Loader2,
-  Plus,
-  Settings,
-  ShieldCheck,
-  Users,
+    ArrowRight,
+    Building2,
+    ExternalLink,
+    Loader2,
+    Plus,
+    Settings,
+    ShieldCheck,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -228,9 +228,7 @@ export default function TenantsPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  <Button variant="outline" className="h-12 px-6 rounded-xl border-slate-200 dark:border-slate-700 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-white">
-                    <Users className="h-4 w-4 mr-2" /> Members
-                  </Button>
+                  <TenantMembersDialog tenantId={tenant.id} tenantName={tenant.name} />
                   <Button variant="outline" className="h-12 px-6 rounded-xl border-slate-200 dark:border-slate-700 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-white">
                     <Settings className="h-4 w-4 mr-2" /> Settings
                   </Button>

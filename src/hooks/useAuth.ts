@@ -28,9 +28,9 @@ export function useAuth(enabled = true) {
     queryKey: ['me'],
     queryFn: async () => {
       const response = await apiClient.get<User>('/api/v1/auth/me');
-      const data = (response as { data?: User }).data ?? (response as User);
-      setUser(data as User);
-      return data as User;
+      const data = response.data as User;
+      setUser(data);
+      return data;
     },
     enabled,
     staleTime: ME_STALE_MS,
