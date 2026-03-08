@@ -42,21 +42,7 @@ export function useRevokeSession() {
   });
 }
 
-// ── Platform gateways (via auth-api integration configs) ──────────────────────
-
-export const gatewayKeys = { all: () => ['platform', 'gateways'] as const };
-
-export function usePlatformGateways() {
-  return useQuery({
-    queryKey: gatewayKeys.all(),
-    queryFn: async () => {
-      const response = await apiClient.get('/api/v1/admin/integrations?service=payment_gateway');
-      const data = (response as { data?: unknown }).data ?? response;
-      return Array.isArray(data) ? data : [];
-    },
-    staleTime: STALE_MS,
-  });
-}
+// Payment gateways are owned by treasury-api/ui; auth-ui no longer exposes gateway CRUD.
 
 // ── Tenant Member Management ─────────────────────────────────────────────────
 
@@ -151,30 +137,4 @@ export function useRemoveTenantMember(tenantId: string | undefined) {
   });
 }
 
-// ── Notification Providers ───────────────────────────────────────────────────
-
-export interface NotificationProvider {
-  id: string;
-  channel: string;
-  provider_name: string;
-  is_active: boolean;
-  is_primary: boolean;
-  status: string;
-  metadata: Record<string, string>;
-  created_at: string;
-  updated_at: string;
-}
-
-export const notificationKeys = { all: () => ['notification-providers'] as const };
-
-export function useNotificationProviders() {
-  return useQuery({
-    queryKey: notificationKeys.all(),
-    queryFn: async () => {
-      const response = await apiClient.get('/api/v1/admin/integrations?service=notification_provider');
-      const data = (response as { data?: unknown }).data ?? response;
-      return Array.isArray(data) ? data : [];
-    },
-    staleTime: STALE_MS,
-  });
-}
+// Notification templates and providers are owned by notifications-api/ui; auth-ui redirects to notifications-ui.

@@ -33,12 +33,12 @@ This document defines the user-facing flows, page layouts, and interaction patte
 | Tenants | `/dashboard/tenants` | `admin` | Manage tenant users, invite users |
 | Developer | `/dashboard/developer` | `admin` | API keys, OAuth client management |
 
-### Platform Admin Pages
+### Platform Admin Pages (redirects to owning services)
 
 | Page | Route | Role Required | Purpose |
 |------|-------|--------------|---------|
-| Gateways | `/dashboard/platform/gateways` | `super_admin` | Payment gateway configuration |
-| Notifications | `/dashboard/platform/notifications` | `super_admin` | Platform notification settings |
+| Gateways | `/dashboard/platform/gateways` | `super_admin` | Redirects to **treasury-ui** (Codevertex Books) for payment gateway configuration |
+| Notifications | `/dashboard/platform/notifications` | `super_admin` | Redirects to **notifications-ui** for templates and provider configuration |
 
 ---
 
@@ -98,9 +98,9 @@ Administration (admin+ only)
   Users & Roles
   Developer Portal
 ---
-Platform (super_admin only)
-  Payment Gateways
-  Notifications
+Platform (super_admin only) — redirects only
+  Gateways → treasury-ui (Codevertex Books)
+  Notifications → notifications-ui
 ```
 
 ### Top Bar
@@ -115,21 +115,12 @@ Platform (super_admin only)
 
 ## Platform Admin Section
 
-### Payment Gateways (`/dashboard/platform/gateways`)
+Payment gateway configuration and notification templates/providers are **owned by treasury-ui and notifications-ui**. Auth-ui only provides redirect routes:
 
-**Access**: `super_admin` only (platform admin at `admin@codevertexitsolutions.com`)
+- **`/dashboard/platform/gateways`** → Redirects to Codevertex Books (treasury-ui) for gateway CRUD, reconciliation, and payouts.
+- **`/dashboard/platform/notifications`** → Redirects to notifications-ui for templates, channels, and branding.
 
-- Table listing all configured payment gateways
-- Columns: Name, Provider, Status, Last Updated
-- Actions: Add gateway, edit, toggle active/inactive
-- Each gateway has: provider type (M-Pesa, Stripe, etc.), API credentials (masked), webhook URL, environment (sandbox/production)
-
-### Platform Roles (`/dashboard/platform/notifications`)
-
-**Access**: `super_admin` only
-
-- Manage platform-wide notification preferences
-- Configure default notification channels per event type
+See treasury-ui and notifications-ui docs for full UX/UI and API details.
 
 ---
 

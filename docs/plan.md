@@ -13,7 +13,7 @@ Auth-ui is the central Single Sign-On (SSO) portal for all BengoBox services. It
 1. **Login/Registration gateway** -- users authenticate here and are redirected back to the requesting service
 2. **Account management portal** -- profile editing, security settings, MFA, session management
 3. **Tenant admin dashboard** -- user management, role assignment, API keys, OAuth client registration
-4. **Platform admin console** -- payment gateway configuration, platform role management (gated by `super_admin`)
+4. **Platform admin console** -- platform role management (gated by `super_admin`). Payment gateway configuration lives in **treasury-ui** (Codevertex Books); notification templates/providers live in **notifications-ui**.
 5. **Developer portal** -- API key management, OAuth client registration, service documentation
 
 ---
@@ -40,7 +40,7 @@ Auth-ui is the central Single Sign-On (SSO) portal for all BengoBox services. It
 - OIDC redirect flow working for all BengoBox service frontends
 - MFA setup and verification (TOTP)
 - Token refresh and session management
-- Platform admin section (gateways, roles) gated by `super_admin`
+- Platform admin section (roles) gated by `super_admin` (gateways → treasury-ui; notifications → notifications-ui)
 - Tenant admin section (users, API keys, settings) gated by `admin`
 - Production deployment at `auth.codevertexitsolutions.com`
 
@@ -79,7 +79,7 @@ Auth-ui is the central Single Sign-On (SSO) portal for all BengoBox services. It
 
 - **Profile / me**: `useAuth` (in `src/hooks/useAuth.ts`) fetches profile via GET /api/v1/auth/me using **TanStack Query** with 5 min `staleTime`/TTL; response includes `roles` and `permissions`; store updated via `setUser`.
 - **RBAC**: `hasRole(role, tenantSlug?)` and `hasPermission(permission)`; platform/superuser-style access treats `superuser`, `admin`, and `super_admin` as full access (aligned with auth-api seed which uses `superuser`).
-- **Navigation**: Dashboard sidebar shows Platform section (Gateways, Notifications) only when `hasRole('superuser')` or `hasRole('admin')` or `hasRole('super_admin')`.
+- **Navigation**: Dashboard sidebar Platform section is empty (gateways and notifications moved to treasury-ui and notifications-ui). Service directory links to Codevertex Books and Notifications for those features.
 - **Route protection**: Unauthenticated users redirected to `/login?return_to=...`; insufficient role redirects to `/unauthorized` (403). Implemented in `ProtectedRoute`, dashboard layout, and layout-level platform-route check.
 - **Error pages**: `src/app/not-found.tsx` (404); `src/app/unauthorized/page.tsx` (403 Access Denied).
 - **Data fetching**: Auth and dashboard data use TanStack Query (`useQuery`/`useMutation`) via `useAuth` and `use-dashboard-api.ts`.

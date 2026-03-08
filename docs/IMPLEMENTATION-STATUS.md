@@ -3,7 +3,7 @@
 **Last Updated**: March 2026  
 **Status**: Sprint 5 Completed, Sprint 6 In Progress
 
-**RBAC & TanStack Query (March 2026):** Profile/me from GET /api/v1/auth/me via `useAuth` with TanStack Query (5 min staleTime, gcTime 10 min). `hasRole` and `hasPermission` helpers; dashboard layout redirects to `/unauthorized` when accessing `/dashboard/platform/*` without admin/super_admin. 404 (`not-found.tsx`) and `/unauthorized` pages exist. Dashboard data fetches use TanStack Query: `useSessions`, `useRevokeSession`, `usePlatformGateways` in `use-dashboard-api.ts`; security and platform gateways pages refactored to use these hooks.
+**RBAC & TanStack Query (March 2026):** Profile/me from GET /api/v1/auth/me via `useAuth` with TanStack Query (5 min staleTime, gcTime 10 min). **Login/register/refresh responses now include `roles` and `permissions`** in the `user` object and at top level so sidebar visibility and permission-gated buttons work immediately after login without waiting for /me. `hasRole` and `hasPermission` use `user.roles` and `user.permissions` from the store (or /me). Dashboard layout redirects to `/unauthorized` when accessing `/dashboard/platform/*` without admin/super_admin. 404 (`not-found.tsx`) and `/unauthorized` pages exist. Dashboard data fetches use TanStack Query: `useSessions`, `useRevokeSession` in `use-dashboard-api.ts`. Payment gateways and notification providers are owned by treasury-ui and notifications-ui; auth-ui platform nav items were removed and `/dashboard/platform/gateways` and `/dashboard/platform/notifications` now redirect to those services.
 
 ---
 

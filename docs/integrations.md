@@ -23,7 +23,7 @@
 | User | `/auth/me`, `/users/me`, `/users/me/permissions` | Profile, permissions |
 | OIDC | `/authorize`, `/token`, `/userinfo`, `/.well-known/*` | SSO flows |
 | Admin | `/admin/tenants`, `/admin/clients`, `/admin/api-keys`, `/admin/keys/rotate` | Tenant/client/key management |
-| Platform | `/platform/gateways`, `/platform/roles` | Platform admin operations |
+| Platform | `/platform/roles` (gateways → treasury-ui; notifications → notifications-ui) | Platform admin operations |
 | Social | `/auth/oauth/{provider}/start`, `/auth/oauth/{provider}/callback` | Google, GitHub, Microsoft login |
 
 ### Axios Client Configuration

@@ -1,15 +1,16 @@
 # Sprint MVP Launch (March 17, 2026)
 
 **Progress (March 8-9, 2026 - Implementation Complete)**:
+- ✅ **Login response RBAC (March 2026):** Auth-api login/register/refresh now include `roles` and `permissions` in the JSON response (`user.roles`, `user.permissions`, and top-level `roles`/`permissions`). Auth-ui LoginForm merges these into the store so sidebar and permission buttons work immediately after login without depending on a separate /me call.
 - ✅ **Critical Bug Fixed**: `hasRole` undefined error - added loading guard in DashboardLayout
 - ✅ **Backend Endpoints**: Created POST/GET/PUT/DELETE `/api/v1/admin/tenants/{id}/members` endpoints for tenant user management
 - ✅ **Frontend Hooks**: Created `usePermissionCheck()` hook; enhanced `use-dashboard-api.ts` with tenant member management hooks
 - ✅ **Reusable Components**: Created `PermissionActionButton` component - reusable permission-gated button/icon with support for permission checks, role checks, and custom logic
 - ✅ **Tenant Members UI**: Integrated member management dialog into tenants page with invite/edit/delete functionality
-- ✅ **Permission-Based Rendering**: Applied `PermissionActionButton` to gateways page (add/delete actions), tenant members dialog (delete action)
+- ✅ **Permission-Based Rendering**: Applied `PermissionActionButton` to tenant members dialog (delete action). Gateways and notifications pages now redirect to treasury-ui and notifications-ui (ownership moved).
 - ✅ **Build Validation**: Both auth-api and auth-ui compile successfully with full TypeScript validation (21 pages generated)
 - 🔄 **E2E Testing**: Ready for smoke test verification of CP-1, CP-2, CP-3
-- 🟡 **Complete Rollout**: Permission checks can be applied to remaining pages (developer, notifications) using the new reusable component
+- 🟡 **Complete Rollout**: Permission checks can be applied to remaining pages (developer) using the new reusable component. Notifications UI lives in notifications-ui; auth-ui redirects there.
 
 **Duration**: March 6 -- March 17, 2026 (10 working days)
 **Status**: In Progress
@@ -69,7 +70,7 @@
 **Owner**: Frontend
 
 - [ ] Verify authenticated users reach `/dashboard` after login
-- [ ] Verify sidebar navigation renders correct sections based on role
+- [ ] Verify sidebar navigation renders correct sections based on role *(roles/permissions now in login response; store populated so hasRole/hasPermission work)*
 - [ ] Verify unauthenticated users are redirected to `/login`
 - [ ] Verify `/unauthorized` page shows for insufficient permissions
 
@@ -82,12 +83,8 @@
 **Priority**: P1
 **Owner**: Frontend
 
-- [x] Verify `/dashboard/platform/gateways` is accessible only to platform roles (UI: superuser, admin, super_admin; seed uses superuser)
-- [x] Verify add gateway button visibility gated behind permission check
-- [x] Verify delete gateway button visibility gated behind permission check
-- [ ] Verify gateway list loads from auth-api *(in progress - hooks ready, needs UI verification)*
-- [ ] Verify add/edit gateway form works *(in progress - dialog ready)*
-- [ ] Verify `/dashboard/platform/notifications` loads for `super_admin` *(pending)*
+- [x] Verify `/dashboard/platform/gateways` redirects to treasury-ui (Codevertex Books); gateway CRUD lives in treasury-ui
+- [x] Verify `/dashboard/platform/notifications` redirects to notifications-ui; templates/providers live in notifications-ui
 - [ ] Test: tenant admin (`admin@theurbanloftcafe.com`) cannot access platform routes (redirected to `/unauthorized`)
 
 ### HP-2: Tenant Admin Section
@@ -214,7 +211,7 @@
 
 - [ ] Users can log in and reach dashboard at `auth.codevertexitsolutions.com`
 - [ ] OIDC redirect flow works from ordering-frontend, POS, notifications-ui
-- [ ] Platform admin can access gateway configuration
+- [ ] Platform admin can access gateway configuration *(via treasury-ui; auth-ui redirect only)*
 - [ ] Tenant admin can manage users and API keys for `urban-loft`
 - [ ] MFA setup and login verification works
 - [ ] Page load time < 3s on 3G connection

@@ -46,9 +46,9 @@ src/app/
     tenants/page.tsx                -- Tenant management (admin)
     developer/page.tsx              -- API keys, OAuth clients
 
-    platform/                       -- Platform admin section (super_admin only)
-      gateways/page.tsx             -- Payment gateway configuration
-      notifications/page.tsx        -- Platform notification settings
+    platform/                       -- Platform admin section (super_admin only); redirects only
+      gateways/page.tsx             -- Redirect to treasury-ui (Codevertex Books)
+      notifications/page.tsx       -- Redirect to notifications-ui
 ```
 
 ---
@@ -126,7 +126,7 @@ UI sections are gated based on user roles from the JWT:
 | `/dashboard/security` | Any authenticated | Security settings, MFA |
 | `/dashboard/tenants` | `admin` | Tenant user management |
 | `/dashboard/developer` | `admin` | API keys, OAuth clients |
-| `/dashboard/platform/*` | `super_admin` | Payment gateways, platform roles |
+| `/dashboard/platform/*` | `super_admin` | Redirects to treasury-ui (gateways) and notifications-ui |
 
 Role checking is implemented client-side for UX (hide/show sections) but enforced server-side by auth-api on every API call.
 

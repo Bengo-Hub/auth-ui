@@ -26,7 +26,16 @@ export default function ProfilePage() {
         name,
         email,
       });
-      setUser(response.data.user);
+      const updated = response.data?.user as { id: string; email?: string; name?: string; roles?: string[]; permissions?: string[]; tenants?: Array<{ id: string; name: string; slug: string; roles: string[] }> } | undefined;
+      if (updated && user) {
+        setUser({
+          ...user,
+          ...updated,
+          roles: updated.roles ?? user.roles ?? [],
+          permissions: updated.permissions ?? user.permissions ?? [],
+          tenants: updated.tenants ?? user.tenants ?? [],
+        });
+      }
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (err: any) {
       setMessage({ 

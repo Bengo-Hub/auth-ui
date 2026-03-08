@@ -43,7 +43,20 @@ export function LoginForm() {
         tenant_slug: tenantSlug,
       });
 
-      setUser(response.data.user);
+      const data = response.data as {
+        user?: { id: string; email: string; name?: string; roles?: string[]; permissions?: string[]; tenants?: Array<{ id: string; name: string; slug: string; roles: string[] }> };
+        roles?: string[];
+        permissions?: string[];
+      };
+      const user = data?.user;
+      if (user) {
+        setUser({
+          ...user,
+          roles: user.roles ?? data.roles ?? [],
+          permissions: user.permissions ?? data.permissions ?? [],
+          tenants: user.tenants ?? [],
+        });
+      }
 
       // If we have OIDC parameters, redirect back to the authorize endpoint
       // The authorize endpoint will now see the session cookie and complete the flow

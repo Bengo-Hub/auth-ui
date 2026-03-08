@@ -6,11 +6,9 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
 import { useAuth } from '@/hooks/useAuth';
 import {
-    Bell,
     Building2,
     ChevronLeft,
     Code2,
-    CreditCard,
     LayoutDashboard,
     LogOut,
     Menu,
@@ -62,18 +60,9 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-const PLATFORM_ADMIN_ITEMS: NavItem[] = [
-  {
-    title: 'Gateways',
-    href: '/dashboard/platform/gateways',
-    icon: CreditCard,
-  },
-  {
-    title: 'Notifications',
-    href: '/dashboard/platform/notifications',
-    icon: Bell,
-  },
-];
+// Payment gateways and notifications are owned by treasury-ui and notifications-ui respectively.
+// Platform admin links to those services are available from the service directory (landing).
+const PLATFORM_ADMIN_ITEMS: NavItem[] = [];
 
 export function DashboardSidebar() {
   const pathname = usePathname();
@@ -134,8 +123,8 @@ export function DashboardSidebar() {
           );
         })}
 
-        {/* Platform Admin Section */}
-        {isPlatformAdmin && (
+        {/* Platform Admin Section — gateways/notifications live in treasury-ui and notifications-ui */}
+        {isPlatformAdmin && PLATFORM_ADMIN_ITEMS.length > 0 && (
           <>
             <div className="pt-4 pb-2">
               {!isCollapsed && (
