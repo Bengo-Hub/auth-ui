@@ -211,7 +211,7 @@
 
 - [ ] Users can log in and reach dashboard at `auth.codevertexitsolutions.com`
 - [ ] OIDC redirect flow works from ordering-frontend, POS, notifications-ui
-- [ ] Platform admin can access gateway configuration *(via treasury-ui; auth-ui redirect only)*
+- [x] Platform admin can access gateway configuration *(via treasury-ui; auth-ui redirect only)*
 - [ ] Tenant admin can manage users and API keys for `urban-loft`
 - [ ] MFA setup and login verification works
 - [ ] Page load time < 3s on 3G connection
