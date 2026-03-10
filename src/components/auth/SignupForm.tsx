@@ -328,461 +328,10 @@ export function SignupForm() {
     }
   };
 
-  // ── Render step progress bar ────────────────────────────────────────────────
-  const StepBar = () => (
-    <div className="flex items-center justify-between mb-8">
-      {STEPS.map((label, i) => (
-        <div key={label} className="flex items-center flex-1">
-          <div className="flex flex-col items-center">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                i < step
-                  ? 'bg-green-500 text-white'
-                  : i === step
-                  ? 'bg-primary text-white ring-4 ring-primary/20'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
-              }`}
-            >
-              {i < step ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
-            </div>
-            <span className={`text-xs mt-1 font-medium ${i === step ? 'text-primary' : 'text-slate-400'}`}>
-              {label}
-            </span>
-          </div>
-          {i < STEPS.length - 1 && (
-            <div className={`flex-1 h-0.5 mx-2 rounded-full transition-all duration-500 ${i < step ? 'bg-green-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-
-  // ── Step 0: Account Info ────────────────────────────────────────────────────
-  const Step0 = () => (
-    <div className="space-y-4">
-      {/* OAuth2 pre-fill banner */}
-      {isOAuthFlow && (
-        <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-          <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-blue-700 dark:text-blue-300">
-            Account details pre-filled from <span className="font-bold">{PROVIDER_LABELS[oauthProvider] || oauthProvider}</span>.
-            You can update them before continuing.
-          </p>
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Full Name</Label>
-        <div className="relative">
-          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-          <Input
-            id="name"
-            type="text"
-            placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-            required
-            autoFocus={!isOAuthFlow}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Email Address</Label>
-        <div className="relative">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-          <Input
-            id="email"
-            type="email"
-            placeholder="name@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            // Email is locked if pre-filled from OAuth (verified by provider)
-            readOnly={isOAuthFlow && !!oauthPrefillEmail}
-            className={`h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 ${
-              isOAuthFlow && oauthPrefillEmail ? 'opacity-70 cursor-not-allowed' : ''
-            }`}
-            required
-          />
-        </div>
-        {isOAuthFlow && oauthPrefillEmail && (
-          <p className="text-xs text-slate-400 ml-1 flex items-center gap-1">
-            <Shield className="w-3 h-3 text-green-500" /> Verified by {PROVIDER_LABELS[oauthProvider] || oauthProvider}
-          </p>
-        )}
-      </div>
-
-      {/* Password fields — hidden for OAuth2 flows (no password needed) */}
-      {!isOAuthFlow && (
-        <>
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Create a strong password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12 pl-12 pr-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                required
-              />
-              <button type="button" onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            </div>
-            <p className="text-xs text-slate-400 ml-1">At least 8 characters</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Confirm Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <Input
-                id="confirm-password"
-                type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="h-12 pl-12 pr-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                required
-              />
-              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Social Login buttons */}
-      {!isOAuthFlow && socialProviders.length > 0 && (
-        <>
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-200 dark:border-slate-800"></span>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-slate-900 px-4 text-slate-500 font-medium">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3">
-            {socialProviders.map((provider) => {
-              const providerKey = provider.name.replace('_oauth', '');
-              const Icon = providerKey === 'google' ? Chrome : providerKey === 'github' ? Github : Cpu;
-              
-              const handleSocialLogin = () => {
-                const startUrl = new URL(`/api/v1/auth/${providerKey}/start`, window.location.origin);
-                if (defaultTenant) startUrl.searchParams.set('tenant_slug', defaultTenant);
-                if (returnTo) startUrl.searchParams.set('return_to', returnTo);
-                
-                // Add OIDC/Redirect params if present
-                if (clientId) startUrl.searchParams.set('client_id', clientId);
-                if (redirectUri) startUrl.searchParams.set('redirect_uri', redirectUri);
-                if (stateParam) startUrl.searchParams.set('state', stateParam);
-                if (scope) startUrl.searchParams.set('scope', scope);
-                
-                window.location.href = startUrl.toString();
-              };
-
-              return (
-                <Button
-                  key={provider.name}
-                  type="button"
-                  variant="outline"
-                  className="h-12 rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 font-semibold"
-                  onClick={handleSocialLogin}
-                >
-                  <Icon className="mr-3 h-5 w-5" />
-                  {provider.display_name}
-                </Button>
-              );
-            })}
-          </div>
-        </>
-      )}
-    </div>
-  );
-
-  // ── Step 1: Organisation ────────────────────────────────────────────────────
-  const Step1 = () => (
-    <div className="space-y-5">
-      {/* Toggle join vs create */}
-      <div className="grid grid-cols-2 gap-3">
-        {(['join_existing', 'create_new'] as const).map((action) => (
-          <button
-            key={action}
-            type="button"
-            onClick={() => { setOrgAction(action); setSelectedTenant(null); setSearchResults([]); setError(null); }}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all font-medium text-sm ${
-              orgAction === action
-                ? 'border-primary bg-primary/5 dark:bg-primary/10 text-primary'
-                : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
-            }`}
-          >
-            {action === 'join_existing' ? <Search className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-            {action === 'join_existing' ? 'Join Existing Org' : 'Create New Org'}
-          </button>
-        ))}
-      </div>
-
-      {orgAction === 'join_existing' ? (
-        <div className="space-y-3">
-          <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Search Organisation</Label>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-            {isSearching && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-slate-400" />}
-            <Input
-              type="text"
-              placeholder="Type org slug (e.g. urban-loft)"
-              value={orgSearch}
-              onChange={(e) => setOrgSearch(e.target.value)}
-              className="h-12 pl-12 pr-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-              autoFocus
-            />
-          </div>
-
-          {/* Results */}
-          {searchResults.length > 0 && (
-            <div className="space-y-2">
-              {searchResults.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => { setSelectedTenant(t); setSearchResults([]); setOrgSearch(t.name); }}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
-                    selectedTenant?.id === t.id
-                      ? 'border-primary bg-primary/5 dark:bg-primary/10'
-                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-sky-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                    {t.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">{t.name}</p>
-                    <p className="text-xs text-slate-400 truncate">@{t.slug}</p>
-                  </div>
-                  {selectedTenant?.id === t.id && <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {selectedTenant && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-              <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-              <p className="text-sm text-green-700 dark:text-green-300 font-medium">
-                You will join <span className="font-bold">{selectedTenant.name}</span> as a member.
-                Admin approval may be required.
-              </p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Organisation Name</Label>
-            <div className="relative">
-              <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <Input type="text" placeholder="Acme Corp" value={newOrgName}
-                onChange={(e) => setNewOrgName(e.target.value)}
-                className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                autoFocus />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Slug (URL identifier)
-            </Label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">@</span>
-              <Input type="text" placeholder="acme-corp" value={newOrgSlug}
-                onChange={(e) => setNewOrgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                className="h-12 pl-8 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono" />
-            </div>
-            <p className="text-xs text-slate-400">Used in URLs – letters, numbers and hyphens only</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Organisation Size</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {ORG_SIZES.map((s) => (
-                <button key={s.value} type="button"
-                  onClick={() => setOrgSize(s.value)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all ${
-                    orgSize === s.value
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
-                  }`}>
-                  <span>{s.icon}</span>{s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Primary Use Case</Label>
-            <div className="flex flex-wrap gap-2">
-              {USE_CASES.map((uc) => (
-                <button key={uc.value} type="button"
-                  onClick={() => setUseCase(uc.value)}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                    useCase === uc.value
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
-                  }`}>
-                  {uc.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  // ── Step 2: Plan Selection (REQUIRED) ────────────────────────────────────────
-  const Step2 = () => (
-    <div className="space-y-4">
-      <div className="text-center mb-2">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-          Choose your subscription plan
-        </h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          {orgAction === 'join_existing' && selectedTenant
-            ? <>You will use <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedTenant.name}</span>'s existing subscription.</>
-            : <>All plans start with a <span className="font-semibold text-primary">14-day free trial</span>. You can upgrade or downgrade anytime.</>
-          }
-        </p>
-      </div>
-
-      {isLoadingPlans ? (
-        <div className="flex items-center justify-center h-32">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      ) : plansLoadFailed ? (
-        // Plans failed to load — warn but still allow proceeding with no plan
-        <div className="space-y-4">
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Could not load subscription plans</p>
-              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                The pricing service may be temporarily unavailable. Your account will be created
-                on the free tier. You can select a plan from your dashboard after signing in.
-              </p>
-            </div>
-          </div>
-          <Button type="button" variant="outline" onClick={loadPlans} className="w-full h-10 rounded-xl text-sm">
-            <ArrowRight className="w-4 h-4 mr-2" /> Retry Loading Plans
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {plans.map((plan) => {
-            const Icon = PLAN_ICONS[plan.planCode] || Zap;
-            const gradient = PLAN_COLORS[plan.planCode] || 'from-sky-500 to-cyan-500';
-            const tier = plan.tierLimitsJSON || {};
-            const isSelected = selectedPlan === plan.planCode;
-            const trialDays = plan.trialDays ?? 14;
-
-            return (
-              <button
-                key={plan.id}
-                type="button"
-                onClick={() => { setSelectedPlan(plan.planCode); setError(null); }}
-                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${
-                  isSelected
-                    ? 'border-primary bg-primary/5 dark:bg-primary/10 ring-2 ring-primary/20'
-                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 shadow-md`}>
-                    <Icon className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-slate-900 dark:text-white text-sm">{plan.name}</p>
-                        {trialDays > 0 && (
-                          <span className="text-xs px-1.5 py-0.5 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-medium">
-                            {trialDays}-day trial
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex-shrink-0">
-                        {plan.basePrice === 0 ? (
-                          <span className="text-green-600 dark:text-green-400">Free</span>
-                        ) : (
-                          <>
-                            <span className="text-xs font-normal text-slate-400">KES </span>
-                            {plan.basePrice.toLocaleString()}
-                            <span className="text-xs font-normal text-slate-400">/mo</span>
-                          </>
-                        )}
-                      </p>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{plan.description}</p>
-                    {(tier.max_riders !== undefined || tier.max_members !== undefined) && (
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-                        {tier.max_members !== undefined && (
-                          <span className="text-xs text-slate-500">
-                            👥 {tier.max_members === -1 ? 'Unlimited' : tier.max_members} members
-                          </span>
-                        )}
-                        {tier.max_riders !== undefined && (
-                          <span className="text-xs text-slate-500">
-                            🛵 {tier.max_riders === -1 ? 'Unlimited' : tier.max_riders} riders
-                          </span>
-                        )}
-                        {tier.max_orders_per_day !== undefined && (
-                          <span className="text-xs text-slate-500">
-                            📦 {tier.max_orders_per_day === -1 ? 'Unlimited' : tier.max_orders_per_day} orders/day
-                          </span>
-                        )}
-                        {tier.max_outlets !== undefined && (
-                          <span className="text-xs text-slate-500">
-                            🏪 {tier.max_outlets === -1 ? 'Unlimited' : tier.max_outlets} outlet{tier.max_outlets !== 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 transition-all ${
-                    isSelected ? 'border-primary bg-primary' : 'border-slate-300 dark:border-slate-600'
-                  }`}>
-                    {isSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-
-          {/* Selection required notice */}
-          {plans.length > 0 && !selectedPlan && (
-            <p className="text-xs text-center text-amber-600 dark:text-amber-400 font-medium">
-              ↑ Please select a plan to complete your registration
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
-      <StepBar />
+      <StepBar step={step} />
 
       {error && (
         <div className="flex items-start gap-2 p-4 text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl">
@@ -791,9 +340,65 @@ export function SignupForm() {
         </div>
       )}
 
-      {step === 0 && <Step0 />}
-      {step === 1 && <Step1 />}
-      {step === 2 && <Step2 />}
+      {step === 0 && (
+        <Step0
+          name={name}
+          setName={setName}
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          confirmPassword={confirmPassword}
+          setConfirmPassword={setConfirmPassword}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
+          showConfirmPassword={showConfirmPassword}
+          setShowConfirmPassword={setShowConfirmPassword}
+          isOAuthFlow={isOAuthFlow}
+          oauthProvider={oauthProvider}
+          oauthPrefillEmail={oauthPrefillEmail}
+          socialProviders={socialProviders}
+          defaultTenant={defaultTenant}
+          returnTo={returnTo}
+          clientId={clientId}
+          redirectUri={redirectUri}
+          stateParam={stateParam}
+          scope={scope}
+        />
+      )}
+      {step === 1 && (
+        <Step1
+          orgAction={orgAction}
+          setOrgAction={setOrgAction}
+          orgSearch={orgSearch}
+          setOrgSearch={setOrgSearch}
+          searchResults={searchResults}
+          selectedTenant={selectedTenant}
+          setSelectedTenant={setSelectedTenant}
+          isSearching={isSearching}
+          newOrgName={newOrgName}
+          setNewOrgName={setNewOrgName}
+          newOrgSlug={newOrgSlug}
+          setNewOrgSlug={setNewOrgSlug}
+          orgSize={orgSize}
+          setOrgSize={setOrgSize}
+          useCase={useCase}
+          setUseCase={setUseCase}
+        />
+      )}
+      {step === 2 && (
+        <Step2
+          plans={plans}
+          selectedPlan={selectedPlan}
+          setSelectedPlan={setSelectedPlan}
+          isLoadingPlans={isLoadingPlans}
+          plansLoadFailed={plansLoadFailed}
+          loadPlans={loadPlans}
+          orgAction={orgAction}
+          selectedTenant={selectedTenant}
+          setError={setError}
+        />
+      )}
 
       <div className="flex gap-3 pt-2">
         {step > 0 && (
@@ -829,6 +434,255 @@ export function SignupForm() {
           <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.
         </p>
       )}
+    </div>
+  );
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function StepBar({ step }: { step: Step }) {
+  return (
+    <div className="flex items-center gap-2 mb-8">
+      {STEPS.map((s, i) => (
+        <div key={s} className="flex-1 flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+            i <= step 
+              ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+          }`}>
+            {i + 1}
+          </div>
+          <span className={`text-xs font-semibold hidden sm:block ${
+            i <= step ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+          }`}>
+            {s}
+          </span>
+          {i < STEPS.length - 1 && (
+            <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800 mx-2" />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Step0({
+  name, setName, email, setEmail, password, setPassword,
+  confirmPassword, setConfirmPassword, showPassword, setShowPassword,
+  showConfirmPassword, setShowConfirmPassword, isOAuthFlow, oauthProvider,
+  oauthPrefillEmail, socialProviders, defaultTenant, returnTo, clientId,
+  redirectUri, stateParam, scope
+}: any) {
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="space-y-2">
+        <Label htmlFor="name">Full Name</Label>
+        <div className="relative">
+          <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+          <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} className="pl-10 h-11 rounded-xl" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Work Email</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+          <Input id="email" type="email" placeholder="john@company.com" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isOAuthFlow} className="pl-10 h-11 rounded-xl" />
+        </div>
+        {isOAuthFlow && <p className="text-[10px] text-slate-500 flex items-center gap-1"><Shield className="w-3 h-3" /> Verified via {PROVIDER_LABELS[oauthProvider] || oauthProvider}</p>}
+      </div>
+
+      {!isOAuthFlow && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 pr-10 h-11 rounded-xl" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                <Input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="pl-10 pr-10 h-11 rounded-xl" />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!isOAuthFlow && socialProviders.length > 0 && (
+        <div className="relative py-4">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-slate-800"></div></div>
+          <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-slate-900 px-2 text-slate-400">Or continue with</span></div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        {socialProviders.map((p: any) => {
+          const Icon = p.name.includes('google') ? Chrome : p.name.includes('github') ? Github : Cpu;
+          const startUrl = new URL(`/api/v1/auth/oauth/${p.name.split('_')[0]}/start`, process.env.NEXT_PUBLIC_AUTH_API_URL);
+          startUrl.searchParams.set('flow', 'signup');
+          if (defaultTenant) startUrl.searchParams.set('tenant_slug', defaultTenant);
+          if (clientId) startUrl.searchParams.set('client_id', clientId);
+          if (redirectUri) startUrl.searchParams.set('redirect_uri', redirectUri);
+          if (stateParam) startUrl.searchParams.set('state', stateParam);
+          if (scope) startUrl.searchParams.set('scope', scope);
+          if (returnTo) startUrl.searchParams.set('return_to', returnTo);
+
+          return (
+            <Button key={p.name} type="button" variant="outline" onClick={() => window.location.href = startUrl.toString()} className="h-11 rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+              <Icon className="w-4 h-4 mr-2" /> {PROVIDER_LABELS[p.name.split('_')[0]]}
+            </Button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Step1({
+  orgAction, setOrgAction, orgSearch, setOrgSearch, searchResults,
+  selectedTenant, setSelectedTenant, isSearching, newOrgName, setNewOrgName,
+  newOrgSlug, setNewOrgSlug, orgSize, setOrgSize, useCase, setUseCase
+}: any) {
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
+        <button type="button" onClick={() => setOrgAction('join_existing')} className={`py-2 text-sm font-semibold rounded-lg transition-all ${orgAction === 'join_existing' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Join Organisation</button>
+        <button type="button" onClick={() => setOrgAction('create_new')} className={`py-2 text-sm font-semibold rounded-lg transition-all ${orgAction === 'create_new' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Create New</button>
+      </div>
+
+      {orgAction === 'join_existing' ? (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Find your organisation</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+              <Input placeholder="Enter organisation slug..." value={orgSearch} onChange={(e) => setOrgSearch(e.target.value)} className="pl-10 h-11 rounded-xl" />
+              {isSearching && <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-primary" />}
+            </div>
+          </div>
+          <div className="space-y-2">
+            {searchResults.map((t: any) => (
+              <button key={t.id} type="button" onClick={() => setSelectedTenant(t)} className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${selectedTenant?.id === t.id ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg font-bold text-slate-400">{t.name[0]}</div>
+                  <div className="text-left"><p className="font-bold text-slate-900 dark:text-white">{t.name}</p><p className="text-xs text-slate-500">@{t.slug}</p></div>
+                </div>
+                {selectedTenant?.id === t.id && <CheckCircle2 className="w-5 h-5 text-primary" />}
+              </button>
+            ))}
+            {orgSearch.length >= 2 && !isSearching && searchResults.length === 0 && (
+              <div className="p-8 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                <p className="text-sm text-slate-500">No organisation found with that slug.</p>
+                <button type="button" onClick={() => setOrgAction('create_new')} className="mt-2 text-sm font-bold text-primary hover:underline">Create a new one instead</button>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Organisation Name</Label>
+            <div className="relative">
+              <Building2 className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+              <Input placeholder="Acme Inc." value={newOrgName} onChange={(e) => setNewOrgName(e.target.value)} className="pl-10 h-11 rounded-xl" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>URL Slug</Label>
+            <div className="relative font-mono text-sm">
+              <span className="absolute left-3 top-3 text-slate-400">@</span>
+              <Input value={newOrgSlug} onChange={(e) => setNewOrgSlug(e.target.value)} className="pl-8 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Organisation Size</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {ORG_SIZES.map((size) => (
+                <button key={size.value} type="button" onClick={() => setOrgSize(size.value)} className={`flex items-center gap-2 p-3 rounded-xl border text-sm transition-all ${orgSize === size.value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'}`}>
+                  <span>{size.icon}</span> {size.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Industry / Use Case</Label>
+            <select value={useCase} onChange={(e) => setUseCase(e.target.value)} className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-primary shadow-sm appearance-none cursor-pointer">
+              <option value="">Select industry...</option>
+              {USE_CASES.map((uc) => <option key={uc.value} value={uc.value}>{uc.label}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Step2({ plans, selectedPlan, setSelectedPlan, isLoadingPlans, plansLoadFailed, loadPlans, orgAction, selectedTenant, setError }: any) {
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-bold text-slate-900 dark:text-white">Choose your plan</h3>
+        <span className="text-[10px] uppercase font-black text-primary bg-primary/10 px-2 py-0.5 rounded tracking-wider">14-Day Free Trial</span>
+      </div>
+
+      {isLoadingPlans ? (
+        <div className="py-12 flex flex-col items-center justify-center gap-3"><Loader2 className="w-8 h-8 animate-spin text-primary" /><p className="text-sm text-slate-500">Fetching pricing plans...</p></div>
+      ) : plansLoadFailed ? (
+        <div className="p-8 text-center border border-rose-100 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-900/10 rounded-2xl">
+          <AlertCircle className="w-8 h-8 text-rose-500 mx-auto mb-3" />
+          <p className="text-sm text-rose-600 dark:text-rose-400 font-medium mb-1">Failed to load plans</p>
+          <button type="button" onClick={loadPlans} className="text-xs text-primary font-bold hover:underline">Try Again</button>
+        </div>
+      ) : plans.length === 0 ? (
+        <div className="p-8 text-center border border-slate-200 dark:border-slate-800 rounded-2xl"><p className="text-sm text-slate-500">No plans available at this time.</p></div>
+      ) : (
+        <div className="space-y-3">
+          {plans.map((p: any) => {
+            const Icon = PLAN_ICONS[p.planCode] || Zap;
+            const gradient = PLAN_COLORS[p.planCode] || 'from-slate-500 to-slate-600';
+            const isSelected = selectedPlan === p.planCode;
+
+            return (
+              <button key={p.id} type="button" onClick={() => setSelectedPlan(p.planCode)} className={`group relative w-full flex items-center p-4 rounded-2xl border text-left transition-all ${isSelected ? 'border-primary ring-1 ring-primary bg-primary/[0.02]' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}>
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white shadow-lg shadow-primary/10 mr-4 group-hover:scale-110 transition-transform`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="font-black text-slate-900 dark:text-white uppercase tracking-tight">{p.name}</p>
+                    <div className="text-right"><span className="text-lg font-black text-slate-900 dark:text-white">{p.currency} {p.basePrice}</span><span className="text-[10px] text-slate-500">/mo</span></div>
+                  </div>
+                  <p className="text-xs text-slate-500 line-clamp-1">{p.description}</p>
+                </div>
+                {isSelected && (
+                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center shadow-lg"><CheckCircle2 className="w-4 h-4" /></div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 flex gap-3">
+        <Info className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+        <p className="text-[10px] leading-relaxed text-slate-500">
+          All plans include a full-featured trial. No credit card required to start.
+          {orgAction === 'join_existing' && selectedTenant && (
+            <span className="block mt-1 font-bold text-slate-700 dark:text-slate-300 underline">Note: Registration with @{selectedTenant.slug} might be restricted based on organisation policy.</span>
+          )}
+        </p>
+      </div>
     </div>
   );
 }
