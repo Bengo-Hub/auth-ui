@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
-import { Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Loader2, Mail, Lock, Eye, EyeOff, Github, Chrome, Cpu } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -15,6 +16,18 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setUser = useAuthStore((state) => state.setUser);
+
+  const { data: activeIntegrations } = useQuery({
+    queryKey: ['active_integrations'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/api/v1/auth/integrations/active');
+      return data as Array<{ name: string; display_name: string }>;
+    },
+  });
+
+  const socialProviders = activeIntegrations?.filter(i => 
+    ['google_oauth', 'github_oauth', 'microsoft_oauth'].includes(i.name)
+  ) || [];
 
   // OIDC / Redirect parameters
   const returnTo = searchParams.get('return_to');
@@ -147,6 +160,55 @@ export function LoginForm() {
           'Sign In'
         )}
       </Button>
+
+      {socialProviders.length > 0 && (
+        <>
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-200 dark:border-slate-800"></span>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white dark:bg-slate-900 px-4 text-slate-500 font-medium">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            {socialProviders.map((provider) => {
+              const providerKey = provider.name.replace('_oauth', '');
+              const Icon = providerKey === 'google' ? Chrome : providerKey === 'github' ? Github : Cpu;
+              
+              const handleSocialLogin = () => {
+                const startUrl = new URL(`/api/v1/auth/${providerKey}/start`, window.location.origin);
+                if (tenantSlug) startUrl.searchParams.set('tenant_slug', tenantSlug);
+                if (returnTo) startUrl.searchParams.set('return_to', returnTo);
+                
+                // Add OIDC/Redirect params if present
+                if (clientId) startUrl.searchParams.set('client_id', clientId);
+                if (redirectUri) startUrl.searchParams.set('redirect_uri', redirectUri);
+                if (stateParam) startUrl.searchParams.set('state', stateParam);
+                if (scope) startUrl.searchParams.set('scope', scope);
+                
+                window.location.href = startUrl.toString();
+              };
+
+              return (
+                <Button
+                  key={provider.name}
+                  type="button"
+                  variant="outline"
+                  className="h-12 rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 font-semibold"
+                  onClick={handleSocialLogin}
+                >
+                  <Icon className="mr-3 h-5 w-5" />
+                  {provider.display_name}
+                </Button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </form>
   );
 }

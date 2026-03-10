@@ -13,12 +13,21 @@ export interface User {
   name?: string;
   roles: string[];
   permissions?: string[];
+  primary_tenant?: string;
+  tenant?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
   tenants: Array<{
     id: string;
     name: string;
     slug: string;
     roles: string[];
   }>;
+  subscription_plan?: string;
+  subscription_status?: string;
+  is_platform_owner?: boolean;
 }
 
 export function useAuth(enabled = true) {
@@ -37,19 +46,30 @@ export function useAuth(enabled = true) {
     gcTime: ME_STALE_MS * 2,
     retry: (_, error: unknown) => {
       const status = (error as { response?: { status?: number } })?.response?.status;
+      // Never retry auth errors — fail fast and treat as unauthenticated
       if (status === 401 || status === 403) return false;
       return true;
     },
     throwOnError: false,
   });
 
-  const user = (query.data ?? storeUser) as User | null;
-
+  // When /me returns 401/403, immediately clear the user store so the UI
+  // switches to the unauthenticated state without staying in an infinite load.
   useEffect(() => {
     if (query.isError && enabled) {
       logout();
     }
   }, [query.isError, enabled, logout]);
+
+  // Derive the resolved user: prefer fresh query data, fall back to store.
+  const user = (query.data ?? storeUser) as User | null;
+
+  // isLoading should only be true while the *initial* fetch is in-flight AND
+  // there is no cached user to show. If the query errored (e.g. 401),
+  // we are NOT loading — we are definitively unauthenticated.
+  // Using `query.isPending` (= no data yet) combined with `query.isFetching`
+  // avoids the stale-loading state that keeps the skeleton visible after 401.
+  const isLoading = !query.isError && query.isPending && query.isFetching && !storeUser;
 
   const hasRole = (role: string, tenantSlug?: string) => {
     if (!user) return false;
@@ -69,12 +89,12 @@ export function useAuth(enabled = true) {
 
   return {
     user,
-    isLoading: query.isLoading,
+    isLoading,
     isError: query.isError,
     error: query.error,
     hasRole,
     hasPermission,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !query.isError,
     refetch: query.refetch,
   };
 }
