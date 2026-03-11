@@ -9,6 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { LoginForm } from '@/components/auth/LoginForm';
 import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl } from '@/lib/utils';
+import { SSOConnectionsSVG } from '@/components/ui/SSOConnectionsSVG';
 
 // Official OAuth Provider Logos (SVG)
 function GoogleLogo({ className }: { className?: string }) {
@@ -154,22 +155,83 @@ function OAuthButton({
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900">
-      {/* Left Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900 overflow-hidden">
+      {/* Left Side - Visual Content */}
+      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-primary/5 via-sky-500/5 to-violet-500/5 dark:from-primary/10 dark:via-sky-500/5 dark:to-violet-500/10 border-r border-slate-200/50 dark:border-slate-800/50 items-center justify-center p-12">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div
+            animate={{ rotate: 360, scale: [1, 1.1, 1] }}
+            transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
+            className="absolute -top-1/4 -right-1/4 w-[800px] h-[800px] bg-gradient-to-tr from-primary/10 to-transparent rounded-full blur-[100px]"
+          />
+          <motion.div
+            animate={{ rotate: -360, scale: [1, 1.2, 1] }}
+            transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}
+            className="absolute -bottom-1/4 -left-1/4 w-[800px] h-[800px] bg-gradient-to-bl from-sky-500/10 to-transparent rounded-full blur-[100px]"
+          />
+        </div>
+
+        <div className="relative z-10 w-full max-w-2xl flex flex-col items-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className="w-full"
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
+                Unified <span className="text-primary italic">Access</span> Control
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                Securely connect to all Codevertex services with a single identity.
+              </p>
+            </div>
+            
+            <SSOConnectionsSVG />
+
+            <div className="mt-12 grid grid-cols-3 gap-8 w-full border-t border-slate-200/50 dark:border-slate-800/50 pt-12">
+              <div className="text-center">
+                <p className="text-2xl font-black text-primary">12+</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Microservices</p>
+              </div>
+              <div className="text-center border-x border-slate-200/50 dark:border-slate-800/50 px-4">
+                <p className="text-2xl font-black text-slate-900 dark:text-white">99.9%</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Reliability</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-black text-slate-900 dark:text-white">SO2</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Compliance</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Right Side - Login Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 relative">
+        <div className="absolute top-8 left-8 lg:hidden">
+            <Link href="/" className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-bold text-xl tracking-tighter">Codevertex</span>
+            </Link>
+        </div>
+
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="w-full max-w-md"
         >
           {/* Logo & Header */}
-          <div className="text-center mb-4">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Welcome back
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">
-              Sign in to continue to your account
+            <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
+              Sign in to your enterprise account
             </p>
           </div>
 
@@ -185,13 +247,13 @@ export default function LoginPage() {
           </Suspense>
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+              <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-slate-50 dark:bg-slate-900 px-4 text-slate-400 font-semibold tracking-widest">
-                or continue with email
+            <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.2em]">
+              <span className="bg-slate-50 dark:bg-slate-900 px-4 text-slate-400">
+                Authorized Credentials Only
               </span>
             </div>
           </div>
@@ -208,131 +270,21 @@ export default function LoginPage() {
           </Suspense>
 
           {/* Sign Up Link */}
-          <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-primary font-semibold hover:text-primary/80 transition-colors">
-              Create one for free
-              <ArrowRight className="inline-block ml-1 w-4 h-4" />
-            </Link>
-          </p>
-
-          {/* Trust Indicators */}
-          <div className="mt-8 flex items-center justify-center gap-6 text-xs text-slate-400 dark:text-slate-500">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
-              SOC 2
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
-              GDPR
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
-              256-bit TLS
-            </div>
+          <div className="mt-8 p-4 rounded-xl bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+                New to the platform?{' '}
+                <Link href="/signup" className="text-primary font-bold hover:underline transition-all">
+                  Create Organization account
+                  <ArrowRight className="inline-block ml-1 w-4 h-4" />
+                </Link>
+            </p>
           </div>
+
+          {/* Footer Info */}
+          <p className="mt-8 text-center text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed max-w-[280px] mx-auto font-medium">
+            Protected by Codevertex Shield. Usage is monitored and subject to our Security Policy.
+          </p>
         </motion.div>
-      </div>
-
-      {/* Right Side - Creative Content */}
-      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-primary/10 via-sky-500/5 to-violet-500/10 dark:from-primary/20 dark:via-sky-500/10 dark:to-violet-500/20 overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}
-            className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-br from-primary/30 to-transparent rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{ rotate: -360 }}
-            transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-br from-sky-500/30 to-transparent rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-violet-500/20 to-transparent rounded-full blur-3xl"
-          />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            className="max-w-lg"
-          >
-            {/* Floating Key Icon */}
-            <motion.div
-              animate={floatingAnimation}
-              className="mb-8 flex justify-center"
-            >
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-xl scale-150" />
-                <div className="relative p-6 bg-gradient-to-br from-primary to-pink-600 rounded-3xl shadow-2xl shadow-primary/30">
-                  <Key className="w-12 h-12 text-white" />
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Headline */}
-            <motion.div variants={itemVariants} className="text-center mb-10">
-              <h2 className="text-3xl xl:text-4xl font-black text-slate-900 dark:text-white mb-4">
-                Secure Access to{' '}
-                <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
-                  Everything
-                </span>
-              </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400">
-                One identity. All your Codevertex services. Enterprise-grade security built for scale.
-              </p>
-            </motion.div>
-
-            {/* Feature Cards */}
-            <div className="grid grid-cols-2 gap-4">
-              {features.map((feature, index) => (
-                <motion.div
-                  key={feature.title}
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.02, y: -4 }}
-                  className="p-5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-white/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-shadow"
-                >
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3 shadow-lg`}>
-                    <feature.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-1">
-                    {feature.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {feature.description}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Stats */}
-            <motion.div
-              variants={itemVariants}
-              className="mt-10 flex items-center justify-center gap-8"
-            >
-              <div className="text-center">
-                <p className="text-2xl font-black text-slate-900 dark:text-white">10K+</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Active Users</p>
-              </div>
-              <div className="w-px h-10 bg-slate-200 dark:bg-slate-700" />
-              <div className="text-center">
-                <p className="text-2xl font-black text-slate-900 dark:text-white">99.9%</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Uptime SLA</p>
-              </div>
-              <div className="w-px h-10 bg-slate-200 dark:bg-slate-700" />
-              <div className="text-center">
-                <p className="text-2xl font-black text-slate-900 dark:text-white">12+</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Services</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
       </div>
     </div>
   );

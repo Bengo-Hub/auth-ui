@@ -126,7 +126,7 @@ export default function DocsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
       {/* Hero Section */}
-      <section className="py-12 sm:py-16 lg:py-24 border-b border-slate-200 dark:border-slate-800">
+      <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
@@ -286,7 +286,8 @@ export default function DocsPage() {
   "user": {
     "id": "uuid",
     "email": "user@example.com",
-    "roles": ["customer"]
+    "roles": ["admin"],
+    "permissions": ["users:read", "users:write", "tenants:read"]
   }
 }`}
                 />
@@ -397,6 +398,8 @@ export default function DocsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <EndpointCard method="POST" path="/api/v1/admin/tenants" description="Create a new tenant" />
               <EndpointCard method="GET" path="/api/v1/admin/tenants" description="List all tenants" />
+              <EndpointCard method="PUT" path="/api/v1/admin/tenants/{id}" description="Update tenant details" />
+              <EndpointCard method="DELETE" path="/api/v1/admin/tenants/{id}" description="Delete a tenant workspace" />
               <EndpointCard method="POST" path="/api/v1/admin/clients" description="Create an OAuth client" />
               <EndpointCard method="GET" path="/api/v1/admin/clients" description="List OAuth clients" />
               <EndpointCard method="POST" path="/api/v1/admin/entitlements" description="Manage service entitlements" />
@@ -540,7 +543,7 @@ router.Get("/api/v1/protected", func(w http.ResponseWriter, r *http.Request) {
                 Backend REST API for authentication, user management, and OAuth/OIDC flows.
               </p>
               <a
-                href="https://github.com/Bengo-Hub/auth-api"
+                href="https://github.com/bengobox/auth-api"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
@@ -564,12 +567,12 @@ router.Get("/api/v1/protected", func(w http.ResponseWriter, r *http.Request) {
                   <Package className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                 </div>
               </div>
-              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Shared Auth Client (Go)</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Service Client (Go)</h3>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                Go SDK for JWT validation, JWKS support, and auth middleware integration.
+                Go SDK for inter-service communication, JWT validation, and middleware integration.
               </p>
               <a
-                href="https://github.com/Bengo-Hub/shared-auth-client"
+                href="https://github.com/Bengo-Hub/shared-service-client"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
@@ -596,7 +599,7 @@ router.Get("/api/v1/protected", func(w http.ResponseWriter, r *http.Request) {
             <CodeBlock
               title="Go SDK Installation"
               language="bash"
-              code={`go get github.com/Bengo-Hub/shared-auth-client`}
+              code={`go get github.com/Bengo-Hub/shared-service-client`}
             />
           </motion.div>
         </div>

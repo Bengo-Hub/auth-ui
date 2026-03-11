@@ -1,195 +1,80 @@
 'use client';
 
-import { useAuth } from '@/hooks/useAuth';
-import { useServiceHealth, ServiceWithHealth } from '@/hooks/useServiceHealth';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowRight,
-  CheckCircle2,
-  ChevronRight,
-  Globe,
-  Lock,
-  Fingerprint,
-  Shield,
-  ShieldCheck,
-  Sparkles,
-  Users,
-  Zap,
-} from 'lucide-react';
-import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { Button } from '@/components/ui/button';
 import { SERVICE_CATEGORIES, getServiceUrl } from '@/config/services';
+import { useAuth } from '@/hooks/useAuth';
+import { ServiceWithHealth, useServiceHealth } from '@/hooks/useServiceHealth';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowRight, ChevronRight, Fingerprint, Lock, Shield, ShieldCheck, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import { SSOConnectionsSVG } from '@/components/ui/SSOConnectionsSVG';
 
-// Animation variants
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-};
+// --- Components ---
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
-};
 
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.9 },
-  visible: { opacity: 1, scale: 1 },
-};
-
-// Stats data
-const STATS = [
-  { label: 'Active Users', value: '10K+', icon: Users },
-  { label: 'Services', value: '12+', icon: Sparkles },
-  { label: 'Uptime', value: '99.9%', icon: Zap },
-  { label: 'Countries', value: '5+', icon: Globe },
-];
-
-// Security features
-const SECURITY_FEATURES = [
-  {
-    icon: Lock,
-    title: 'End-to-End Encryption',
-    description: 'All data encrypted in transit and at rest using industry-standard protocols.',
-  },
-  {
-    icon: Fingerprint,
-    title: 'Multi-Factor Authentication',
-    description: 'Secure your account with TOTP, SMS, or hardware security keys.',
-  },
-  {
-    icon: Shield,
-    title: 'Session Management',
-    description: 'View and revoke active sessions from any device, anywhere.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'OAuth 2.0 & OIDC',
-    description: 'Industry-standard protocols for secure, seamless authentication.',
-  },
-];
-
-// Service card component
-function ServiceCard({ service, isAuthenticated, index }: {
-  service: ServiceWithHealth;
-  isAuthenticated: boolean;
-  index: number;
-}) {
+function ServiceCard({ service, isAuthenticated, index }: { service: ServiceWithHealth; isAuthenticated: boolean; index: number }) {
   const Icon = service.icon;
   const statusColors = {
-    live: 'bg-green-500',
-    beta: 'bg-amber-500',
-    'coming-soon': 'bg-slate-400',
-    offline: 'bg-rose-500',
-  };
-  const statusLabels = {
-    live: 'Live',
-    beta: 'Beta',
-    'coming-soon': 'Coming Soon',
-    offline: 'Offline',
+    live: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    beta: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    'coming-soon': 'bg-slate-200/50 text-slate-500 border-slate-200',
+    offline: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
   };
 
   return (
     <motion.div
-      variants={fadeInUp}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ delay: index * 0.05, duration: 0.5, ease: "easeOut" }}
       className="h-full"
     >
       <Link
         href={getServiceUrl(service.id, isAuthenticated)}
-        className={`group relative flex flex-col h-full min-h-[220px] p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-primary/30 dark:hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 ${
-          service.status === 'coming-soon' || service.status === 'offline' ? 'opacity-75 pointer-events-none' : ''
-        }`}
+        className={`group relative flex flex-col p-8 rounded-3xl bg-white dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 backdrop-blur-xl hover:bg-slate-50 dark:hover:bg-slate-900 hover:border-primary/40 transition-all duration-300 h-full shadow-sm hover:shadow-xl hover:shadow-primary/5 ${service.status === 'coming-soon' || service.status === 'offline' ? 'opacity-70 pointer-events-none grayscale-[0.5]' : ''
+          }`}
       >
-        {/* Status badge */}
-        <div className="absolute top-4 right-4">
-          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium text-white ${statusColors[service.status]}`}>
-            <span className={`w-1.5 h-1.5 rounded-full bg-white ${service.status === 'live' ? 'animate-pulse' : ''}`} />
-            {statusLabels[service.status]}
+        <div className="flex items-center justify-between mb-8 relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-100 to-white dark:from-slate-800 dark:to-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-800 group-hover:scale-110 group-hover:border-primary/30 group-hover:shadow-[0_0_20px_rgba(var(--primary),0.2)] transition-all duration-500">
+            {service.svgIcon ? (
+              <img src={service.svgIcon} alt={service.name} className="w-8 h-8 object-contain transition-all duration-500 group-hover:drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
+            ) : (
+              <Icon className="h-7 w-7 text-slate-600 dark:text-slate-300 group-hover:text-primary transition-all duration-500" />
+            )}
+          </div>
+          <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border ${statusColors[service.status]}`}>
+            {service.status.replace('-', ' ')}
           </span>
         </div>
 
-        {/* Icon - SVG or Lucide fallback */}
-        <div className="w-14 h-14 rounded-xl overflow-hidden mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-          {service.svgIcon ? (
-            <img
-              src={service.svgIcon}
-              alt={`${service.name} icon`}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${service.gradient} flex items-center justify-center`}>
-              <Icon className="h-7 w-7 text-white" />
-            </div>
-          )}
-        </div>
-
-        {/* Content */}
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors">
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary transition-colors relative z-10">
           {service.name}
         </h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 flex-grow">
+
+        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed mb-8 flex-1 relative z-10">
           {service.description}
         </p>
 
-        {/* Action */}
-        {service.status !== 'coming-soon' && service.status !== 'offline' && (
-          <div className="flex items-center gap-1.5 text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
-            {isAuthenticated ? 'Launch' : 'Sign in to access'}
-            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-          </div>
-        )}
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 group-hover:text-primary transition-all pt-4 border-t border-slate-100 dark:border-slate-800/80 relative z-10 mt-auto">
+          {isAuthenticated ? 'Launch application' : 'Sign in to access'}
+          <ArrowRight className="h-4 w-4 ml-auto opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+        </div>
       </Link>
     </motion.div>
   );
 }
 
-// Category filter component
-function CategoryFilter({
-  activeCategory,
-  onCategoryChange
-}: {
-  activeCategory: string | null;
-  onCategoryChange: (category: string | null) => void;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2 mb-8">
-      <button
-        onClick={() => onCategoryChange(null)}
-        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-          activeCategory === null
-            ? 'bg-primary text-white shadow-lg shadow-primary/25'
-            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-        }`}
-      >
-        All Services
-      </button>
-      {SERVICE_CATEGORIES.map((category) => (
-        <button
-          key={category.id}
-          onClick={() => onCategoryChange(category.id)}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-            activeCategory === category.id
-              ? 'bg-primary text-white shadow-lg shadow-primary/25'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-          }`}
-        >
-          {category.name}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export default function LandingPage() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const { services, isLoading: isLoadingHealth } = useServiceHealth();
+  const { isAuthenticated, isLoading } = useAuth();
+  const { services } = useServiceHealth();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const filteredServices = useMemo(() => {
     if (!activeCategory) return services;
@@ -197,297 +82,206 @@ export default function LandingPage() {
   }, [activeCategory, services]);
 
   return (
-    <div className="relative overflow-hidden bg-slate-50 dark:bg-slate-900">
+    <div className="bg-slate-50 dark:bg-slate-950 min-h-screen selection:bg-primary/30 selection:text-primary-foreground font-sans">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center pt-16 pb-24 px-4">
-        <div className="max-w-7xl mx-auto w-full">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Content */}
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={staggerContainer}
-              className="text-center lg:text-left"
-            >
-              <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 dark:bg-primary/20 text-primary text-sm font-semibold mb-6">
-                <ShieldCheck className="h-4 w-4" />
-                <span>Unified Identity Platform</span>
-              </motion.div>
-
-              <motion.h1
-                variants={fadeInUp}
-                className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white mb-6"
-              >
-                One Account.{' '}
-                <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                  Infinite Possibilities.
-                </span>
-              </motion.h1>
-
-              <motion.p
-                variants={fadeInUp}
-                className="text-lg text-slate-600 dark:text-slate-400 max-w-xl mx-auto lg:mx-0 mb-8"
-              >
-                Securely access all Codevertex services with a single login. Manage your profile,
-                security settings, and connected applications in one place.
-              </motion.p>
-
-              <motion.div variants={fadeInUp} className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                {isLoading ? (
-                  <div className="h-12 w-48 animate-pulse bg-slate-200 dark:bg-slate-700 rounded-full" />
-                ) : isAuthenticated ? (
-                  <>
-                    <Link
-                      href="/dashboard"
-                      className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-primary text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all"
-                    >
-                      Go to Dashboard
-                      <ArrowRight className="h-5 w-5" />
-                    </Link>
-                    <Link
-                      href="/profile"
-                      className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold border border-slate-200 dark:border-slate-700 hover:border-primary/30 hover:shadow-lg transition-all"
-                    >
-                      My Profile
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/signup"
-                      className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-primary text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all"
-                    >
-                      Get Started Free
-                      <ArrowRight className="h-5 w-5" />
-                    </Link>
-                    <Link
-                      href="/login"
-                      className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold border border-slate-200 dark:border-slate-700 hover:border-primary/30 hover:shadow-lg transition-all"
-                    >
-                      Sign In
-                      <ChevronRight className="h-5 w-5" />
-                    </Link>
-                  </>
-                )}
-              </motion.div>
-
-              {/* Trust indicators */}
-              <motion.div
-                variants={fadeInUp}
-                className="flex flex-wrap items-center gap-6 mt-10 justify-center lg:justify-start"
-              >
-                {['SOC 2 Compliant', 'GDPR Ready', '256-bit Encryption'].map((badge) => (
-                  <div key={badge} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    {badge}
-                  </div>
-                ))}
-              </motion.div>
-            </motion.div>
-
-            {/* Right: Stats Grid */}
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={staggerContainer}
-              className="grid grid-cols-2 gap-4"
-            >
-              {STATS.map((stat, idx) => (
-                <motion.div
-                  key={stat.label}
-                  variants={scaleIn}
-                  transition={{ delay: idx * 0.1 }}
-                  className="relative p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-lg transition-shadow"
-                >
-                  <stat.icon className="h-8 w-8 text-primary mb-3" />
-                  <div className="text-3xl font-black text-slate-900 dark:text-white mb-1">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm text-slate-600 dark:text-slate-400">
-                    {stat.label}
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
+      <section className="relative pt-24 lg:pt-32 pb-12 lg:pb-20 px-6 overflow-hidden">
+        {/* Abstract Background Meshes */}
+        <div className="absolute top-0 inset-0 w-full h-full overflow-hidden pointer-events-none opacity-40 dark:opacity-20 flex justify-center">
+          <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-primary/20 rounded-full blur-[120px]" />
+          <div className="absolute top-[20%] left-[-10%] w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[100px]" />
         </div>
 
-        {/* Background decorations */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/20 rounded-full blur-[128px]" />
-          <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-500/20 rounded-full blur-[128px]" />
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 relative z-10 text-left">
+          <div className="flex-1 max-w-2xl text-center lg:text-left">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold shadow-sm mb-10"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> Start building the future of SaaS
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.7, ease: "easeOut" }}
+              className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.05] mb-8"
+            >
+              One Account. <br className="hidden sm:block" />
+              <span className="bg-gradient-to-br from-primary via-primary to-indigo-600 bg-clip-text text-transparent drop-shadow-sm">
+                Endless Growth.
+              </span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.7, ease: "easeOut" }}
+              className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 font-medium max-w-2xl lg:mx-0 mx-auto mb-12 leading-relaxed"
+            >
+              Empower your enterprise with a premium unified identity layer. Secure access, cross-service billing, and infinite scaling for your digital ecosystem.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.7 }}
+              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full sm:w-auto"
+            >
+              <AnimatePresence mode="wait">
+                {!mounted ? (
+                  <div className="w-48 h-14 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-full" key="hydration-shim" />
+                ) : isAuthenticated ? (
+                  <Button size="lg" className="h-14 px-10 rounded-full bg-primary text-white font-bold text-lg shadow-[0_8px_30px_rgba(var(--primary),0.3)] hover:shadow-[0_8px_40px_rgba(var(--primary),0.4)] hover:-translate-y-0.5 transition-all group" asChild key="btn-dashboard">
+                    <Link href="/dashboard">
+                      Go to Dashboard
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                ) : !isLoading ? (
+                  <motion.div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto" key="btn-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <Button size="lg" className="h-14 w-full sm:w-auto px-10 rounded-full bg-primary text-white font-bold text-lg shadow-[0_8px_30px_rgba(var(--primary),0.3)] hover:shadow-[0_8px_40px_rgba(var(--primary),0.4)] hover:-translate-y-0.5 transition-all group" asChild>
+                      <Link href="/signup">
+                        Start for free
+                        <ChevronRight className="ml-1 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </Button>
+                    <Button size="lg" variant="outline" className="h-14 w-full sm:w-auto px-10 rounded-full border-slate-200 dark:border-slate-800 dark:text-white font-bold text-lg shadow-sm hover:bg-slate-100 dark:hover:bg-slate-900 transition-all" asChild>
+                      <Link href="/login">Sign in</Link>
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <div className="w-48 h-14 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-full" key="loader" />
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </div>
+
+          <div className="flex-1 w-full lg:w-auto min-h-[400px] flex items-center justify-center">
+            <SSOConnectionsSVG />
+          </div>
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="py-20 px-4 bg-white dark:bg-slate-900/50">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-4">
-              Integrated Services
-            </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Access the complete Codevertex ecosystem with your single account.
-              Click any service to get started.
-            </p>
-          </motion.div>
+      {/* Services Interoperability Section */}
+      <section className="py-16 px-6 relative">
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-16">
+            <div className="max-w-2xl text-left">
+              <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-tight mb-6">
+                Integrated <span className="text-primary font-serif italic font-normal tracking-tight">Intelligence</span>
+              </h2>
+              <p className="text-lg text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                Unlock a suite of composable microservices designed to manage every aspect of your enterprise—scaling independently but communicating seamlessly.
+              </p>
+            </div>
 
-          <CategoryFilter
-            activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
-          />
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setActiveCategory(null)}
+                className={`h-10 px-5 rounded-full text-xs font-bold transition-all duration-300 ${!activeCategory ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'}`}
+              >
+                All
+              </button>
+              {SERVICE_CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`h-10 px-5 rounded-full text-xs font-bold transition-all duration-300 ${activeCategory === cat.id ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'}`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
             <motion.div
               key={activeCategory || 'all'}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
               {filteredServices.map((service, idx) => (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  isAuthenticated={isAuthenticated}
-                  index={idx}
-                />
+                <ServiceCard key={service.id} service={service} isAuthenticated={isAuthenticated} index={idx} />
               ))}
             </motion.div>
           </AnimatePresence>
-
-          {filteredServices.length === 0 && (
-            <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-              No services in this category yet.
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Security Features Section */}
-      <section className="py-20 px-4 bg-slate-50 dark:bg-slate-800/30">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-4">
-              Enterprise-Grade Security
-            </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Your security is our priority. Built with industry-leading security
-              standards and best practices.
-            </p>
-          </motion.div>
+      {/* Security Proof */}
+      <section className="py-20 px-6">
+        <div className="max-w-7xl mx-auto scroll-m-20 bg-white dark:bg-slate-900 rounded-[3rem] p-10 md:p-20 border border-slate-200 dark:border-slate-800 shadow-2xl relative overflow-hidden">
+          {/* Subtle Grid Bg */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {SECURITY_FEATURES.map((feature, idx) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50"
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-4">
-                  <feature.icon className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {feature.description}
-                </p>
-              </motion.div>
-            ))}
+          <div className="grid lg:grid-cols-2 gap-20 items-center relative z-10">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold tracking-wide mb-6">
+                <ShieldCheck className="w-4 h-4" /> Enterprise-Grade
+              </div>
+              <h2 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white mb-8 leading-[1.1] tracking-tight">
+                Built for <span className="bg-gradient-to-br from-primary to-blue-600 bg-clip-text text-transparent">Absolute</span> Trust.
+              </h2>
+              <div className="space-y-10 mt-12">
+                {[
+                  { icon: Lock, title: 'Edge Encryption', desc: 'Secure data transit via AES-256 and TLS 1.3 protocol at every single hop across regions.' },
+                  { icon: Fingerprint, title: 'Biometric MFA', desc: 'Modern WebAuthn and passkey support built directly into the authentication flow natively.' },
+                  { icon: Shield, title: 'Active Threat Guard', desc: 'Real-time global threat detection, IP anomaly flagging, and automated session revoking.' }
+                ].map((f, i) => (
+                  <div key={i} className="flex gap-6 group">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-950 flex items-center justify-center shrink-0 border border-slate-200/50 dark:border-slate-800/50 group-hover:bg-primary/5 group-hover:border-primary/20 transition-all duration-300">
+                      <f.icon className="h-6 w-6 text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{f.title}</h4>
+                      <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">{f.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-md aspect-square rounded-[3rem] bg-gradient-to-br from-slate-100 to-white dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden flex items-center justify-center p-12 group">
+                <ShieldCheck className="w-full h-full text-slate-200 dark:text-slate-800 group-hover:scale-110 group-hover:text-primary/10 transition-all duration-1000" />
+
+                {/* Orbital elements */}
+                <motion.div initial={{ rotate: 0 }} animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} className="absolute inset-10 border-[1.5px] border-dashed border-slate-300/50 dark:border-slate-600/50 rounded-full" />
+                <motion.div initial={{ rotate: 360 }} animate={{ rotate: 0 }} transition={{ duration: 15, repeat: Infinity, ease: 'linear' }} className="absolute inset-20 border-[1px] border-solid border-primary/20 rounded-full" />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="relative p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-primary to-blue-600 text-white text-center overflow-hidden"
-          >
+      {/* Call to Action */}
+      <section className="py-24 px-6 overflow-hidden">
+        <div className="max-w-5xl mx-auto">
+          <div className="relative p-16 sm:p-24 rounded-[3rem] bg-slate-900 border border-slate-800 text-center overflow-hidden shadow-2xl">
             <div className="relative z-10">
-              <h2 className="text-3xl sm:text-4xl font-black mb-4">
-                Ready to Get Started?
+              <h2 className="text-4xl sm:text-6xl font-black text-white mb-8 tracking-tight">
+                Ready to unify your digital <span className="text-primary italic font-serif font-normal">infrastructure?</span>
               </h2>
-              <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-                Join thousands of businesses already using Codevertex to streamline
-                their operations. Create your account in seconds.
+              <p className="text-slate-300 text-lg sm:text-xl font-medium max-w-2xl mx-auto mb-12 leading-relaxed">
+                Join thousands of businesses running their operations on Codevertex OS. Fast deployment, secure foundation, endless possibilities.
               </p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                {!isAuthenticated ? (
-                  <>
-                    <Link
-                      href="/signup"
-                      className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-white text-primary font-semibold hover:bg-slate-100 transition-colors"
-                    >
-                      Create Free Account
-                      <ArrowRight className="h-5 w-5" />
-                    </Link>
-                    <Link
-                      href="/login"
-                      className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-white/10 text-white font-semibold border border-white/20 hover:bg-white/20 transition-colors"
-                    >
-                      Sign In
-                    </Link>
-                  </>
-                ) : (
-                  <Link
-                    href="/dashboard"
-                    className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-white text-primary font-semibold hover:bg-slate-100 transition-colors"
-                  >
-                    Go to Dashboard
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                )}
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                <Button size="lg" className="h-14 px-10 rounded-full bg-primary text-white font-bold text-lg hover:-translate-y-1 transition-all shadow-[0_8px_30px_rgba(var(--primary),0.3)]" asChild>
+                  <Link href="/signup">Start Free Trial</Link>
+                </Button>
+                <Button size="lg" variant="outline" className="h-14 px-10 rounded-full bg-white/5 backdrop-blur-md border-white/10 text-white font-bold text-lg hover:bg-white/10 transition-all" asChild>
+                  <Link href="/pricing">View Pricing</Link>
+                </Button>
               </div>
             </div>
 
-            {/* Background pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl" />
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Footer trust badges */}
-      <section className="py-12 px-4 border-t border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-slate-500 dark:text-slate-400">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-green-500" />
-              SOC 2 Type II Compliant
-            </div>
-            <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-blue-500" />
-              256-bit TLS Encryption
-            </div>
-            <div className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              GDPR Compliant
-            </div>
-            <div className="flex items-center gap-2">
-              <Fingerprint className="h-5 w-5 text-purple-500" />
-              FIDO2 WebAuthn Support
-            </div>
+            {/* Background elements */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/20 to-transparent opacity-50 pointer-events-none" />
           </div>
         </div>
       </section>

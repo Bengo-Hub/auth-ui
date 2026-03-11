@@ -9,6 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { SignupForm } from '@/components/auth/SignupForm';
 import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl } from '@/lib/utils';
+import { SSOConnectionsSVG } from '@/components/ui/SSOConnectionsSVG';
 
 // Official OAuth Provider Logos (SVG)
 function GoogleLogo({ className }: { className?: string }) {
@@ -154,36 +155,82 @@ function OAuthButton({
 
 export default function SignupPage() {
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900">
-      {/* Left Side - Signup Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900 overflow-hidden">
+      {/* Left Side - Visual Content */}
+      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-primary/5 via-sky-500/5 to-violet-500/5 dark:from-primary/10 dark:via-sky-500/5 dark:to-violet-500/10 border-r border-slate-200/50 dark:border-slate-800/50 items-center justify-center p-12">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div
+            animate={{ rotate: 360, scale: [1, 1.1, 1] }}
+            transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
+            className="absolute -top-1/4 -right-1/4 w-[800px] h-[800px] bg-gradient-to-tr from-primary/10 to-transparent rounded-full blur-[100px]"
+          />
+          <motion.div
+            animate={{ rotate: -360, scale: [1, 1.2, 1] }}
+            transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}
+            className="absolute -bottom-1/4 -left-1/4 w-[800px] h-[800px] bg-gradient-to-bl from-sky-500/10 to-transparent rounded-full blur-[100px]"
+          />
+        </div>
+
+        <div className="relative z-10 w-full max-w-2xl flex flex-col items-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className="w-full"
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
+                Scale Your <span className="text-primary">Ecosystem</span>
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                Join 10,000+ businesses running on Codevertex infrastructure.
+              </p>
+            </div>
+            
+            <SSOConnectionsSVG />
+
+            <div className="mt-12 p-6 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/50 dark:border-slate-700/50 shadow-sm max-w-md mx-auto">
+              <p className="text-sm text-slate-600 dark:text-slate-400 italic text-center mb-4">
+                "Codevertex SSO simplified our entire authentication flow. Setup took minutes and our team loves it."
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-sky-500 flex items-center justify-center text-white text-xs font-bold">
+                  JM
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-white">John Mwangi</p>
+                  <p className="text-[10px] text-slate-500">CTO, TechStartup Kenya</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Right Side - Signup Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 relative">
+        <div className="absolute top-8 left-8 lg:hidden">
+            <Link href="/" className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-bold text-xl tracking-tighter">Codevertex</span>
+            </Link>
+        </div>
+
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="w-full max-w-md"
         >
           {/* Logo & Header */}
           <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-3 mb-6">
-              <img
-                src="/images/logo/codevertex.png"
-                alt="Codevertex"
-                className="h-12 w-12 object-contain"
-              />
-              <div className="text-left">
-                <span className="block text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                  Codevertex
-                </span>
-                <span className="block text-sm font-medium text-primary">
-                  Identity Platform
-                </span>
-              </div>
-            </Link>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-              Create your account
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Create Organization
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">
+            <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
               Join the Codevertex ecosystem today
             </p>
           </div>
@@ -200,13 +247,13 @@ export default function SignupPage() {
           </Suspense>
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+              <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-slate-50 dark:bg-slate-900 px-4 text-slate-400 font-semibold tracking-widest">
-                or sign up with email
+            <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.2em]">
+              <span className="bg-slate-50 dark:bg-slate-900 px-4 text-slate-400">
+                Setup Official Profile
               </span>
             </div>
           </div>
@@ -223,119 +270,16 @@ export default function SignupPage() {
           </Suspense>
 
           {/* Sign In Link */}
-          <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
-            Already have an account?{' '}
-            <Link href="/login" className="text-primary font-semibold hover:text-primary/80 transition-colors">
-              <ArrowLeft className="inline-block mr-1 w-4 h-4" />
-              Sign in instead
-            </Link>
-          </p>
+          <div className="mt-8 p-4 rounded-xl bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+                Already registered?{' '}
+                <Link href="/login" className="text-primary font-bold hover:underline transition-all">
+                  <ArrowLeft className="inline-block mr-1 w-4 h-4" />
+                  Sign in to console
+                </Link>
+            </p>
+          </div>
         </motion.div>
-      </div>
-
-      {/* Right Side - Benefits Content */}
-      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-sky-500/10 via-primary/5 to-violet-500/10 dark:from-sky-500/20 dark:via-primary/10 dark:to-violet-500/20 overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}
-            className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-br from-sky-500/30 to-transparent rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{ rotate: -360 }}
-            transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-br from-primary/30 to-transparent rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-violet-500/20 to-transparent rounded-full blur-3xl"
-          />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            className="max-w-lg"
-          >
-            {/* Floating Icon */}
-            <motion.div
-              animate={floatingAnimation}
-              className="mb-8 flex justify-center"
-            >
-              <div className="relative">
-                <div className="absolute inset-0 bg-sky-500/20 rounded-3xl blur-xl scale-150" />
-                <div className="relative p-6 bg-gradient-to-br from-sky-500 to-cyan-600 rounded-3xl shadow-2xl shadow-sky-500/30">
-                  <UserPlus className="w-12 h-12 text-white" />
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Headline */}
-            <motion.div variants={itemVariants} className="text-center mb-10">
-              <h2 className="text-3xl xl:text-4xl font-black text-slate-900 dark:text-white mb-4">
-                Join{' '}
-                <span className="bg-gradient-to-r from-sky-500 to-primary bg-clip-text text-transparent">
-                  10,000+
-                </span>
-                {' '}Users
-              </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400">
-                Start your journey with Codevertex. Access powerful tools built for modern businesses.
-              </p>
-            </motion.div>
-
-            {/* Benefits Cards */}
-            <div className="grid grid-cols-2 gap-4">
-              {benefits.map((benefit, index) => (
-                <motion.div
-                  key={benefit.title}
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.02, y: -4 }}
-                  className="p-5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-white/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-shadow"
-                >
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${benefit.color} flex items-center justify-center mb-3 shadow-lg`}>
-                    <benefit.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-1">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {benefit.description}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Testimonial */}
-            <motion.div
-              variants={itemVariants}
-              className="mt-10 p-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-white/50 dark:border-slate-700/50"
-            >
-              <div className="flex gap-1 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400 italic mb-3">
-                "Codevertex SSO simplified our entire authentication flow. Setup took minutes and our team loves it."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-sky-500 flex items-center justify-center text-white text-xs font-bold">
-                  JM
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">John Mwangi</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">CTO, TechStartup Kenya</p>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
       </div>
     </div>
   );

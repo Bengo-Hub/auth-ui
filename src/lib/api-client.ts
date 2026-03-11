@@ -35,10 +35,11 @@ const PUBLIC_ROUTES = [
   '/reset-password',  // Reset password page
   '/status',          // Status page
   '/docs',            // Documentation
+  '/pricing',         // Pricing page
 ];
 
 // Check if current path is a public route
-const isPublicRoute = (pathname: string) => {
+export const isPublicRoute = (pathname: string) => {
   return PUBLIC_ROUTES.some(route =>
     pathname === route || pathname.startsWith(route + '/')
   );

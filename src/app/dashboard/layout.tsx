@@ -1,6 +1,7 @@
 'use client';
 
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
+import { DashboardTopNav } from '@/components/layout/DashboardTopNav';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/auth-store';
 import { usePathname, useRouter } from 'next/navigation';
@@ -46,11 +47,14 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <DashboardSidebar />
-      <main className="flex-1 overflow-y-auto p-8">
-        <div className="max-w-5xl mx-auto">
-          {children}
-        </div>
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <DashboardTopNav />
+        <main className="flex-1 overflow-y-auto p-8 lg:p-12">
+          <div className="max-w-6xl mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import apiClient from '@/lib/api-client';
+import apiClient, { isPublicRoute } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth-store';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -41,15 +41,13 @@ export function useAuth(enabled = true) {
       setUser(data);
       return data;
     },
-    enabled,
+    // Only query if:
+    // 1. Explicitly enabled AND
+    // 2. We have a stored user (likely session refresh) OR we are on a protected route
+    enabled: enabled && (!!storeUser || (typeof window !== 'undefined' && !isPublicRoute(window.location.pathname))),
     staleTime: ME_STALE_MS,
     gcTime: ME_STALE_MS * 2,
-    retry: (_, error: unknown) => {
-      const status = (error as { response?: { status?: number } })?.response?.status;
-      // Never retry auth errors — fail fast and treat as unauthenticated
-      if (status === 401 || status === 403) return false;
-      return true;
-    },
+    retry: false, // Auth should fail fast to show login buttons
     throwOnError: false,
   });
 
@@ -64,12 +62,9 @@ export function useAuth(enabled = true) {
   // Derive the resolved user: prefer fresh query data, fall back to store.
   const user = (query.data ?? storeUser) as User | null;
 
-  // isLoading should only be true while the *initial* fetch is in-flight AND
-  // there is no cached user to show. If the query errored (e.g. 401),
-  // we are NOT loading — we are definitively unauthenticated.
-  // Using `query.isPending` (= no data yet) combined with `query.isFetching`
-  // avoids the stale-loading state that keeps the skeleton visible after 401.
-  const isLoading = !query.isError && query.isPending && query.isFetching && !storeUser;
+  // isLoading should only be true while we have no data and the query is still "loading"
+  // query.isLoading in v5 is equivalent to isPending && isFetching
+  const isLoading = query.isLoading && !storeUser;
 
   const hasRole = (role: string, tenantSlug?: string) => {
     if (!user) return false;

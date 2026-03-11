@@ -42,6 +42,71 @@ export function useRevokeSession() {
   });
 }
 
+// ── Tenants ──────────────────────────────────────────────────────────────────
+
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  metadata?: Record<string, any>;
+}
+
+export const tenantKeys = { all: () => ['admin', 'tenants'] as const };
+
+export function useTenants() {
+  return useQuery({
+    queryKey: tenantKeys.all(),
+    queryFn: async () => {
+      const response = await apiClient.get<Tenant[]>('/api/v1/admin/tenants');
+      const data = (response as any).data ?? response;
+      return Array.isArray(data) ? (data as Tenant[]) : [];
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+export function useCreateTenant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { name: string; slug: string }) => {
+      const response = await apiClient.post('/api/v1/admin/tenants', payload);
+      return (response as { data?: Tenant }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tenantKeys.all() });
+    },
+  });
+}
+
+export function useUpdateTenant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: { id: string; name: string; slug: string }) => {
+      const response = await apiClient.put(`/api/v1/admin/tenants/${id}`, payload);
+      return (response as { data?: Tenant }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tenantKeys.all() });
+    },
+  });
+}
+
+export function useDeleteTenant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(`/api/v1/admin/tenants/${id}`);
+      return (response as { data?: any }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tenantKeys.all() });
+    },
+  });
+}
+
 // Payment gateways are owned by treasury-api/ui; auth-ui no longer exposes gateway CRUD.
 
 // ── Tenant Member Management ─────────────────────────────────────────────────

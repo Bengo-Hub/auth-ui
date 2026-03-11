@@ -2,14 +2,18 @@
 
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useAuth } from '@/hooks/useAuth';
-import { Activity, Menu, User, X, Code2 } from 'lucide-react';
-import Image from 'next/image';
+import { Activity, Code2, Menu, User, X } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { user, isLoading } = useAuth();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm">
@@ -17,19 +21,13 @@ export default function Navbar() {
         <div className="flex justify-between h-16 lg:h-20">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative w-10 h-10 lg:w-12 lg:h-12 rounded-xl overflow-hidden shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow">
-                <Image
-                  src="/images/logo/codevertex.png"
-                  alt="Codevertex"
-                  fill
-                  className="object-cover"
-                  priority
-                />
+            <Link href="/" className="flex items-center group gap-3">
+              <div className="relative flex items-center justify-center p-2 rounded-xl bg-gradient-to-br from-primary/10 to-transparent group-hover:from-primary/20 transition-all duration-500">
+                <img src="/images/logo/codevertex.png" alt="Codevertex" className="h-8 w-auto object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-md dark:brightness-110" />
               </div>
               <div className="flex flex-col">
                 <span className="text-lg lg:text-xl font-black tracking-tight text-slate-900 dark:text-white">
-                  Codevertex <span className="text-primary">SSO</span>
+                  <span className="text-primary">SSO</span>
                 </span>
                 <span className="hidden sm:block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Identity Platform
@@ -54,6 +52,12 @@ export default function Navbar() {
               Developers
             </Link>
             <Link
+              href="/pricing"
+              className="px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Pricing
+            </Link>
+            <Link
               href="/docs"
               className="px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
             >
@@ -71,32 +75,34 @@ export default function Navbar() {
 
             <ThemeToggle />
 
-            {isLoading ? (
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            {!mounted ? (
+              <div className="h-9 w-24 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-full" />
             ) : user ? (
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 hover:-translate-y-0.5"
               >
-                <div className="bg-primary/10 p-1.5 rounded-full">
-                  <User className="h-4 w-4 text-primary" />
-                </div>
                 Dashboard
               </Link>
-            ) : (
-              <div className="flex items-center gap-3">
+            ) : !isLoading ? (
+              <div className="flex items-center gap-4">
                 <Link
                   href="/login"
-                  className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+                  className="px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-primary transition-colors"
                 >
-                  Sign In
+                  Log In
                 </Link>
                 <Link
                   href="/signup"
-                  className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40"
+                  className="bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg hover:-translate-y-0.5"
                 >
-                  Get Started
+                  Start Free
                 </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-24 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-full" />
+                <div className="h-9 w-28 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-full" />
               </div>
             )}
           </div>
@@ -140,6 +146,13 @@ export default function Navbar() {
               Documentation
             </Link>
             <Link
+              href="/pricing"
+              className="block px-4 py-3 text-base font-semibold text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Pricing
+            </Link>
+            <Link
               href="/status"
               className="block px-4 py-3 text-base font-semibold text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
               onClick={() => setIsOpen(false)}
@@ -148,8 +161,12 @@ export default function Navbar() {
             </Link>
 
             <hr className="border-slate-200 dark:border-slate-800 my-3" />
-
-            {user ? (
+ 
+            {!mounted ? (
+              <div className="flex flex-col gap-2">
+                <div className="h-12 w-full bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg" />
+              </div>
+            ) : user ? (
               <Link
                 href="/dashboard"
                 className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-primary text-white rounded-lg font-semibold transition-colors"
@@ -158,7 +175,7 @@ export default function Navbar() {
                 <User className="h-4 w-4" />
                 Dashboard
               </Link>
-            ) : (
+            ) : !isLoading ? (
               <div className="space-y-2">
                 <Link
                   href="/login"
@@ -174,6 +191,11 @@ export default function Navbar() {
                 >
                   Get Started
                 </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div className="h-12 w-full bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg" />
+                <div className="h-12 w-full bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg" />
               </div>
             )}
           </div>

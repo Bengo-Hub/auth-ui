@@ -9,6 +9,7 @@ import {
     Building2,
     ChevronLeft,
     Code2,
+    ExternalLink,
     LayoutDashboard,
     LogOut,
     Menu,
@@ -25,6 +26,8 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  permission?: string;
+  role?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -42,36 +45,53 @@ const NAV_ITEMS: NavItem[] = [
     title: 'Security',
     href: '/dashboard/security',
     icon: Shield,
+    permission: 'settings:read',
   },
   {
     title: 'Organizations',
     href: '/dashboard/tenants',
     icon: Building2,
+    permission: 'tenants:read',
   },
   {
     title: 'Developer',
     href: '/dashboard/developer',
     icon: Code2,
+    permission: 'catalog:view',
   },
   {
     title: 'Settings',
     href: '/dashboard/settings',
     icon: Settings,
+    permission: 'settings:manage',
   },
 ];
 
 // Payment gateways and notifications are owned by treasury-ui and notifications-ui respectively.
 // Platform admin links to those services are available from the service directory (landing).
-const PLATFORM_ADMIN_ITEMS: NavItem[] = [];
+const PLATFORM_ADMIN_ITEMS: NavItem[] = [
+  {
+    title: 'Membership Tiers',
+    href: 'https://subscriptions.codevertexitsolutions.com/codevertex/platform/plans',
+    icon: Wrench,
+    role: 'super_admin'
+  }
+];
 
 export function DashboardSidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
-  const { hasRole } = useAuth();
+  const { hasRole, hasPermission } = useAuth();
 
   const isPlatformAdmin = hasRole('superuser') || hasRole('admin') || hasRole('super_admin');
+
+  const visibleNavItems = NAV_ITEMS.filter(item => {
+    if (item.permission) return hasPermission(item.permission);
+    if (item.role) return hasRole(item.role);
+    return true;
+  });
 
   return (
     <aside
@@ -80,45 +100,60 @@ export function DashboardSidebar() {
         isCollapsed ? 'w-20' : 'w-64'
       )}
     >
-      <div className="flex items-center justify-between p-6">
+      <div className={cn(
+        "flex items-center px-6 pt-10 mb-8",
+        isCollapsed ? "justify-center" : "justify-between"
+      )}>
+        <Link href="/" className="flex items-center justify-center transition-all hover:scale-105 duration-500 hover:drop-shadow-2xl">
+          <img
+            src="/images/logo/codevertex.png"
+            alt="Codevertex"
+            className={cn(
+              "object-contain transition-all duration-500",
+              isCollapsed ? "w-12 h-12" : "w-48 h-16"
+            )}
+          />
+        </Link>
         {!isCollapsed && (
-          <Link href="/" className="flex items-center gap-2">
-            <img
-              src="/images/logo/codevertex.png"
-              alt="Codevertex"
-              className="w-8 h-8 object-contain"
-            />
-            <span className="font-black text-xl tracking-tighter text-slate-900 dark:text-white">Codevertex</span>
-          </Link>
-        )}
-        <div className="flex items-center gap-1 ml-auto">
-          <ThemeToggle />
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={() => setIsCollapsed(true)}
+            className="hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
           >
-            {isCollapsed ? <Menu className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
+      {isCollapsed && (
+        <div className="flex flex-col items-center gap-4 mb-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsCollapsed(false)}
+            className="hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+          >
+            <Menu className="h-5 w-5" />
           </Button>
         </div>
-      </div>
+      )}
 
       <nav className="flex-1 px-4 space-y-2">
-        {NAV_ITEMS.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group',
+                'flex items-center gap-3 px-5 py-4 rounded-2xl transition-all duration-300 group',
                 isActive
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary'
+                  ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-primary'
               )}
             >
-              <item.icon className={cn('h-5 w-5', isActive ? 'text-white' : 'group-hover:text-primary')} />
-              {!isCollapsed && <span className="font-bold">{item.title}</span>}
+              <item.icon className={cn('h-5 w-5 transition-transform duration-300 group-hover:scale-110', isActive ? 'text-white' : 'group-hover:text-primary')} />
+              {!isCollapsed && <span className="font-black text-sm uppercase tracking-widest">{item.title}</span>}
             </Link>
           );
         })}
@@ -126,14 +161,14 @@ export function DashboardSidebar() {
         {/* Platform Admin Section — gateways/notifications live in treasury-ui and notifications-ui */}
         {isPlatformAdmin && PLATFORM_ADMIN_ITEMS.length > 0 && (
           <>
-            <div className="pt-4 pb-2">
+            <div className="pt-6 pb-2">
               {!isCollapsed && (
-                <div className="flex items-center gap-2 px-4">
+                <div className="flex items-center gap-2 px-6">
                   <Wrench className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Platform</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Platform</span>
                 </div>
               )}
-              {isCollapsed && <div className="border-t border-slate-200 dark:border-slate-700 mx-2" />}
+              {isCollapsed && <div className="border-t border-slate-200 dark:border-slate-800 mx-2" />}
             </div>
             {PLATFORM_ADMIN_ITEMS.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -142,14 +177,19 @@ export function DashboardSidebar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group',
+                    'flex items-center gap-3 px-5 py-4 rounded-2xl transition-all duration-300 group',
                     isActive
-                      ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary'
+                      ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]'
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-primary'
                   )}
                 >
-                  <item.icon className={cn('h-5 w-5', isActive ? 'text-white' : 'group-hover:text-primary')} />
-                  {!isCollapsed && <span className="font-bold">{item.title}</span>}
+                  <item.icon className={cn('h-5 w-5 transition-transform duration-300 group-hover:scale-110', isActive ? 'text-white' : 'group-hover:text-primary')} />
+                  {!isCollapsed && (
+                    <div className="flex items-center justify-between flex-1">
+                      <span className="font-black text-sm uppercase tracking-widest">{item.title}</span>
+                      {item.href.startsWith('http') && <ExternalLink className="h-3 w-3 opacity-50" />}
+                    </div>
+                  )}
                 </Link>
               );
             })}
@@ -157,22 +197,21 @@ export function DashboardSidebar() {
         )}
       </nav>
 
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-        {!isCollapsed && user && (
-          <div className="mb-4 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Signed in as</p>
-            <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{user.name || user.email}</p>
-          </div>
+      <div className="p-6 border-t border-slate-100 dark:border-slate-800/50">
+        {!isCollapsed && (
+           <div className="mb-6">
+             <ThemeToggle />
+           </div>
         )}
         <button
           onClick={() => logout()}
           className={cn(
-            'flex items-center gap-3 w-full px-4 py-3 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all duration-200',
+            'flex items-center gap-3 w-full px-5 py-4 rounded-2xl text-rose-500 font-black text-sm uppercase tracking-widest hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all duration-300',
             isCollapsed ? 'justify-center' : ''
           )}
         >
           <LogOut className="h-5 w-5" />
-          {!isCollapsed && <span className="font-bold">Sign Out</span>}
+          {!isCollapsed && <span>Sign Out</span>}
         </button>
       </div>
     </aside>

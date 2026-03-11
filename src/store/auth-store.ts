@@ -17,9 +17,11 @@ interface User {
 
 interface AuthState {
   user: User | null;
+  activeTenant: { id: string; name: string; slug: string } | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setUser: (user: User | null) => void;
+  setActiveTenant: (tenant: { id: string; name: string; slug: string } | null) => void;
   setLoading: (isLoading: boolean) => void;
   logout: () => void;
 }
@@ -28,11 +30,18 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
+      activeTenant: null,
       isAuthenticated: false,
       isLoading: true,
-      setUser: (user) => set({ user, isAuthenticated: !!user, isLoading: false }),
+      setUser: (user) => {
+        set({ user, isAuthenticated: !!user, isLoading: false });
+        if (user && user.tenants.length > 0 && !useAuthStore.getState().activeTenant) {
+          set({ activeTenant: user.tenants[0] });
+        }
+      },
+      setActiveTenant: (activeTenant) => set({ activeTenant }),
       setLoading: (isLoading) => set({ isLoading }),
-      logout: () => set({ user: null, isAuthenticated: false, isLoading: false }),
+      logout: () => set({ user: null, activeTenant: null, isAuthenticated: false, isLoading: false }),
     }),
     {
       name: 'bb-auth-storage',
