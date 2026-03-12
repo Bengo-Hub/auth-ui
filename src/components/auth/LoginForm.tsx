@@ -72,10 +72,18 @@ export function LoginForm() {
         });
       }
 
-      // If we have OIDC parameters, redirect back to the authorize endpoint
-      // The authorize endpoint will now see the session cookie and complete the flow
+      // Prefer return_to when it's an absolute URL: full page redirect so the browser sends
+      // the session cookie (required for service-originated login and for redirecting to another app).
+      if (returnTo && returnTo.startsWith('http') && isValidReturnUrl(returnTo)) {
+        window.location.href = returnTo;
+        return;
+      }
+
+      // If we have OIDC params but no return_to, build the SSO authorize URL and redirect there
+      // (must use SSO origin so the browser hits auth-api and sends the session cookie).
       if (clientId && redirectUri) {
-        const authorizeUrl = new URL('/api/v1/auth/oidc/authorize', window.location.origin);
+        const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+        const authorizeUrl = new URL('/api/v1/authorize', ssoBase.replace(/\/$/, ''));
         authorizeUrl.searchParams.set('client_id', clientId);
         authorizeUrl.searchParams.set('redirect_uri', redirectUri);
         if (stateParam) authorizeUrl.searchParams.set('state', stateParam);
@@ -85,13 +93,7 @@ export function LoginForm() {
         return;
       }
 
-      // Otherwise redirect to returnTo or dashboard (validated to prevent open redirect).
-      // When return_to is the full sso authorize URL (service-originated login), use full page
-      // redirect so the browser sends the session cookie to sso and breaks the redirect loop.
-      if (returnTo && returnTo.startsWith('http') && isValidReturnUrl(returnTo)) {
-        window.location.href = returnTo;
-        return;
-      }
+      // Relative return_to or default: client-side navigation
       router.push(getSafeReturnUrl(returnTo));
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || 'Failed to sign in');

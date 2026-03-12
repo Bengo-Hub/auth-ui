@@ -1,29 +1,30 @@
 'use client';
 
-import { useAuthStore } from '@/store/auth-store';
 import { Button } from '@/components/ui/button';
-import { 
-  Bell, 
-  Search, 
-  User, 
-  ChevronRight,
-  Home
-} from 'lucide-react';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { useLogout } from '@/hooks/useLogout';
+import { useAuthStore } from '@/store/auth-store';
+import {
+    Bell,
+    ChevronRight,
+    Home,
+    Search,
+    User
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export function DashboardTopNav() {
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
+  const logout = useLogout();
   const pathname = usePathname();
 
   const getBreadcrumbs = () => {
@@ -124,3 +125,4 @@ export function DashboardTopNav() {
 }
 
 import { Settings } from 'lucide-react';
+

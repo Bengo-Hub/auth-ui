@@ -3,6 +3,7 @@
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useLogout } from '@/hooks/useLogout';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
 import {
@@ -81,7 +82,7 @@ const PLATFORM_ADMIN_ITEMS: NavItem[] = [
 export function DashboardSidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const logout = useAuthStore((state) => state.logout);
+  const logout = useLogout();
   const user = useAuthStore((state) => state.user);
   const { hasRole, hasPermission } = useAuth();
 
