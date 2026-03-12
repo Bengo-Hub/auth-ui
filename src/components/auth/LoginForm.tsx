@@ -35,7 +35,8 @@ export function LoginForm() {
   const redirectUri = searchParams.get('redirect_uri');
   const stateParam = searchParams.get('state');
   const scope = searchParams.get('scope');
-  const tenantSlug = searchParams.get('tenant') || 'codevertex'; // Default tenant
+  // When no tenant in URL, send empty string so auth-api resolves tenant from user's primary_tenant_id (tenant users can log in directly).
+  const tenantSlug = searchParams.get('tenant') ?? '';
 
   // Demo credentials for easy testing (view-only access)
   const [email, setEmail] = useState('demo@bengobox.dev');

@@ -1,6 +1,6 @@
 'use client';
 
-import apiClient, { isPublicRoute } from '@/lib/api-client';
+import apiClient from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth-store';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -41,10 +41,10 @@ export function useAuth(enabled = true) {
       setUser(data);
       return data;
     },
-    // Only query if:
-    // 1. Explicitly enabled AND
-    // 2. We have a stored user (likely session refresh) OR we are on a protected route
-    enabled: enabled && (!!storeUser || (typeof window !== 'undefined' && !isPublicRoute(window.location.pathname))),
+    // Always run on client when enabled so we hydrate from session (cookie) on every page,
+    // including public ones like /. Otherwise after login redirect to / the navbar would
+    // show "Log In" / "Start Free" if the session cookie wasn't sent or /me wasn't called.
+    enabled: enabled && typeof window !== 'undefined',
     staleTime: ME_STALE_MS,
     gcTime: ME_STALE_MS * 2,
     retry: false, // Auth should fail fast to show login buttons
