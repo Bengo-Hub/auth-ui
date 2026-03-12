@@ -16,7 +16,7 @@ test.describe('SSO RBAC and permissions', () => {
     await expect(page.locator('header').or(page.locator('nav')).first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test('tenant admin can log in and leaves login page (tenant resolved from user primary_tenant_id when no ?tenant= in URL)', async ({ page }) => {
+  test('tenant admin can log in with email and password only (no tenant in URL; backend resolves org from user)', async ({ page }) => {
     await page.goto('/login');
     await page.getByRole('textbox', { name: /email/i }).fill(TENANT_ADMIN_EMAIL);
     await page.getByRole('textbox', { name: /password/i }).fill(TENANT_ADMIN_PASSWORD);

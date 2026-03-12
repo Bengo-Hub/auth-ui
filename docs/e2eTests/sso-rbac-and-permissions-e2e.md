@@ -8,6 +8,8 @@
 
 E2E tests validate role-based access at the auth-ui (SSO) level: platform admin and tenant admin can log in and reach the dashboard; unauthenticated users are redirected to login when hitting protected routes.
 
+**Real user experience:** The tests use only the fields a real user sees: **email and password**. No tenant is entered or embedded in the URL. The tenant admin test navigates to `/login` (no `?tenant=`) and submits credentials; auth-api resolves the tenant from the user's primary organisation in the DB. This ensures the test validates the real system behaviour, not a forged flow.
+
 ## Preconditions
 
 - Same as [sso-login-flow-e2e.md](./sso-login-flow-e2e.md)

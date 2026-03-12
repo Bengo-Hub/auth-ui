@@ -23,6 +23,10 @@ pnpm test:e2e
 
 View report: `npx playwright show-report playwright-report`
 
+## Test run results (March 2026)
+
+- **Latest run:** 21 tests passed (chromium, firefox, webkit). All SSO login flow and RBAC/permissions specs pass.
+
 ## Manual run results (March 2026)
 
 - **Login page:** Loads at `/login`; form has Email, Password, Sign In; social buttons (Google, GitHub, Microsoft). Heading: "Welcome back" / "Sign in to your enterprise account."

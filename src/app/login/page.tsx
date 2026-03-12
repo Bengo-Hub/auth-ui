@@ -1,15 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle2, Fingerprint, Globe, Key, Loader2, Shield, Zap } from 'lucide-react';
+import { ArrowRight, Fingerprint, Globe, Loader2, Shield, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 
 import { LoginForm } from '@/components/auth/LoginForm';
+import { SSOConnectionsSVG } from '@/components/ui/SSOConnectionsSVG';
 import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl } from '@/lib/utils';
-import { SSOConnectionsSVG } from '@/components/ui/SSOConnectionsSVG';
 
 // Official OAuth Provider Logos (SVG)
 function GoogleLogo({ className }: { className?: string }) {
@@ -116,7 +116,8 @@ function OAuthButton({
     try {
       // Get return_to from URL params, validated to prevent open redirect
       const returnTo = getSafeReturnUrl(searchParams.get('return_to'), '/dashboard');
-      const tenantSlug = searchParams.get('tenant') || 'codevertex';
+      // When no tenant in URL, send empty so auth-api can resolve tenant from user's primary org (same as LoginForm).
+      const tenantSlug = searchParams.get('tenant') ?? '';
 
       // Call the OAuth start endpoint
       const response = await apiClient.post(`/api/v1/auth/oauth/${provider}/start`, {

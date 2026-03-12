@@ -1,8 +1,10 @@
 # SSO Login Flow E2E
 
 **Last updated:** March 2026  
-**Spec:** [sso-integration-guide.md](../../../shared-docs/sso-integration-guide.md)  
+**Spec:** [sso-integration-guide.md](../../../shared-docs/sso-integration-guide.md), [SSO-AUTHENTICATED-REQUESTS-AND-401.md](../../../shared-docs/SSO-AUTHENTICATED-REQUESTS-AND-401.md)  
 **Status:** Implemented (Playwright)
+
+**Real user experience:** Tests mirror how a real user uses the system. The login form has **only email and password**; there is no tenant field or tenant in the URL. auth-api resolves the user's organisation from the provided email (primary_tenant_id). Tests must not forge tenant (e.g. no `?tenant=...` in the URL) so that we validate the actual login flow.
 
 ## Overview
 
@@ -42,6 +44,13 @@ E2E tests validate the SSO login flow on `accounts.codevertexitsolutions.com`: l
 
 - Same login steps as above
 - After redirect to dashboard, assert header or nav is visible
+
+### 4. After login SSO GET /api/v1/auth/me returns 200 and response includes roles and permissions
+
+- Same login steps as above (email + password, submit).
+- Wait for the response to GET /api/v1/auth/me (request goes to sso.* or accounts.*).
+- Assert status 200 (user valid at SSO).
+- Assert response body includes `roles` and `permissions` (user synced at SSO with correct role/permission mapping). This test guarantees SSO /me coverage for the 401 test plan (see [SSO-AUTHENTICATED-REQUESTS-AND-401.md](../../../shared-docs/SSO-AUTHENTICATED-REQUESTS-AND-401.md)).
 
 ## Environment Variables
 

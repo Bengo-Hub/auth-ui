@@ -116,7 +116,7 @@ function OAuthButton({
     try {
       // Get return_to from URL params, validated to prevent open redirect
       const returnTo = getSafeReturnUrl(searchParams.get('return_to'), '/dashboard');
-      const tenantSlug = searchParams.get('tenant') || 'codevertex';
+      const tenantSlug = searchParams.get('tenant') ?? '';
 
       // Call the OAuth start endpoint
       const response = await apiClient.post(`/api/v1/auth/oauth/${provider}/start`, {
