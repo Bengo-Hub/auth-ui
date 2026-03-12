@@ -17,6 +17,7 @@ export default defineConfig({
   outputDir: 'test-results',
   use: {
     baseURL: process.env.BASE_URL || 'https://accounts.codevertexitsolutions.com',
+    headless: process.env.CI === 'true',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry',

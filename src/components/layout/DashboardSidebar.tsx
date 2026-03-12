@@ -2,9 +2,9 @@
 
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
-import { useAuth } from '@/hooks/useAuth';
 import {
     Building2,
     ChevronLeft,
@@ -72,7 +72,7 @@ const NAV_ITEMS: NavItem[] = [
 const PLATFORM_ADMIN_ITEMS: NavItem[] = [
   {
     title: 'Membership Tiers',
-    href: 'https://subscriptions.codevertexitsolutions.com/codevertex/platform/plans',
+    href: 'https://pricing.codevertexitsolutions.com/codevertex/platform/plans',
     icon: Wrench,
     role: 'super_admin'
   }

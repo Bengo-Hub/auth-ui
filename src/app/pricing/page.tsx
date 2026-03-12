@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Check, ShieldCheck, Building2, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useAuthStore } from '@/store/auth-store';
 import { useAuth } from '@/hooks/useAuth';
-import { subscriptionApi, Plan } from '@/lib/subscription-api';
+import { Plan, subscriptionApi } from '@/lib/subscription-api';
+import { useAuthStore } from '@/store/auth-store';
+import { motion } from 'framer-motion';
+import { ArrowRight, Building2, Check, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function PricingPage() {
   const { activeTenant } = useAuthStore();
@@ -29,7 +29,7 @@ export default function PricingPage() {
     fetchPlans();
   }, []);
   
-  const SUBSCRIPTIONS_BASE_URL = 'https://subscriptions.codevertexitsolutions.com';
+  const SUBSCRIPTIONS_BASE_URL = 'https://pricing.codevertexitsolutions.com';
   
   const getPlanHref = (plan: Plan) => {
     const returnTo = `${SUBSCRIPTIONS_BASE_URL}/plans?plan=${plan.plan_code.toLowerCase()}`;
