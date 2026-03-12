@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api-client';
-import { getSafeReturnUrl } from '@/lib/utils';
+import { getSafeReturnUrl, isValidReturnUrl } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, Mail, Lock, Eye, EyeOff, Github, Chrome, Cpu } from 'lucide-react';
+import { Chrome, Cpu, Eye, EyeOff, Github, Loader2, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -85,7 +85,13 @@ export function LoginForm() {
         return;
       }
 
-      // Otherwise redirect to returnTo or dashboard (validated to prevent open redirect)
+      // Otherwise redirect to returnTo or dashboard (validated to prevent open redirect).
+      // When return_to is the full sso authorize URL (service-originated login), use full page
+      // redirect so the browser sends the session cookie to sso and breaks the redirect loop.
+      if (returnTo && returnTo.startsWith('http') && isValidReturnUrl(returnTo)) {
+        window.location.href = returnTo;
+        return;
+      }
       router.push(getSafeReturnUrl(returnTo));
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || 'Failed to sign in');

@@ -5,15 +5,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** SSO base URL for return_to validation (same as api-client). Must be set so service-originated login return_to (sso authorize URL) is allowed. */
+const SSO_ISSUER_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+
 /**
  * Validates that a return URL is safe to redirect to (prevents open redirect attacks).
- * Only allows relative paths on the same origin. Rejects absolute URLs,
- * protocol-relative URLs, and javascript: URIs.
+ * Allows relative paths and absolute URLs that start with the configured SSO issuer (NEXT_PUBLIC_API_URL).
+ * Rejects protocol-relative URLs and javascript: URIs.
  */
 export function isValidReturnUrl(url: string | null | undefined): boolean {
   if (!url) return false;
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   // Allow relative paths
   if (url.startsWith('/')) {
@@ -31,8 +32,8 @@ export function isValidReturnUrl(url: string | null | undefined): boolean {
     return true;
   }
 
-  // Allow absolute URLs that start with our API URL (for OIDC flows)
-  if (apiUrl && url.startsWith(apiUrl)) {
+  // Allow absolute URLs that start with our SSO issuer (for OIDC / service-originated login return_to)
+  if (SSO_ISSUER_BASE && url.startsWith(SSO_ISSUER_BASE)) {
     return true;
   }
 
