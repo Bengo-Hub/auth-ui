@@ -60,7 +60,7 @@ Service frontend -> auth.codevertexitsolutions.com/login
 | Ordering App | `ordering-app` | `https://ordersapp.codevertexitsolutions.com/callback` |
 | POS | `pos-app` | `https://pos.codevertexitsolutions.com/callback` |
 | Notifications UI | `notifications-ui` | `https://notifications.codevertexitsolutions.com/[orgSlug]/auth/callback` |
-| Subscriptions UI | `subscriptions-ui` | `https://subscriptions.codevertexitsolutions.com/callback` |
+| Subscriptions UI | `subscriptions-ui` | `https://pricing.codevertexitsolutions.com/auth/callback` |
 
 ### Post-Login Redirect
 
