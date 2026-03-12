@@ -31,6 +31,19 @@ test.describe('SSO login flow', () => {
     await expect(page.locator('header').or(page.locator('nav')).first()).toBeVisible({ timeout: 5_000 });
   });
 
+  test('after direct login navbar shows Dashboard and hides Log In / Start Free', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByRole('textbox', { name: /email/i }).fill(DEMO_EMAIL);
+    await page.getByRole('textbox', { name: /password/i }).fill(DEMO_PASSWORD);
+    await page.getByRole('button', { name: /sign in/i }).click();
+
+    await page.waitForURL((url) => !url.pathname.endsWith('/login'), { timeout: 20_000 });
+    const nav = page.locator('nav').first();
+    await expect(nav.getByRole('link', { name: /dashboard/i })).toBeVisible({ timeout: 10_000 });
+    await expect(nav.getByRole('link', { name: /log in/i })).not.toBeVisible();
+    await expect(nav.getByRole('link', { name: /start free|get started/i })).not.toBeVisible();
+  });
+
   test('after login SSO GET /api/v1/auth/me returns 200 and response includes roles and permissions', async ({ page }) => {
     await page.goto('/login');
     await page.getByRole('textbox', { name: /email/i }).fill(DEMO_EMAIL);

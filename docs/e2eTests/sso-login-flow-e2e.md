@@ -45,7 +45,12 @@ E2E tests validate the SSO login flow on `accounts.codevertexitsolutions.com`: l
 - Same login steps as above
 - After redirect to dashboard, assert header or nav is visible
 
-### 4. After login SSO GET /api/v1/auth/me returns 200 and response includes roles and permissions
+### 4. After direct login navbar shows Dashboard and hides Log In / Start Free
+
+- Same login steps as above (email + password, submit).
+- After redirect away from `/login`, assert the **navbar** contains a visible "Dashboard" link and does **not** show "Log In" or "Start Free" (or "Get Started"). This hardens the test so we catch the bug where the landing page still showed unauthenticated buttons after login (fixed by: useAuth only clears session on /me error when there is no user in the store; LoginForm sets user in store on success so navbar reflects authenticated state).
+
+### 5. After login SSO GET /api/v1/auth/me returns 200 and response includes roles and permissions
 
 - Same login steps as above (email + password, submit).
 - Wait for the response to GET /api/v1/auth/me (request goes to sso.* or accounts.*).

@@ -51,13 +51,15 @@ export function useAuth(enabled = true) {
     throwOnError: false,
   });
 
-  // When /me returns 401/403, immediately clear the user store so the UI
-  // switches to the unauthenticated state without staying in an infinite load.
+  // When /me returns 401/403, clear the user store only if we don't already have
+  // a user from a successful login (storeUser). Otherwise a brief /me failure or
+  // race after redirect (e.g. cookie not yet sent) would clear the user and
+  // make the navbar show "Log In" / "Start Free" again.
   useEffect(() => {
-    if (query.isError && enabled) {
+    if (query.isError && enabled && !storeUser) {
       logout();
     }
-  }, [query.isError, enabled, logout]);
+  }, [query.isError, enabled, storeUser, logout]);
 
   // Derive the resolved user: prefer fresh query data, fall back to store.
   const user = (query.data ?? storeUser) as User | null;

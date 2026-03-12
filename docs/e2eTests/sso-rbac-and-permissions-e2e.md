@@ -22,21 +22,25 @@ E2E tests validate role-based access at the auth-ui (SSO) level: platform admin 
 
 ## Scenarios
 
-### 1. Platform admin can access dashboard and sees nav
+### 1. Platform admin can log in and navbar shows Dashboard, not Log In / Start Free
 
 - Navigate to `/login`
 - Fill platform admin credentials and submit
-- Assert redirect to `/dashboard` (or `/login` if auth fails)
-- If dashboard: assert welcome/dashboard text and nav visible
+- Assert redirect away from `/login`
+- Assert navbar contains visible "Dashboard" link and does not show "Log In" or "Start Free" (or "Get Started")
 
-### 2. Tenant admin can access dashboard after login
+### 2. Tenant admin can log in with email and password only (no tenant in URL)
 
-- Navigate to `/login`
+- Navigate to `/login` (no `?tenant=`)
 - Fill tenant admin credentials and submit
-- Assert redirect to `/dashboard` (or `/login`)
-- If dashboard: assert welcome/dashboard text visible
+- Assert redirect away from `/login` (backend resolves org from user's primary_tenant_id)
 
-### 3. Unauthenticated user on dashboard redirects to login
+### 3. Tenant admin after login sees Dashboard in navbar and not Log In / Start Free
+
+- Same as scenario 2 (tenant admin login)
+- After redirect, assert navbar shows "Dashboard" and hides unauthenticated buttons (same as platform admin)
+
+### 4. Unauthenticated user on dashboard redirects to login
 
 - Navigate to `/dashboard` without being logged in
 - Assert URL becomes `/login` (redirect)
