@@ -1,27 +1,37 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  brand_colors?: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+  logo_url?: string;
+  subscription_plan?: string;
+  subscription_status?: string;
+  subscription_expires_at?: string;
+}
+
 interface User {
   id: string;
   email: string;
   name?: string;
   roles: string[];
   permissions?: string[];
-  tenants: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    roles: string[];
-  }>;
+  tenants: Array<Tenant & { roles: string[] }>;
 }
 
 interface AuthState {
   user: User | null;
-  activeTenant: { id: string; name: string; slug: string } | null;
+  activeTenant: Tenant | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setUser: (user: User | null) => void;
-  setActiveTenant: (tenant: { id: string; name: string; slug: string } | null) => void;
+  setActiveTenant: (tenant: Tenant | null) => void;
   setLoading: (isLoading: boolean) => void;
   logout: () => void;
 }
