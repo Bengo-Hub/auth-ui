@@ -79,11 +79,14 @@ const PLATFORM_ADMIN_ITEMS: NavItem[] = [
   }
 ];
 
+import { useTenant } from '@/components/providers/tenant-provider';
+
 export function DashboardSidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const logout = useLogout();
   const user = useAuthStore((state) => state.user);
+  const { tenant } = useTenant();
   const { hasRole, hasPermission } = useAuth();
 
   const isPlatformAdmin = hasRole('superuser') || hasRole('admin') || hasRole('super_admin');
@@ -97,7 +100,7 @@ export function DashboardSidebar() {
   return (
     <aside
       className={cn(
-        'relative flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 ease-in-out',
+        'relative flex flex-col bg-brand-dark text-brand-light border-r border-white/10 transition-all duration-300 ease-in-out',
         isCollapsed ? 'w-20' : 'w-64'
       )}
     >
@@ -106,14 +109,25 @@ export function DashboardSidebar() {
         isCollapsed ? "justify-center" : "justify-between"
       )}>
         <Link href="/" className="flex items-center justify-center transition-all hover:scale-105 duration-500 hover:drop-shadow-2xl">
-          <img
-            src="/images/logo/codevertex.png"
-            alt="Codevertex"
-            className={cn(
-              "object-contain transition-all duration-500",
-              isCollapsed ? "w-12 h-12" : "w-48 h-16"
-            )}
-          />
+          {tenant?.logoUrl ? (
+            <img 
+              src={tenant.logoUrl} 
+              alt={tenant.name} 
+              className={cn(
+                "object-contain transition-all duration-500",
+                isCollapsed ? "w-10 h-10" : "h-12 w-auto"
+              )} 
+            />
+          ) : (
+            <img
+              src="/images/logo/codevertex.png"
+              alt="Codevertex"
+              className={cn(
+                "object-contain transition-all duration-500",
+                isCollapsed ? "w-12 h-12" : "w-48 h-16"
+              )}
+            />
+          )}
         </Link>
         {!isCollapsed && (
           <Button

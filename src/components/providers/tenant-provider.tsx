@@ -1,21 +1,16 @@
 'use client';
 
-import { getBrandFromMetadata, getTenantBySlug, type PublicTenant } from '@/lib/tenant-api';
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { getTenantBySlug, type TenantBrand } from '@/lib/tenant-api';
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
 type TenantContextType = {
-  tenant: PublicTenant | null;
+  tenant: TenantBrand | null;
   slug: string | null;
-  logoUrl: string;
-  primaryColor: string;
-  secondaryColor: string;
   isLoading: boolean;
+  getServiceTitle: (appName: string) => string;
 };
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
-
-const DEFAULT_PRIMARY = '#ec4899';
-const DEFAULT_SECONDARY = '#6366f1';
 
 function getSlug(): string | null {
   if (typeof window === 'undefined') return process.env.NEXT_PUBLIC_TENANT_SLUG || null;
@@ -23,34 +18,40 @@ function getSlug(): string | null {
   return params.get('tenant') || process.env.NEXT_PUBLIC_TENANT_SLUG || null;
 }
 
+const DEFAULT_BRAND: TenantBrand = {
+  id: 'platform',
+  name: 'Codevertex',
+  slug: 'codevertex',
+  logoUrl: '/images/logo/codevertex.png',
+  primaryColor: '#5B1C4D',
+  secondaryColor: '#ea8022',
+  orgName: 'Codevertex IT Solutions',
+};
+
 export function TenantProvider({ children }: { children: ReactNode }) {
-  const [tenant, setTenant] = useState<PublicTenant | null>(null);
+  const [tenant, setTenant] = useState<TenantBrand | null>(null);
   const [slug, setSlug] = useState<string | null>(null);
-  const [logoUrl, setLogoUrl] = useState('');
-  const [primaryColor, setPrimaryColor] = useState(DEFAULT_PRIMARY);
-  const [secondaryColor, setSecondaryColor] = useState(DEFAULT_SECONDARY);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const slugVal = getSlug();
     setSlug(slugVal);
+    
+    // For core services like Auth, we always use Codevertex branding
+    document.documentElement.style.setProperty('--tenant-primary', DEFAULT_BRAND.primaryColor!);
+    document.documentElement.style.setProperty('--tenant-secondary', DEFAULT_BRAND.secondaryColor!);
+    document.documentElement.style.setProperty('--tenant-logo-url', `url(${DEFAULT_BRAND.logoUrl})`);
+
     if (!slugVal) {
       setIsLoading(false);
       return;
     }
+    
     let cancelled = false;
     getTenantBySlug(slugVal).then((t) => {
       if (cancelled) return;
       setTenant(t || null);
-      if (t) {
-        const brand = getBrandFromMetadata(t.metadata);
-        setLogoUrl(brand.logoUrl);
-        setPrimaryColor(brand.primaryColor);
-        setSecondaryColor(brand.secondaryColor);
-        document.documentElement.style.setProperty('--tenant-primary', brand.primaryColor);
-        document.documentElement.style.setProperty('--tenant-secondary', brand.secondaryColor);
-        document.documentElement.style.setProperty('--tenant-logo-url', brand.logoUrl ? `url(${brand.logoUrl})` : 'none');
-      }
+      // We don't override the properties here in core services
       setIsLoading(false);
     });
     return () => {
@@ -58,20 +59,31 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const value: TenantContextType = {
-    tenant,
-    slug,
-    logoUrl,
-    primaryColor,
-    secondaryColor,
-    isLoading,
+  const effectiveBrand = DEFAULT_BRAND;
+
+  const getServiceTitle = (appName: string) => {
+    return `Codevertex ${appName}`;
   };
+
+  const value = useMemo(() => ({
+    tenant: effectiveBrand,
+    slug,
+    isLoading,
+    getServiceTitle,
+  }), [effectiveBrand, slug, isLoading]);
 
   return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
 }
 
 export function useTenant() {
   const ctx = useContext(TenantContext);
-  if (ctx === undefined) throw new Error('useTenant must be used within TenantProvider');
+  if (ctx === undefined) {
+    return {
+      tenant: null,
+      slug: null,
+      isLoading: false,
+      getServiceTitle: (s: string) => s,
+    };
+  }
   return ctx;
 }

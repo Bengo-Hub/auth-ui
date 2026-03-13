@@ -11,6 +11,7 @@ import {
     User
 } from 'lucide-react';
 import Link from 'next/link';
+import { Greeting } from '@/components/dashboard/Greeting';
 
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -42,17 +43,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-12">
       <header>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
-            Welcome back, <span className="text-primary">{user?.name || user?.email?.split('@')[0]}</span>
-          </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 font-light">
-            Manage your Codevertex account, security, and organization settings.
-          </p>
-        </motion.div>
+        <Greeting userName={user?.name || user?.email?.split('@')[0]} />
       </header>
 
       {/* Stats Grid */}

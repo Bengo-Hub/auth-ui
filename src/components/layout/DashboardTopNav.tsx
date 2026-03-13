@@ -1,5 +1,6 @@
 'use client';
 
+import { useTenant } from '@/components/providers/tenant-provider';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -17,7 +18,8 @@ import {
     ChevronRight,
     Home,
     Search,
-    User
+    User,
+    Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -26,6 +28,9 @@ export function DashboardTopNav() {
   const user = useAuthStore((state) => state.user);
   const logout = useLogout();
   const pathname = usePathname();
+  const { getServiceTitle } = useTenant();
+
+  const displayTitle = getServiceTitle('Account');
 
   const getBreadcrumbs = () => {
     const paths = pathname.split('/').filter(p => p !== '');
@@ -51,12 +56,14 @@ export function DashboardTopNav() {
 
   return (
     <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 px-8 flex items-center justify-between">
-      {/* Left: Breadcrumbs */}
-      <div className="flex items-center text-slate-500">
+      {/* Left: Branded Title */}
+      <div className="flex items-center gap-4">
         <Link href="/dashboard" className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-          <Home className="h-4 w-4" />
+          <Home className="h-5 w-5 text-primary" />
         </Link>
-        {getBreadcrumbs()}
+        <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+          {displayTitle}
+        </h1>
       </div>
 
       {/* Center: Search (Placeholder) */}
@@ -123,6 +130,3 @@ export function DashboardTopNav() {
     </header>
   );
 }
-
-import { Settings } from 'lucide-react';
-

@@ -87,17 +87,17 @@ export default function Footer() {
       <div className="border-t border-slate-200 dark:border-slate-800">
         <div className="h-1 bg-gradient-to-r from-primary via-sky-500 to-violet-500" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-slate-500">
-              &copy; {new Date().getFullYear()} Codevertex IT Solutions. All rights reserved.
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+            <p>
+              All Rights Reserved. Codevertex IT Solutions &copy; {new Date().getFullYear()}.
             </p>
             <a
-              href="https://www.codevertexitsolutions.com"
+              href="https://codevertexitsolutions.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-slate-500 hover:text-primary transition-colors flex items-center gap-2"
+              className="hover:text-primary transition-colors flex items-center gap-1"
             >
-              Powered by <span className="font-semibold text-primary">Codevertex</span>
+              Powered by <span className="font-semibold text-primary">Codevertex IT Solutions</span>
             </a>
           </div>
         </div>

@@ -14,7 +14,9 @@ import {
 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { tenant, slug, primaryColor, logoUrl, isLoading } = useTenant();
+  const { tenant, slug, isLoading } = useTenant();
+  const primaryColor = tenant?.primaryColor;
+  const logoUrl = tenant?.logoUrl;
 
   return (
     <div className="space-y-12">

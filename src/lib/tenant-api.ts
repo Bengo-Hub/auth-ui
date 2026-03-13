@@ -5,6 +5,17 @@
 
 const AUTH_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
 
+export interface TenantBrandMetadata {
+  logo_url?: string;
+  logoUrl?: string;
+  primary_color?: string;
+  primaryColor?: string;
+  secondary_color?: string;
+  secondaryColor?: string;
+  org_name?: string;
+  orgName?: string;
+}
+
 export interface PublicTenant {
   id: string;
   name: string;
@@ -13,13 +24,43 @@ export interface PublicTenant {
   metadata?: Record<string, unknown>;
 }
 
-export async function getTenantBySlug(slug: string): Promise<PublicTenant | null> {
+export interface TenantBrand {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  orgName: string;
+}
+
+export function parseBrandFromTenant(t: PublicTenant): TenantBrand {
+  const meta = (t.metadata || {}) as TenantBrandMetadata;
+  const logoUrl = meta.logo_url ?? meta.logoUrl ?? null;
+  const primaryColor = (meta.primary_color ?? meta.primaryColor) ?? null;
+  const secondaryColor = (meta.secondary_color ?? meta.secondaryColor) ?? null;
+  const orgName = (meta.org_name ?? meta.orgName) ?? t.name ?? '';
+
+  return {
+    id: t.id,
+    name: t.name ?? '',
+    slug: t.slug ?? '',
+    logoUrl: typeof logoUrl === 'string' ? logoUrl : null,
+    primaryColor: typeof primaryColor === 'string' ? primaryColor : null,
+    secondaryColor: typeof secondaryColor === 'string' ? secondaryColor : null,
+    orgName: typeof orgName === 'string' ? orgName : (t.name ?? ''),
+  };
+}
+
+export async function getTenantBySlug(slug: string): Promise<TenantBrand | null> {
+  if (!slug) return null;
   try {
     const res = await fetch(`${AUTH_API_BASE}/api/v1/tenants/by-slug/${encodeURIComponent(slug)}`, {
       credentials: 'omit',
     });
     if (!res.ok) return null;
-    return (await res.json()) as PublicTenant;
+    const data = (await res.json()) as PublicTenant;
+    return parseBrandFromTenant(data);
   } catch {
     return null;
   }
@@ -27,10 +68,10 @@ export async function getTenantBySlug(slug: string): Promise<PublicTenant | null
 
 /** Brand-related keys in tenant metadata (align with notifications branding). */
 export function getBrandFromMetadata(metadata?: Record<string, unknown>) {
-  const m = metadata || {};
+  const m = (metadata || {}) as TenantBrandMetadata;
   return {
-    logoUrl: (m.logo_url as string) || (m.logo as string) || '',
-    primaryColor: (m.primary_color as string) || '#0ea5e9',
-    secondaryColor: (m.secondary_color as string) || '#6366f1',
+    logoUrl: m.logo_url ?? m.logoUrl ?? '',
+    primaryColor: m.primary_color ?? m.primaryColor ?? '#0ea5e9',
+    secondaryColor: m.secondary_color ?? m.secondaryColor ?? '#6366f1',
   };
 }
