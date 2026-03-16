@@ -1,23 +1,22 @@
 'use client';
 
-import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useLogout } from '@/hooks/useLogout';
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/store/auth-store';
 import {
-    Building2,
-    ChevronLeft,
-    Code2,
-    ExternalLink,
-    LayoutDashboard,
-    LogOut,
-    Menu,
-    Settings,
-    Shield,
-    User,
-    Wrench
+  Building2,
+  ChevronLeft,
+  Code2,
+  ExternalLink,
+  Key,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  Shield,
+  User,
+  Wrench
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -61,6 +60,12 @@ const NAV_ITEMS: NavItem[] = [
     permission: 'catalog:view',
   },
   {
+    title: 'API Keys',
+    href: '/dashboard/api-keys',
+    icon: Key,
+    permission: 'settings:manage',
+  },
+  {
     title: 'Settings',
     href: '/dashboard/settings',
     icon: Settings,
@@ -75,6 +80,7 @@ const PLATFORM_ADMIN_ITEMS: NavItem[] = [
     title: 'Membership Tiers',
     href: 'https://pricing.codevertexitsolutions.com/codevertex/platform/plans',
     icon: Wrench,
+    newTab: true,
     role: 'super_admin'
   }
 ];
@@ -93,7 +99,7 @@ export function DashboardSidebar() {
   const visibleNavItems = NAV_ITEMS.filter(item => {
     // Restrict "Organizations" (href: /dashboard/tenants) to super_admin/superuser/admin
     if (item.href === '/dashboard/tenants' && !isPlatformAdmin) return false;
-    
+
     if (item.permission) return hasPermission(item.permission);
     if (item.role) return hasRole(item.role);
     return true;
@@ -112,13 +118,13 @@ export function DashboardSidebar() {
       )}>
         <Link href="/" className="flex items-center justify-center transition-all hover:scale-105 duration-500 hover:drop-shadow-2xl">
           {tenant?.logoUrl ? (
-            <img 
-              src={tenant.logoUrl} 
-              alt={tenant.name} 
+            <img
+              src={tenant.logoUrl}
+              alt={tenant.name}
               className={cn(
                 "object-contain transition-all duration-500",
                 isCollapsed ? "w-10 h-10" : "h-12 w-auto"
-              )} 
+              )}
             />
           ) : (
             <img

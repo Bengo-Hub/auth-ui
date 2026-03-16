@@ -49,10 +49,13 @@ const ORG_SIZES = [
 ];
 
 const USE_CASES = [
-  { value: 'food_delivery', label: 'Food Delivery' },
-  { value: 'logistics', label: 'Logistics / Courier' },
-  { value: 'cafe_restaurant', label: 'Café / Restaurant' },
+  { value: 'hospitality', label: 'Hospitality (Restaurant, Cafe)' },
   { value: 'retail', label: 'Retail / eCommerce' },
+  { value: 'quick_service', label: 'Quick Service / Kiosk' },
+  { value: 'manufacturing', label: 'Manufacturing' },
+  { value: 'warehousing', label: 'Warehousing / Logistics' },
+  { value: 'services', label: 'Services / Professional' },
+  { value: 'e_commerce', label: 'Online Store / E-commerce' },
   { value: 'other', label: 'Other' },
 ];
 
@@ -130,6 +133,7 @@ export function SignupForm() {
   const [newOrgSlug, setNewOrgSlug] = useState('');
   const [orgSize, setOrgSize] = useState('');
   const [useCase, setUseCase] = useState('');
+  const [hqBranchName, setHqBranchName] = useState('Main/HQ');
 
   // Step 3 — Plan (REQUIRED — account creation is blocked without selection)
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -296,9 +300,10 @@ export function SignupForm() {
       payload.new_org = {
         name: newOrgName,
         slug: newOrgSlug,
+        use_case: useCase,
+        hq_branch_name: hqBranchName,
         metadata: {
           org_size: orgSize,
-          use_case: useCase,
         },
       };
     }
@@ -604,6 +609,14 @@ function Step1({
               <span className="absolute left-3 top-3 text-slate-400">@</span>
               <Input value={newOrgSlug} onChange={(e) => setNewOrgSlug(e.target.value)} className="pl-8 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50" />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Primary Branch Name</Label>
+            <div className="relative">
+              <Zap className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+              <Input placeholder="Main/HQ" value={hqBranchName} onChange={(e) => setHqBranchName(e.target.value)} className="pl-10 h-11 rounded-xl" />
+            </div>
+            <p className="text-[10px] text-slate-500">The name of your primary location (e.g. Main/HQ, Downtown, etc.)</p>
           </div>
           <div className="space-y-2">
             <Label>Organisation Size</Label>
