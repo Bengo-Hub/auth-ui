@@ -65,8 +65,8 @@ export const PRODUCTION_DOMAINS = {
   // Finance & Enterprise
   books: 'https://books.codevertexitsolutions.com',
   booksApi: 'https://booksapi.codevertexitsolutions.com',
-  erp: 'https://erp.masterspace.co.ke',
-  erpApi: 'https://erpapi.masterspace.co.ke',
+  erp: 'https://erp.codevertexitsolutions.com',
+  erpApi: 'https://erpapi.codevertexitsolutions.com',
 
   // Project & Support
   projects: 'https://projects.codevertexitsolutions.com',
@@ -77,8 +77,8 @@ export const PRODUCTION_DOMAINS = {
   // Specialized
   ispBilling: 'https://ispbilling.codevertexitsolutions.com',
   ispBillingApi: 'https://ispbillingapi.codevertexitsolutions.com',
-  truload: 'https://kuraweightest.masterspace.co.ke',
-  truloadApi: 'https://kuraweighapitest.masterspace.co.ke',
+  truload: 'https://truload.codevertexitsolutions.com',
+  truloadApi: 'https://truloadapi.codevertexitsolutions.com',
   iot: 'https://iot.codevertexitsolutions.com',
 
   // Infrastructure
@@ -239,7 +239,7 @@ export const SERVICES: Service[] = [
     id: 'truload',
     name: 'Codevertex TruLoad',
     shortName: 'TruLoad',
-    description: 'Axle load weighing, prosecution management, and analytics for transport authorities.',
+    description: 'Intelligent weighing, enforcement, and commercial weighbridge management for transport authorities and operators.',
     icon: Zap,
     svgIcon: '/svgs/services/truload.svg',
     url: PRODUCTION_DOMAINS.truload,
@@ -247,7 +247,7 @@ export const SERVICES: Service[] = [
     color: 'bg-yellow-500',
     gradient: 'from-yellow-500 to-orange-500',
     category: 'specialized',
-    status: 'beta',
+    status: 'live',
   },
   {
     id: 'notifications',
