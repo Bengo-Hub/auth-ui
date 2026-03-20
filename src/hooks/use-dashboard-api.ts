@@ -49,6 +49,11 @@ export interface Tenant {
   name: string;
   slug: string;
   status: string;
+  use_case?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  subscription_plan?: string;
+  hq_branch_name?: string;
   created_at: string;
   updated_at: string;
   metadata?: Record<string, any>;
@@ -71,7 +76,7 @@ export function useTenants() {
 export function useCreateTenant() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { name: string; slug: string }) => {
+    mutationFn: async (payload: { name: string; slug: string; use_case?: string; contact_email?: string }) => {
       const response = await apiClient.post('/api/v1/admin/tenants', payload);
       return (response as { data?: Tenant }).data ?? response;
     },
@@ -84,7 +89,7 @@ export function useCreateTenant() {
 export function useUpdateTenant() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...payload }: { id: string; name: string; slug: string }) => {
+    mutationFn: async ({ id, ...payload }: { id: string; name: string; slug: string; use_case?: string; contact_email?: string }) => {
       const response = await apiClient.put(`/api/v1/admin/tenants/${id}`, payload);
       return (response as { data?: Tenant }).data ?? response;
     },
@@ -115,6 +120,8 @@ export interface TenantMember {
   id: string;
   user_id: string;
   tenant_id: string;
+  email?: string;
+  name?: string;
   roles: string[];
   status: string;
   created_at: string;
