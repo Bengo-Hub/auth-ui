@@ -98,9 +98,7 @@ export function DashboardSidebar() {
   const isPlatformAdmin = hasRole('superuser') || hasRole('admin') || hasRole('super_admin');
 
   const visibleNavItems = NAV_ITEMS.filter(item => {
-    // Restrict "Organizations" (href: /dashboard/tenants) to super_admin/superuser/admin
     if (item.href === '/dashboard/tenants' && !isPlatformAdmin) return false;
-
     if (item.permission) return hasPermission(item.permission);
     if (item.role) return hasRole(item.role);
     return true;
@@ -109,7 +107,7 @@ export function DashboardSidebar() {
   return (
     <aside
       className={cn(
-        'sticky top-0 h-screen flex flex-col bg-brand-dark text-brand-light border-r border-white/10 transition-all duration-300 ease-in-out z-30',
+        'sticky top-0 h-screen flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out z-30',
         isCollapsed ? 'w-20' : 'w-64'
       )}
     >
@@ -143,7 +141,7 @@ export function DashboardSidebar() {
             variant="ghost"
             size="icon"
             onClick={() => setIsCollapsed(true)}
-            className="hover:bg-white/10 text-white/50 hover:text-white rounded-xl"
+            className="text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover rounded-xl"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
@@ -155,7 +153,7 @@ export function DashboardSidebar() {
             variant="ghost"
             size="icon"
             onClick={() => setIsCollapsed(false)}
-            className="hover:bg-white/10 text-white/50 hover:text-white rounded-xl"
+            className="text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover rounded-xl"
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -172,11 +170,11 @@ export function DashboardSidebar() {
               className={cn(
                 'flex items-center gap-3 px-5 py-4 rounded-2xl transition-all duration-300 group',
                 isActive
-                  ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]'
-                  : 'text-white/50 hover:bg-white/5 hover:text-white'
+                  ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02]'
+                  : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground'
               )}
             >
-              <item.icon className={cn('h-5 w-5 transition-transform duration-300 group-hover:scale-110', isActive ? 'text-white' : 'group-hover:text-white')} />
+              <item.icon className={cn('h-5 w-5 transition-transform duration-300 group-hover:scale-110', isActive ? 'text-primary-foreground' : 'group-hover:text-sidebar-foreground')} />
               {!isCollapsed && <span className="font-bold text-xs uppercase tracking-widest">{item.title}</span>}
             </Link>
           );
@@ -188,11 +186,11 @@ export function DashboardSidebar() {
             <div className="pt-6 pb-2">
               {!isCollapsed && (
                 <div className="flex items-center gap-2 px-6">
-                  <Wrench className="h-3.5 w-3.5 text-white/30" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Platform</span>
+                  <Wrench className="h-3.5 w-3.5 text-sidebar-section" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-sidebar-section">Platform</span>
                 </div>
               )}
-              {isCollapsed && <div className="border-t border-white/10 mx-2" />}
+              {isCollapsed && <div className="border-t border-sidebar-border mx-2" />}
             </div>
             {PLATFORM_ADMIN_ITEMS.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -203,11 +201,11 @@ export function DashboardSidebar() {
                   className={cn(
                     'flex items-center gap-3 px-5 py-4 rounded-2xl transition-all duration-300 group',
                     isActive
-                      ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]'
-                      : 'text-white/50 hover:bg-white/5 hover:text-white'
+                      ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02]'
+                      : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground'
                   )}
                 >
-                  <item.icon className={cn('h-5 w-5 transition-transform duration-300 group-hover:scale-110', isActive ? 'text-white' : 'group-hover:text-white')} />
+                  <item.icon className={cn('h-5 w-5 transition-transform duration-300 group-hover:scale-110', isActive ? 'text-primary-foreground' : 'group-hover:text-sidebar-foreground')} />
                   {!isCollapsed && (
                     <div className="flex items-center justify-between flex-1">
                       <span className="font-bold text-xs uppercase tracking-widest">{item.title}</span>
@@ -221,11 +219,11 @@ export function DashboardSidebar() {
         )}
       </nav>
 
-      <div className="p-6 border-t border-white/10 shrink-0">
+      <div className="p-6 border-t border-sidebar-border shrink-0">
         <button
           onClick={() => logout()}
           className={cn(
-            'flex items-center gap-3 w-full px-5 py-4 rounded-2xl text-rose-400 font-bold text-xs uppercase tracking-widest hover:bg-rose-500/10 transition-all duration-300',
+            'flex items-center gap-3 w-full px-5 py-4 rounded-2xl text-rose-500 dark:text-rose-400 font-bold text-xs uppercase tracking-widest hover:bg-rose-500/10 transition-all duration-300',
             isCollapsed ? 'justify-center' : ''
           )}
         >

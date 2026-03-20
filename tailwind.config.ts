@@ -63,6 +63,14 @@ const config: Config = {
           orange: '#FB923C',
         },
         'creamy-white': 'hsl(var(--creamy-white))',
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          muted: 'hsl(var(--sidebar-muted))',
+          border: 'hsl(var(--sidebar-border))',
+          hover: 'hsl(var(--sidebar-hover))',
+          section: 'hsl(var(--sidebar-section))',
+        },
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
