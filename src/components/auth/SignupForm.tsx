@@ -8,8 +8,8 @@ import { isValidReturnUrl } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import {
   Loader2, Mail, Lock, Eye, EyeOff, User, Building2, Search,
-  CheckCircle2, ChevronRight, ChevronLeft, Users, Zap, Crown,
-  ArrowRight, AlertCircle, Plus, Shield, Info, Github, Chrome, Cpu,
+  CheckCircle2, ChevronRight, ChevronLeft, Zap,
+  ArrowRight, AlertCircle, Plus, Shield, Github, Chrome, Cpu,
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useCallback, useEffect } from 'react';
@@ -24,22 +24,9 @@ interface TenantResult {
   metadata?: Record<string, any>;
 }
 
-interface SubscriptionPlan {
-  id: string;
-  planCode: string;
-  name: string;
-  description: string;
-  billingCycle: string;
-  basePrice: number;
-  currency: string;
-  tierOrder: number;
-  tierLimitsJSON?: Record<string, any>;
-  features?: string[];
-  trialDays?: number;
-}
 
-const STEPS = ['Account', 'Organisation', 'Plan'] as const;
-type Step = 0 | 1 | 2;
+const STEPS = ['Account', 'Organisation'] as const;
+type Step = 0 | 1;
 
 const ORG_SIZES = [
   { value: '1-5', label: '1–5 people', icon: '👤' },
@@ -49,27 +36,21 @@ const ORG_SIZES = [
 ];
 
 const USE_CASES = [
-  { value: 'hospitality', label: 'Hospitality (Restaurant, Cafe)' },
-  { value: 'retail', label: 'Retail / eCommerce' },
-  { value: 'quick_service', label: 'Quick Service / Kiosk' },
-  { value: 'manufacturing', label: 'Manufacturing' },
-  { value: 'warehousing', label: 'Warehousing / Logistics' },
-  { value: 'services', label: 'Services / Professional' },
+  { value: 'hospitality', label: 'Hospitality (Restaurant, Cafe, Bar)' },
+  { value: 'retail', label: 'Retail / Shop' },
   { value: 'e_commerce', label: 'Online Store / E-commerce' },
+  { value: 'quick_service', label: 'Quick Service / Kiosk' },
+  { value: 'food_delivery', label: 'Food Delivery' },
+  { value: 'grocery', label: 'Grocery / Supermarket' },
+  { value: 'manufacturing', label: 'Manufacturing' },
+  { value: 'warehousing', label: 'Warehousing' },
+  { value: 'logistics', label: 'Logistics / Fleet Management' },
+  { value: 'weighbridge', label: 'Weighbridge / Commercial Weighing' },
+  { value: 'services', label: 'Services / Professional' },
+  { value: 'pharmacy', label: 'Pharmacy / Health' },
   { value: 'other', label: 'Other' },
 ];
 
-const PLAN_ICONS: Record<string, React.FC<{ className?: string }>> = {
-  STARTER: ({ className }) => <Zap className={className} />,
-  GROWTH: ({ className }) => <Users className={className} />,
-  PROFESSIONAL: ({ className }) => <Crown className={className} />,
-};
-
-const PLAN_COLORS: Record<string, string> = {
-  STARTER: 'from-sky-500 to-cyan-500',
-  GROWTH: 'from-violet-500 to-purple-500',
-  PROFESSIONAL: 'from-amber-500 to-orange-500',
-};
 
 const PROVIDER_LABELS: Record<string, string> = {
   google: 'Google',
@@ -132,46 +113,15 @@ export function SignupForm() {
   const [newOrgName, setNewOrgName] = useState('');
   const [newOrgSlug, setNewOrgSlug] = useState('');
   const [orgSize, setOrgSize] = useState('');
-  const [useCase, setUseCase] = useState('');
+  const [useCases, setUseCases] = useState<string[]>([]);
   const [hqBranchName, setHqBranchName] = useState('Main/HQ');
 
-  // Step 3 — Plan (REQUIRED — account creation is blocked without selection)
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [selectedPlan, setSelectedPlan] = useState<string>('');
-  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
-  const [plansLoadFailed, setPlansLoadFailed] = useState(false);
-
-  // ── Subscription plans loader ───────────────────────────────────────────────
-  const loadPlans = useCallback(async () => {
-    if (plans.length > 0) return;
-    setIsLoadingPlans(true);
-    setPlansLoadFailed(false);
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SUBSCRIPTION_API_URL || 'https://pricingapi.codevertexitsolutions.com'}/api/v1/plans?billing_cycle=MONTHLY`,
-        { headers: { Accept: 'application/json' } }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        const monthlyPlans: SubscriptionPlan[] = (Array.isArray(data) ? data : data.data || [])
-          .filter((p: SubscriptionPlan) => p.billingCycle === 'MONTHLY')
-          .sort((a: SubscriptionPlan, b: SubscriptionPlan) => a.tierOrder - b.tierOrder);
-        setPlans(monthlyPlans);
-        // Auto-select lowest tier as default
-        if (monthlyPlans.length > 0) setSelectedPlan(monthlyPlans[0].planCode);
-      } else {
-        setPlansLoadFailed(true);
-      }
-    } catch {
-      setPlansLoadFailed(true);
-    } finally {
-      setIsLoadingPlans(false);
-    }
-  }, [plans.length]);
-
-  useEffect(() => {
-    if (step === 2) loadPlans();
-  }, [step, loadPlans]);
+  // Toggle a use case in the multi-select list
+  const toggleUseCase = (value: string) => {
+    setUseCases((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
 
   // ── Org search ──────────────────────────────────────────────────────────────
   const searchOrg = useCallback(async (query: string) => {
@@ -239,20 +189,16 @@ export function SignupForm() {
     return true;
   };
 
-  const validateStep2 = () => {
-    // If plans loaded successfully, selection is mandatory
-    if (plans.length > 0 && !selectedPlan) {
-      setError('Please select a subscription plan to continue');
-      return false;
-    }
-    return true;
-  };
-
   const nextStep = () => {
     setError(null);
     if (step === 0 && !validateStep0()) return;
-    if (step === 1 && !validateStep1()) return;
-    setStep((s) => Math.min(s + 1, 2) as Step);
+    if (step === 1 && !validateStep1()) { return; }
+    if (step === 1) {
+      // Step 1 is the final step — submit directly
+      handleSubmit();
+      return;
+    }
+    setStep((s) => Math.min(s + 1, 1) as Step);
   };
 
   const prevStep = () => {
@@ -263,7 +209,6 @@ export function SignupForm() {
   // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     setError(null);
-    if (!validateStep2()) return;
 
     setIsLoading(true);
 
@@ -275,12 +220,10 @@ export function SignupForm() {
       email,
       tenant_slug: tenantSlug,
       org_action: orgAction,
-      // Selected plan is required — sent as top-level field so auth-api can record it
-      selected_plan: selectedPlan,
       profile: {
         name,
         org_size: orgSize || undefined,
-        use_case: useCase || undefined,
+        use_cases: useCases.length > 0 ? useCases : undefined,
       },
     };
 
@@ -300,7 +243,7 @@ export function SignupForm() {
       payload.new_org = {
         name: newOrgName,
         slug: newOrgSlug,
-        use_case: useCase,
+        use_cases: useCases,
         hq_branch_name: hqBranchName,
         metadata: {
           org_size: orgSize,
@@ -387,25 +330,13 @@ export function SignupForm() {
           setNewOrgSlug={setNewOrgSlug}
           orgSize={orgSize}
           setOrgSize={setOrgSize}
-          useCase={useCase}
-          setUseCase={setUseCase}
+          useCases={useCases}
+          toggleUseCase={toggleUseCase}
           hqBranchName={hqBranchName}
           setHqBranchName={setHqBranchName}
         />
       )}
-      {step === 2 && (
-        <Step2
-          plans={plans}
-          selectedPlan={selectedPlan}
-          setSelectedPlan={setSelectedPlan}
-          isLoadingPlans={isLoadingPlans}
-          plansLoadFailed={plansLoadFailed}
-          loadPlans={loadPlans}
-          orgAction={orgAction}
-          selectedTenant={selectedTenant}
-          setError={setError}
-        />
-      )}
+      {/* Subscription plan step removed — all tenants auto-assigned STARTER with free trial */}
 
       <div className="flex gap-3 pt-2">
         {step > 0 && (
@@ -415,7 +346,7 @@ export function SignupForm() {
           </Button>
         )}
 
-        {step < 2 ? (
+        {step === 0 ? (
           <Button type="button" onClick={nextStep}
             className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 transition-all">
             Continue <ChevronRight className="w-4 h-4 ml-1" />
@@ -423,8 +354,8 @@ export function SignupForm() {
         ) : (
           <Button
             type="button"
-            onClick={handleSubmit}
-            disabled={isLoading || (plans.length > 0 && !selectedPlan)}
+            onClick={nextStep}
+            disabled={isLoading}
             className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
@@ -434,11 +365,11 @@ export function SignupForm() {
         )}
       </div>
 
-      {step === 2 && (
+      {step === 1 && (
         <p className="text-xs text-center text-slate-400 dark:text-slate-500">
-          By creating an account, you agree to our{' '}
-          <a href="/terms" className="text-primary hover:underline">Terms</a> and{' '}
-          <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.
+          All accounts start with a free STARTER plan.{' '}
+          <a href="/terms" className="text-primary hover:underline">Terms</a> &{' '}
+          <a href="/privacy" className="text-primary hover:underline">Privacy</a>.
         </p>
       )}
     </div>
@@ -559,7 +490,7 @@ function Step0({
 function Step1({
   orgAction, setOrgAction, orgSearch, setOrgSearch, searchResults,
   selectedTenant, setSelectedTenant, isSearching, newOrgName, setNewOrgName,
-  newOrgSlug, setNewOrgSlug, orgSize, setOrgSize, useCase, setUseCase,
+  newOrgSlug, setNewOrgSlug, orgSize, setOrgSize, useCases, toggleUseCase,
   hqBranchName, setHqBranchName
 }: any) {
   return (
@@ -632,11 +563,15 @@ function Step1({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Industry / Use Case</Label>
-            <select value={useCase} onChange={(e) => setUseCase(e.target.value)} className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-primary shadow-sm appearance-none cursor-pointer">
-              <option value="">Select industry...</option>
-              {USE_CASES.map((uc) => <option key={uc.value} value={uc.value}>{uc.label}</option>)}
-            </select>
+            <Label>Use Cases <span className="text-xs text-slate-400 font-normal">(select all that apply)</span></Label>
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+              {USE_CASES.map((uc) => (
+                <button key={uc.value} type="button" onClick={() => toggleUseCase(uc.value)} className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs transition-all text-left ${useCases.includes(uc.value) ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'}`}>
+                  {useCases.includes(uc.value) ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0" />}
+                  {uc.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -644,61 +579,4 @@ function Step1({
   );
 }
 
-function Step2({ plans, selectedPlan, setSelectedPlan, isLoadingPlans, plansLoadFailed, loadPlans, orgAction, selectedTenant, setError }: any) {
-  return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-bold text-slate-900 dark:text-white">Choose your plan</h3>
-        <span className="text-[10px] uppercase font-black text-primary bg-primary/10 px-2 py-0.5 rounded tracking-wider">14-Day Free Trial</span>
-      </div>
-
-      {isLoadingPlans ? (
-        <div className="py-12 flex flex-col items-center justify-center gap-3"><Loader2 className="w-8 h-8 animate-spin text-primary" /><p className="text-sm text-slate-500">Fetching pricing plans...</p></div>
-      ) : plansLoadFailed ? (
-        <div className="p-8 text-center border border-rose-100 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-900/10 rounded-2xl">
-          <AlertCircle className="w-8 h-8 text-rose-500 mx-auto mb-3" />
-          <p className="text-sm text-rose-600 dark:text-rose-400 font-medium mb-1">Failed to load plans</p>
-          <button type="button" onClick={loadPlans} className="text-xs text-primary font-bold hover:underline">Try Again</button>
-        </div>
-      ) : plans.length === 0 ? (
-        <div className="p-8 text-center border border-slate-200 dark:border-slate-800 rounded-2xl"><p className="text-sm text-slate-500">No plans available at this time.</p></div>
-      ) : (
-        <div className="space-y-3">
-          {plans.map((p: any) => {
-            const Icon = PLAN_ICONS[p.planCode] || Zap;
-            const gradient = PLAN_COLORS[p.planCode] || 'from-slate-500 to-slate-600';
-            const isSelected = selectedPlan === p.planCode;
-
-            return (
-              <button key={p.id} type="button" onClick={() => setSelectedPlan(p.planCode)} className={`group relative w-full flex items-center p-4 rounded-2xl border text-left transition-all ${isSelected ? 'border-primary ring-1 ring-primary bg-primary/[0.02]' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}>
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white shadow-lg shadow-primary/10 mr-4 group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="font-black text-slate-900 dark:text-white uppercase tracking-tight">{p.name}</p>
-                    <div className="text-right"><span className="text-lg font-black text-slate-900 dark:text-white">{p.currency} {p.basePrice}</span><span className="text-[10px] text-slate-500">/mo</span></div>
-                  </div>
-                  <p className="text-xs text-slate-500 line-clamp-1">{p.description}</p>
-                </div>
-                {isSelected && (
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center shadow-lg"><CheckCircle2 className="w-4 h-4" /></div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 flex gap-3">
-        <Info className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-        <p className="text-[10px] leading-relaxed text-slate-500">
-          All plans include a full-featured trial. No credit card required to start.
-          {orgAction === 'join_existing' && selectedTenant && (
-            <span className="block mt-1 font-bold text-slate-700 dark:text-slate-300 underline">Note: Registration with @{selectedTenant.slug} might be restricted based on organisation policy.</span>
-          )}
-        </p>
-      </div>
-    </div>
-  );
-}
+/* Step2 (Plan selection) removed — all tenants auto-assigned STARTER with free trial */
