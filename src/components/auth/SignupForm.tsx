@@ -389,6 +389,8 @@ export function SignupForm() {
           setOrgSize={setOrgSize}
           useCase={useCase}
           setUseCase={setUseCase}
+          hqBranchName={hqBranchName}
+          setHqBranchName={setHqBranchName}
         />
       )}
       {step === 2 && (
@@ -557,7 +559,8 @@ function Step0({
 function Step1({
   orgAction, setOrgAction, orgSearch, setOrgSearch, searchResults,
   selectedTenant, setSelectedTenant, isSearching, newOrgName, setNewOrgName,
-  newOrgSlug, setNewOrgSlug, orgSize, setOrgSize, useCase, setUseCase
+  newOrgSlug, setNewOrgSlug, orgSize, setOrgSize, useCase, setUseCase,
+  hqBranchName, setHqBranchName
 }: any) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
