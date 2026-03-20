@@ -59,8 +59,44 @@ export default function SecurityPage() {
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [revokingAll, setRevokingAll] = useState(false);
 
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+
   const { data: sessions = [], isLoading: sessionsLoading, refetch: fetchSessions } = useSessions();
   const revokeMutation = useRevokeSession();
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({ title: 'Error', description: 'All fields are required.', variant: 'destructive' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: 'Error', description: 'New passwords do not match.', variant: 'destructive' });
+      return;
+    }
+    if (newPassword.length < 12) {
+      toast({ title: 'Error', description: 'Password must be at least 12 characters.', variant: 'destructive' });
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await apiClient.post('/api/v1/auth/password-reset/confirm', {
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+      toast({ title: 'Password updated', description: 'Your password has been changed successfully.' });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to change password.', variant: 'destructive' });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const revokeSession = async (sessionId: string) => {
     setRevokingId(sessionId);
@@ -113,21 +149,21 @@ export default function SecurityPage() {
             </div>
           </div>
 
-          <form className="space-y-6 max-w-md">
+          <form onSubmit={handlePasswordChange} className="space-y-6 max-w-md">
             <div className="space-y-3">
               <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Current Password</Label>
-              <Input type="password" placeholder="••••••••" className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
+              <Input type="password" placeholder="••••••••" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
             </div>
             <div className="space-y-3">
               <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">New Password</Label>
-              <Input type="password" placeholder="••••••••" className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
+              <Input type="password" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
             </div>
             <div className="space-y-3">
               <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Confirm New Password</Label>
-              <Input type="password" placeholder="••••••••" className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
+              <Input type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
             </div>
-            <Button className="h-14 px-8 rounded-2xl bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 text-white font-bold">
-              Update Password
+            <Button type="submit" disabled={changingPassword} className="h-14 px-8 rounded-2xl bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 text-white font-bold">
+              {changingPassword ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Updating...</> : 'Update Password'}
             </Button>
           </form>
         </motion.div>

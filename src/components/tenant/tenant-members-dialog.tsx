@@ -206,9 +206,14 @@ export function TenantMembersDialog({ tenantId, tenantName }: TenantMembersDialo
                     key={member.user_id}
                     className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between"
                   >
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-900 dark:text-white">{member.user_id}</p>
-                      <p className="text-xs text-slate-500">Added {new Date(member.created_at).toLocaleDateString()}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-slate-900 dark:text-white truncate">
+                        {member.name || member.email || 'Unknown User'}
+                      </p>
+                      <p className="text-xs text-slate-500 truncate">
+                        {member.email && member.name ? member.email : member.user_id}
+                        {' · '}Added {new Date(member.created_at).toLocaleDateString()}
+                      </p>
                     </div>
 
                     <div className="flex items-center gap-3">

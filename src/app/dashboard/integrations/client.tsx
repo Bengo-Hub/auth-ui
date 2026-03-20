@@ -28,18 +28,62 @@ interface Integration {
   tenant_id?: string;
 }
 
-const DEFAULT_INTEGRATIONS = [
-  { name: 'google_oauth', type: 'oauth2', label: 'Google OAuth', icon: Globe },
-  { name: 'github_oauth', type: 'oauth2', label: 'GitHub OAuth', icon: Server },
-  { name: 'microsoft_oauth', type: 'oauth2', label: 'Microsoft OAuth', icon: Database },
-  { name: 'paystack', type: 'payment', label: 'Paystack', icon: Key },
+interface ProviderField {
+  key: string;
+  label: string;
+  placeholder: string;
+  type?: 'text' | 'password';
+  credKey: string; // key sent in credentials map
+}
+
+interface ProviderDef {
+  name: string;
+  type: string;
+  label: string;
+  icon: typeof Globe;
+  fields: ProviderField[];
+}
+
+const DEFAULT_INTEGRATIONS: ProviderDef[] = [
+  {
+    name: 'google_oauth', type: 'oauth2', label: 'Google OAuth', icon: Globe,
+    fields: [
+      { key: 'client_id', label: 'Client ID', placeholder: '123456789-abc.apps.googleusercontent.com', type: 'text', credKey: 'client_id' },
+      { key: 'client_secret', label: 'Client Secret', placeholder: 'GOCSPX-...', type: 'password', credKey: 'client_secret' },
+      { key: 'redirect_url', label: 'Redirect URL', placeholder: 'https://sso.codevertexitsolutions.com/api/v1/auth/oauth/google/callback', type: 'text', credKey: 'redirect_url' },
+    ],
+  },
+  {
+    name: 'github_oauth', type: 'oauth2', label: 'GitHub OAuth', icon: Server,
+    fields: [
+      { key: 'client_id', label: 'App ID', placeholder: 'Ov23li...', type: 'text', credKey: 'client_id' },
+      { key: 'client_secret', label: 'App Secret', placeholder: 'c516195ef...', type: 'password', credKey: 'client_secret' },
+      { key: 'redirect_url', label: 'Redirect URL', placeholder: 'https://sso.codevertexitsolutions.com/api/v1/auth/oauth/github/callback', type: 'text', credKey: 'redirect_url' },
+    ],
+  },
+  {
+    name: 'microsoft_oauth', type: 'oauth2', label: 'Microsoft OAuth', icon: Database,
+    fields: [
+      { key: 'client_id', label: 'Application (Client) ID', placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', type: 'text', credKey: 'client_id' },
+      { key: 'client_secret', label: 'Client Secret Value', placeholder: 'Secret value from Certificates & secrets', type: 'password', credKey: 'client_secret' },
+      { key: 'tenant_id', label: 'Directory (Tenant) ID', placeholder: 'common (or specific tenant UUID)', type: 'text', credKey: 'tenant_id' },
+      { key: 'redirect_url', label: 'Redirect URL', placeholder: 'https://sso.codevertexitsolutions.com/api/v1/auth/oauth/microsoft/callback', type: 'text', credKey: 'redirect_url' },
+    ],
+  },
+  {
+    name: 'paystack', type: 'payment', label: 'Paystack', icon: Key,
+    fields: [
+      { key: 'public_key', label: 'Public Key', placeholder: 'pk_live_...', type: 'text', credKey: 'public_key' },
+      { key: 'secret_key', label: 'Secret Key', placeholder: 'sk_live_...', type: 'password', credKey: 'secret_key' },
+    ],
+  },
 ];
 
 export default function IntegrationsClient() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [editingName, setEditingName] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ client_id: '', secret: '', display_name: '' });
+  const [formData, setFormData] = useState<Record<string, string>>({});
 
   const { data: configs, isLoading } = useQuery<Integration[]>({
     queryKey: ['admin_integrations'],
@@ -73,24 +117,29 @@ export default function IntegrationsClient() {
     onError: () => toast({ title: 'Error', description: 'Failed to save integration credentials', variant: 'destructive' }),
   });
 
-  const handleEdit = (name: string) => {
-    const existing = configs?.find((i) => i.name === name);
-    setFormData({ 
-      client_id: '', // We don't fetch back the ID for security/simplicity in this view
-      secret: '', 
-      display_name: existing?.display_name || '' 
-    });
-    setEditingName(name);
+  const handleEdit = (providerDef: ProviderDef) => {
+    const existing = configs?.find((i) => i.name === providerDef.name);
+    // Initialize form with empty fields for each provider-specific field
+    const initial: Record<string, string> = { display_name: existing?.display_name || providerDef.label };
+    for (const f of providerDef.fields) {
+      initial[f.key] = '';
+    }
+    setFormData(initial);
+    setEditingName(providerDef.name);
   };
 
-  const handleSave = (providerDef: typeof DEFAULT_INTEGRATIONS[0]) => {
+  const handleSave = (providerDef: ProviderDef) => {
+    // Build credentials map from provider-specific fields
+    const credentials: Record<string, string> = {};
+    for (const f of providerDef.fields) {
+      if (formData[f.key]) {
+        credentials[f.credKey] = formData[f.key];
+      }
+    }
     upsertMutation.mutate({
       name: providerDef.name,
       display_name: formData.display_name || providerDef.label,
-      credentials: {
-        client_id: formData.client_id,
-        client_secret: formData.secret, // Backend expects client_secret
-      },
+      credentials,
     });
   };
 
@@ -156,15 +205,15 @@ export default function IntegrationsClient() {
               <div className="mt-6 pt-4 border-t border-border/50">
                 <Dialog open={editingName === providerDef.name} onOpenChange={(open) => !open && setEditingName(null)}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full" onClick={() => handleEdit(providerDef.name)}>
+                    <Button variant="outline" className="w-full" onClick={() => handleEdit(providerDef)}>
                       <Settings2 className="mr-2 h-4 w-4" /> Configure
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                       <DialogTitle>Configure {providerDef.label}</DialogTitle>
                       <DialogDescription>
-                        API keys and secrets are encrypted with AES-256-GCM before saving to the database. They can only be accessed internally.
+                        Credentials are encrypted with AES-256-GCM before storage. Leave fields blank to keep existing values.
                       </DialogDescription>
                     </DialogHeader>
 
@@ -173,37 +222,30 @@ export default function IntegrationsClient() {
                         <Label htmlFor="display_name">Display Name</Label>
                         <Input
                           id="display_name"
-                          placeholder="e.g. Google Social Login"
-                          value={formData.display_name}
+                          placeholder={`e.g. ${providerDef.label}`}
+                          value={formData.display_name || ''}
                           onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="client_id">Client ID / Public Key</Label>
-                        <Input
-                          id="client_id"
-                          placeholder="e.g. 123456789-abc.apps.googleusercontent.com"
-                          value={formData.client_id}
-                          onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="secret">Client Secret / Private Key</Label>
-                        <Input
-                          id="secret"
-                          type="password"
-                          placeholder={hasConfig ? '•••••••••••••••• (Leave blank to keep existing)' : 'Paste secret key here'}
-                          value={formData.secret}
-                          onChange={(e) => setFormData({ ...formData, secret: e.target.value })}
-                        />
-                      </div>
+                      {providerDef.fields.map((field) => (
+                        <div key={field.key} className="space-y-2">
+                          <Label htmlFor={field.key}>{field.label}</Label>
+                          <Input
+                            id={field.key}
+                            type={field.type || 'text'}
+                            placeholder={hasConfig && field.type === 'password' ? '•••••••••••••••• (Leave blank to keep existing)' : field.placeholder}
+                            value={formData[field.key] || ''}
+                            onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                          />
+                        </div>
+                      ))}
                     </div>
 
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setEditingName(null)}>Cancel</Button>
-                      <Button 
+                      <Button
                         onClick={() => handleSave(providerDef)}
-                        disabled={upsertMutation.isPending || (!hasConfig && !formData.secret)}
+                        disabled={upsertMutation.isPending}
                       >
                         {upsertMutation.isPending ? 'Encrypting...' : 'Save Configuration'}
                       </Button>

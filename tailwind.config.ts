@@ -52,6 +52,8 @@ const config: Config = {
   			},
         // Codevertex brand colors
         brand: {
+          dark: '#0f172a',   // slate-900 — always-dark sidebar/nav background
+          light: '#f8fafc',  // slate-50  — text on dark surfaces
           pink: '#EC4899',
           'pink-dark': '#DB2777',
           sky: '#0EA5E9',

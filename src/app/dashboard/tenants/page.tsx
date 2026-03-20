@@ -53,6 +53,8 @@ function CreateOrgDialog() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
+  const [useCase, setUseCase] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,12 +69,14 @@ function CreateOrgDialog() {
     e.preventDefault();
     setError(null);
 
-    createTenant.mutate({ name, slug }, {
+    createTenant.mutate({ name, slug, use_case: useCase, contact_email: contactEmail }, {
       onSuccess: () => {
         toast({ title: 'Success', description: 'Organization created successfully.' });
         setOpen(false);
         setName('');
         setSlug('');
+        setUseCase('');
+        setContactEmail('');
       },
       onError: (err: any) => {
         setError(err.response?.data?.error || 'Failed to create organization');
@@ -87,22 +91,45 @@ function CreateOrgDialog() {
           <Plus className="h-5 w-5 mr-2" /> Create Organization
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md rounded-3xl">
+      <DialogContent className="sm:max-w-lg rounded-3xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Create Organization</DialogTitle>
           <DialogDescription>Add a new organization to your ecosystem.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          {error && <div className="p-3 bg-rose-50 text-rose-600 rounded-xl text-xs font-bold">{error}</div>}
-          <div className="space-y-2">
-            <Label>Organization Name</Label>
-            <Input value={name} onChange={e => handleNameChange(e.target.value)} placeholder="Acme Corp" />
+          {error && <div className="p-3 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-bold">{error}</div>}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2 col-span-2">
+              <Label>Organization Name *</Label>
+              <Input value={name} onChange={e => handleNameChange(e.target.value)} placeholder="Acme Corp" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Slug *</Label>
+              <Input value={slug} onChange={e => { setSlugManuallyEdited(true); setSlug(slugify(e.target.value)); }} placeholder="acme-corp" required />
+              <p className="text-[11px] text-muted-foreground">Used in URLs and API calls</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Use Case</Label>
+              <select
+                value={useCase}
+                onChange={e => setUseCase(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm"
+              >
+                <option value="">Select type...</option>
+                <option value="ordering">Food Ordering</option>
+                <option value="pos">Point of Sale</option>
+                <option value="weighbridge">Weighbridge / TruLoad</option>
+                <option value="isp">ISP Billing</option>
+                <option value="erp">ERP</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label>Contact Email</Label>
+              <Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="admin@acme.com" />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Slug</Label>
-            <Input value={slug} onChange={e => setSlug(slugify(e.target.value))} placeholder="acme-corp" />
-          </div>
-          <Button type="submit" disabled={createTenant.isPending} className="w-full h-12 rounded-xl">
+          <Button type="submit" disabled={createTenant.isPending || !name || !slug} className="w-full h-12 rounded-xl text-white font-bold">
             {createTenant.isPending ? <Loader2 className="animate-spin" /> : 'Create Organization'}
           </Button>
         </form>
@@ -116,10 +143,12 @@ function EditOrgDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: b
   const updateTenant = useUpdateTenant();
   const [name, setName] = useState(tenant.name);
   const [slug, setSlug] = useState(tenant.slug);
+  const [useCase, setUseCase] = useState(tenant.use_case || '');
+  const [contactEmail, setContactEmail] = useState(tenant.contact_email || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateTenant.mutate({ id: tenant.id, name, slug }, {
+    updateTenant.mutate({ id: tenant.id, name, slug, use_case: useCase, contact_email: contactEmail }, {
       onSuccess: () => {
         toast({ title: 'Updated', description: 'Organization updated successfully.' });
         onOpenChange(false);
@@ -129,18 +158,41 @@ function EditOrgDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: b
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-3xl">
+      <DialogContent className="sm:max-w-lg rounded-3xl">
         <DialogHeader>
-          <DialogTitle>Edit Organization</DialogTitle>
+          <DialogTitle className="text-xl font-bold">Edit Organization</DialogTitle>
+          <DialogDescription>Update organization details for {tenant.name}.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label>Name</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Slug</Label>
-            <Input value={slug} onChange={e => setSlug(e.target.value)} />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2 col-span-2">
+              <Label>Organization Name</Label>
+              <Input value={name} onChange={e => setName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Slug</Label>
+              <Input value={slug} onChange={e => setSlug(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Use Case</Label>
+              <select
+                value={useCase}
+                onChange={e => setUseCase(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm"
+              >
+                <option value="">Select type...</option>
+                <option value="ordering">Food Ordering</option>
+                <option value="pos">Point of Sale</option>
+                <option value="weighbridge">Weighbridge / TruLoad</option>
+                <option value="isp">ISP Billing</option>
+                <option value="erp">ERP</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label>Contact Email</Label>
+              <Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="admin@acme.com" />
+            </div>
           </div>
           <Button type="submit" disabled={updateTenant.isPending} className="w-full h-12 rounded-xl text-white font-bold">
             {updateTenant.isPending ? <Loader2 className="animate-spin" /> : 'Save Changes'}

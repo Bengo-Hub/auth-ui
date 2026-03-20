@@ -236,7 +236,20 @@ function OAuthSection() {
                       <p className="text-sm text-slate-500 dark:text-slate-400">ID: {client.id}</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl"
+                    onClick={async () => {
+                      if (!confirm(`Delete OAuth client "${client.name}"? This cannot be undone.`)) return;
+                      try {
+                        await apiClient.delete(`/api/v1/developer/clients/${client.id}`);
+                        fetchClients();
+                      } catch (err) {
+                        console.error('Failed to delete client', err);
+                      }
+                    }}
+                  >
                     <Trash2 className="h-5 w-5" />
                   </Button>
                 </div>
