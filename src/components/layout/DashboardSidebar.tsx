@@ -28,6 +28,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   permission?: string;
   role?: string;
+  newTab?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
