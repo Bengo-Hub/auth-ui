@@ -1,0 +1,5 @@
+<svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="8" width="34" height="34" rx="8" stroke="#0984e3" stroke-width="2.5"/>
+  <path d="M12 25L18 31L28 19" stroke="#00cec9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="44" y="32" fill="#2d3436" style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 22px;">UltiChange</text>
+</svg>
