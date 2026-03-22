@@ -45,21 +45,20 @@ export const isPublicRoute = (pathname: string) => {
   );
 };
 
-// Response interceptor for handling errors globally
+// Response interceptor for handling errors globally.
+// Preserves the original AxiosError so callers can access response data (e.g. error codes, details).
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
-
     if (error.response?.status === 401) {
-      // Only redirect to login for protected routes, not public pages
-      // Public pages handle unauthenticated state gracefully via useAuth hook
+      // Only redirect to login for protected routes, not public pages.
+      // Public pages (like /login) handle errors in their own catch blocks.
       if (typeof window !== 'undefined' && !isPublicRoute(window.location.pathname)) {
         window.location.href = `/login?return_to=${encodeURIComponent(window.location.pathname)}`;
       }
     }
 
-    return Promise.reject(new Error(message));
+    return Promise.reject(error);
   }
 );
 
