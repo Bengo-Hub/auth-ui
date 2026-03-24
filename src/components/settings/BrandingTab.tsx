@@ -100,8 +100,69 @@ export function BrandingTab() {
     );
   }
 
+  const primaryColor = tenantData?.brand_colors?.primary || '#020617';
+  const secondaryColor = tenantData?.brand_colors?.secondary || '#334155';
+  const accentColor = tenantData?.brand_colors?.accent || '#0ea5e9';
+  const logoUrl = tenantData?.logo_url || '';
+  const orgName = tenantData?.name || tenantData?.slug || 'Your Organization';
+
   return (
     <form onSubmit={handleSave} className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {/* Live Brand Preview */}
+      <section className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+          <Palette className="h-5 w-5 text-primary" />
+          Live Preview
+        </h3>
+        <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+          {/* Mock sidebar + header */}
+          <div className="flex h-48">
+            {/* Sidebar preview */}
+            <div className="w-56 flex flex-col items-center py-6 px-4 gap-4" style={{ backgroundColor: primaryColor }}>
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="h-10 w-auto object-contain rounded" />
+              ) : (
+                <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
+                  <ImageIcon className="h-5 w-5 text-white/70" />
+                </div>
+              )}
+              <span className="text-white/90 text-sm font-bold truncate max-w-full">{orgName}</span>
+              <div className="w-full space-y-2 mt-2">
+                <div className="h-8 rounded-lg bg-white/15 px-3 flex items-center">
+                  <span className="text-white/80 text-xs font-medium">Dashboard</span>
+                </div>
+                <div className="h-8 rounded-lg px-3 flex items-center" style={{ backgroundColor: accentColor + '33' }}>
+                  <span className="text-white text-xs font-bold">Orders</span>
+                </div>
+                <div className="h-8 rounded-lg bg-white/10 px-3 flex items-center">
+                  <span className="text-white/60 text-xs font-medium">Settings</span>
+                </div>
+              </div>
+            </div>
+            {/* Content area preview */}
+            <div className="flex-1 bg-slate-50 dark:bg-slate-800 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-8 w-24 rounded-lg" style={{ backgroundColor: primaryColor }}></div>
+                <div className="h-8 w-20 rounded-lg" style={{ backgroundColor: secondaryColor, opacity: 0.4 }}></div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 w-3/4 rounded bg-slate-200 dark:bg-slate-700"></div>
+                <div className="h-3 w-1/2 rounded bg-slate-200 dark:bg-slate-700"></div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <div className="h-9 px-4 rounded-lg text-white text-xs font-bold flex items-center" style={{ backgroundColor: accentColor }}>
+                  Action Button
+                </div>
+                <div className="h-9 px-4 rounded-lg border text-xs font-bold flex items-center" style={{ borderColor: secondaryColor, color: secondaryColor }}>
+                  Secondary
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p className="text-[10px] text-slate-500 font-medium mt-3 text-center">This preview shows how your brand colors appear in the application sidebar, header, and buttons across all services</p>
+      </section>
+
       {/* Identity Section */}
       <section className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
         <h3 className="text-xl font-black text-slate-900 dark:text-white mb-8 flex items-center gap-2">
