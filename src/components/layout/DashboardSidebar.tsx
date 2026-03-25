@@ -8,13 +8,13 @@ import {
   Building2,
   ChevronLeft,
   Code2,
+  Database,
   ExternalLink,
   Key,
   LayoutDashboard,
   LogOut,
   Menu,
   Settings,
-  Shield,
   User,
   Wrench
 } from 'lucide-react';
@@ -43,28 +43,16 @@ const NAV_ITEMS: NavItem[] = [
     icon: User,
   },
   {
-    title: 'Security',
-    href: '/dashboard/security',
-    icon: Shield,
-    permission: 'settings:read',
-  },
-  {
     title: 'Organizations',
     href: '/dashboard/tenants',
     icon: Building2,
-    permission: 'tenants:read',
+    permission: 'tenants:change',
   },
   {
     title: 'Developer',
     href: '/dashboard/developer',
     icon: Code2,
-    permission: 'catalog:view',
-  },
-  {
-    title: 'API Keys',
-    href: '/dashboard/api-keys',
-    icon: Key,
-    permission: 'settings:manage',
+    permission: 'tenants:view',
   },
   {
     title: 'Settings',
@@ -78,12 +66,24 @@ const NAV_ITEMS: NavItem[] = [
 // Platform admin links to those services are available from the service directory (landing).
 const PLATFORM_ADMIN_ITEMS: NavItem[] = [
   {
+    title: 'OAuth Clients',
+    href: '/dashboard/platform/clients',
+    icon: Key,
+    role: 'superuser',
+  },
+  {
     title: 'Membership Tiers',
     href: 'https://pricing.codevertexitsolutions.com/codevertex/platform/plans',
     icon: Wrench,
     newTab: true,
-    role: 'super_admin'
-  }
+    role: 'superuser'
+  },
+  {
+    title: 'DB Backups',
+    href: '/dashboard/platform/backups',
+    icon: Database,
+    role: 'superuser',
+  },
 ];
 
 import { useTenant } from '@/components/providers/tenant-provider';
