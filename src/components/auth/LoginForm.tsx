@@ -7,10 +7,10 @@ import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl, isValidReturnUrl } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, ArrowRight, Building2, Chrome, Cpu, Eye, EyeOff, Github, Loader2, Lock, Mail, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, Building2, Chrome, Cpu, Eye, EyeOff, Github, Loader2, Lock, Mail, ShieldCheck, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface TenantSuggestion {
   id: string;
@@ -51,6 +51,12 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // MFA challenge state
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [totpCode, setTotpCode] = useState('');
+  const [mfaError, setMfaError] = useState<string | null>(null);
+  const totpInputRef = useRef<HTMLInputElement>(null);
+
   // Tenant mismatch state
   const [mismatch, setMismatch] = useState<{
     requestedTenant: string;
@@ -76,24 +82,39 @@ export function LoginForm() {
     window.location.href = url.toString();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const doLogin = async (otpCode?: string) => {
     setIsLoading(true);
     setError(null);
+    setMfaError(null);
     setMismatch(null);
 
     try {
-      const response = await apiClient.post('/api/v1/auth/login', {
+      const payload: Record<string, string> = {
         email,
         password,
         tenant_slug: tenantSlug,
-      });
+      };
+      if (otpCode) payload.totp_code = otpCode;
+
+      const response = await apiClient.post('/api/v1/auth/login', payload);
 
       const data = response.data as {
+        mfa_required?: boolean;
+        mfa_method?: string;
+        user_id?: string;
         user?: { id: string; email: string; name?: string; roles?: string[]; permissions?: string[]; tenants?: Array<{ id: string; name: string; slug: string; roles: string[] }> };
         roles?: string[];
         permissions?: string[];
       };
+
+      // MFA challenge: backend needs a TOTP code
+      if (data.mfa_required) {
+        setMfaRequired(true);
+        setIsLoading(false);
+        setTimeout(() => totpInputRef.current?.focus(), 100);
+        return;
+      }
+
       const user = data?.user;
       if (user) {
         setUser({
@@ -136,6 +157,8 @@ export function LoginForm() {
           requestedTenant: details.requested_tenant || tenantSlug,
           userTenants: details.user_tenants,
         });
+      } else if (code === 'invalid_totp') {
+        setMfaError('Invalid verification code. Please try again.');
       } else {
         setError(err.response?.data?.error || err.message || 'Failed to sign in');
       }
@@ -143,6 +166,96 @@ export function LoginForm() {
       setIsLoading(false);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    doLogin();
+  };
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = totpCode.replace(/\s/g, '').replace(/-/g, '');
+    if (code.length < 6) {
+      setMfaError('Please enter a 6-digit code.');
+      return;
+    }
+    doLogin(code);
+  };
+
+  const handleMfaBack = () => {
+    setMfaRequired(false);
+    setTotpCode('');
+    setMfaError(null);
+  };
+
+  // MFA challenge screen
+  if (mfaRequired) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center space-y-3">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <ShieldCheck className="h-7 w-7 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Two-Factor Authentication</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter the 6-digit code from your authenticator app to complete sign in.
+          </p>
+        </div>
+
+        {mfaError && (
+          <div className="p-4 text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl">
+            {mfaError}
+          </div>
+        )}
+
+        <form onSubmit={handleMfaSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="totp_code" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              Verification Code
+            </Label>
+            <Input
+              ref={totpInputRef}
+              id="totp_code"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="000 000"
+              maxLength={7}
+              value={totpCode}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^0-9]/g, '');
+                // Format as "123 456"
+                setTotpCode(raw.length > 3 ? raw.slice(0, 3) + ' ' + raw.slice(3, 6) : raw);
+              }}
+              className="h-14 text-center text-2xl font-mono tracking-[0.3em] rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary"
+              autoFocus
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              'Verify & Sign In'
+            )}
+          </Button>
+
+          <button
+            type="button"
+            onClick={handleMfaBack}
+            className="w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to sign in
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <>

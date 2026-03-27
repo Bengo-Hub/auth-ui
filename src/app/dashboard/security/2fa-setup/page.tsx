@@ -19,11 +19,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { useCallback, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 type SetupStep = 'scan' | 'verify' | 'backup' | 'complete';
 
 export default function TwoFactorSetupPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<SetupStep>('scan');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +75,8 @@ export default function TwoFactorSetupPage() {
       await apiClient.post('/api/v1/auth/mfa/totp/confirm', {
         code: verificationCode,
       });
+      // Invalidate /me cache so profile page reflects mfa_enabled=true
+      queryClient.invalidateQueries({ queryKey: ['me'] });
       // Generate backup codes
       const backupResponse = await apiClient.post('/api/v1/auth/mfa/backup-codes/regenerate', {
         count: 10,
