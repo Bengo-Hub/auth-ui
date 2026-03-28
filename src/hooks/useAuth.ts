@@ -28,6 +28,7 @@ export interface User {
   subscription_plan?: string;
   subscription_status?: string;
   is_platform_owner?: boolean;
+  mfa_enabled?: boolean;
   profile?: Record<string, any>;
 }
 

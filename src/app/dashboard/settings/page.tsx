@@ -2,14 +2,12 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GeneralTab } from '@/components/settings/GeneralTab';
-import { SecurityTab } from '@/components/settings/SecurityTab';
 import { IntegrationsTab } from '@/components/settings/IntegrationsTab';
 import { BrandingTab } from '@/components/settings/BrandingTab';
-import { 
-  Settings2, 
-  ShieldCheck, 
-  Plug2, 
-  Palette 
+import {
+  Settings2,
+  Plug2,
+  Palette
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -33,13 +31,6 @@ export default function SettingsPage() {
               General
             </TabsTrigger>
             <TabsTrigger 
-              value="security" 
-              className="rounded-xl px-6 font-bold flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-lg dark:data-[state=active]:shadow-none data-[state=active]:text-primary transition-all"
-            >
-              <ShieldCheck className="h-4 w-4" />
-              Security
-            </TabsTrigger>
-            <TabsTrigger 
               value="integrations" 
               className="rounded-xl px-6 font-bold flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-lg dark:data-[state=active]:shadow-none data-[state=active]:text-primary transition-all"
             >
@@ -59,9 +50,6 @@ export default function SettingsPage() {
         <div className="px-4">
           <TabsContent value="general">
             <GeneralTab />
-          </TabsContent>
-          <TabsContent value="security">
-            <SecurityTab />
           </TabsContent>
           <TabsContent value="integrations">
             <IntegrationsTab />

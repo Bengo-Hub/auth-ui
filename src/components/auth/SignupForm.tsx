@@ -541,8 +541,9 @@ function Step1({
             <Label>URL Slug</Label>
             <div className="relative font-mono text-sm">
               <span className="absolute left-3 top-3 text-slate-400">@</span>
-              <Input value={newOrgSlug} onChange={(e) => setNewOrgSlug(e.target.value)} className="pl-8 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50" />
+              <Input value={newOrgSlug} readOnly disabled className="pl-8 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-70" />
             </div>
+            <p className="text-[10px] text-slate-500">Auto-generated from organisation name</p>
           </div>
           <div className="space-y-2">
             <Label>Primary Branch Name</Label>

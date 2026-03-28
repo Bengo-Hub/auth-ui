@@ -210,3 +210,71 @@ export function useRemoveTenantMember(tenantId: string | undefined) {
 }
 
 // Notification templates and providers are owned by notifications-api/ui; auth-ui redirects to notifications-ui.
+
+// ── OAuth Clients ─────────────────────────────────────────────────────────────
+
+export interface OAuthClient {
+  id: string;
+  client_id: string;
+  client_secret?: string;
+  name: string;
+  redirect_uris: string[];
+  allowed_scopes: string[];
+  public: boolean;
+  tenant_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const oauthClientKeys = { all: () => ['admin', 'clients'] as const };
+
+export function useOAuthClients() {
+  return useQuery({
+    queryKey: oauthClientKeys.all(),
+    queryFn: async () => {
+      const response = await apiClient.get<OAuthClient[]>('/api/v1/admin/clients');
+      const data = (response as any).data ?? response;
+      return Array.isArray(data) ? (data as OAuthClient[]) : [];
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+export function useCreateOAuthClient() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { client_id: string; name: string; redirect_uris: string[]; scopes: string[]; public: boolean }) => {
+      const response = await apiClient.post('/api/v1/admin/clients', payload);
+      return (response as { data?: OAuthClient }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: oauthClientKeys.all() });
+    },
+  });
+}
+
+export function useUpdateOAuthClient() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: { id: string; name?: string; redirect_uris?: string[]; scopes?: string[]; public?: boolean }) => {
+      const response = await apiClient.patch(`/api/v1/admin/clients/${id}`, payload);
+      return (response as { data?: OAuthClient }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: oauthClientKeys.all() });
+    },
+  });
+}
+
+export function useDeleteOAuthClient() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(`/api/v1/admin/clients/${id}`);
+      return (response as { data?: any }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: oauthClientKeys.all() });
+    },
+  });
+}
