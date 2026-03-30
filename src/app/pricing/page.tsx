@@ -12,14 +12,15 @@ import { useEffect, useState } from 'react';
 export default function PricingPage() {
   const { activeTenant } = useAuthStore();
   const { isAuthenticated } = useAuth();
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [allPlans, setAllPlans] = useState<Plan[]>([]);
+  const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'ANNUAL'>('MONTHLY');
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     const fetchPlans = async () => {
       try {
         const data = await subscriptionApi.getPlans();
-        setPlans(data.sort((a, b) => a.tier_order - b.tier_order));
+        setAllPlans(data.sort((a, b) => (a.tier_order ?? 0) - (b.tier_order ?? 0)));
       } catch (error) {
         console.error('Failed to fetch plans:', error);
       } finally {
@@ -28,6 +29,8 @@ export default function PricingPage() {
     };
     fetchPlans();
   }, []);
+
+  const plans = allPlans.filter((p) => p.billing_cycle === billingCycle);
   
   const SUBSCRIPTIONS_BASE_URL = 'https://pricing.codevertexitsolutions.com';
   
@@ -67,6 +70,32 @@ export default function PricingPage() {
             >
               Scale your application security and identity management without breaking the bank. Choose the plan that fits your journey.
             </motion.p>
+          </div>
+
+          {/* Billing cycle toggle */}
+          <div className="flex justify-center mb-12">
+            <div className="inline-flex rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1 shadow-sm">
+              <button
+                onClick={() => setBillingCycle('MONTHLY')}
+                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+                  billingCycle === 'MONTHLY'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('ANNUAL')}
+                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+                  billingCycle === 'ANNUAL'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Annual <span className="text-xs opacity-75 ml-1">Save ~8%</span>
+              </button>
+            </div>
           </div>
 
           {loading ? (
