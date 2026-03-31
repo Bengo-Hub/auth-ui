@@ -46,19 +46,19 @@ const NAV_ITEMS: NavItem[] = [
     title: 'Organizations',
     href: '/dashboard/tenants',
     icon: Building2,
-    permission: 'settings:manage',
+    permission: 'auth.preferences.change',
   },
   {
     title: 'Developer',
     href: '/dashboard/developer',
     icon: Code2,
-    permission: 'settings:manage',
+    permission: 'auth.preferences.change',
   },
   {
     title: 'Settings',
     href: '/dashboard/settings',
     icon: Settings,
-    permission: 'settings:manage',
+    permission: 'auth.preferences.change',
   },
 ];
 

@@ -16,9 +16,9 @@ export interface PermissionCheck {
  * Example:
  * ```tsx
  * const { canDelete, canEdit, canInvite } = usePermissionCheck();
- * 
- * {canDelete('users:delete') && <DeleteButton />}
- * {canEdit('users:update') && <EditButton />}
+ *
+ * {canDelete('auth.users.delete') && <DeleteButton />}
+ * {canEdit('auth.users.change') && <EditButton />}
  * ```
  */
 export function usePermissionCheck() {
@@ -26,7 +26,7 @@ export function usePermissionCheck() {
 
   return {
     /**
-     * Check if user has a specific permission (e.g., 'users:delete')
+     * Check if user has a specific permission (e.g., 'auth.users.delete')
      */
     can: (permission: string) => hasPermission(permission),
     
@@ -43,27 +43,27 @@ export function usePermissionCheck() {
     /**
      * Check if user can manage users (invite, delete, change roles)
      */
-    canManageUsers: () => hasPermission('users:write') || hasPermission('users:invite'),
+    canManageUsers: () => hasPermission('auth.users.manage') || hasPermission('auth.users.add'),
     
     /**
      * Check if user can view users
      */
-    canViewUsers: () => hasPermission('users:read'),
+    canViewUsers: () => hasPermission('auth.users.view'),
     
     /**
      * Check if user can manage roles/permissions
      */
-    canManageRoles: () => hasPermission('roles:write') || hasRole('superuser') || hasRole('admin') || hasRole('super_admin'),
+    canManageRoles: () => hasPermission('auth.users.manage') || hasRole('superuser') || hasRole('admin') || hasRole('super_admin'),
     
     /**
      * Check if user can configure payment gateways
      */
-    canManageGateways: () => hasPermission('integrations:write') || hasRole('superuser') || hasRole('admin') || hasRole('super_admin'),
+    canManageGateways: () => hasPermission('auth.preferences.change') || hasRole('superuser') || hasRole('admin') || hasRole('super_admin'),
     
     /**
      * Check if user can view settings
      */
-    canViewSettings: () => hasPermission('settings:read'),
+    canViewSettings: () => hasPermission('auth.preferences.view'),
   };
 }
 

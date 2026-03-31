@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
 export interface PermissionActionButtonProps {
-  /** Permission code(s) required (e.g., 'users:delete', 'integrations:write') */
+  /** Permission code(s) required (e.g., 'auth.users.delete', 'auth.preferences.change') */
   permission?: string | string[];
   /** Check role instead of permission (e.g., 'admin', 'superuser') */
   role?: string;
@@ -41,7 +41,7 @@ export interface PermissionActionButtonProps {
  * ```tsx
  * // Permission-based
  * <PermissionActionButton 
- *   permission="users:delete" 
+ *   permission="auth.users.delete"
  *   icon={Trash2} 
  *   onClick={handleDelete}
  *   variant="destructive"

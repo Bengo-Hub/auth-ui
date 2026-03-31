@@ -287,7 +287,7 @@ export default function DocsPage() {
     "id": "uuid",
     "email": "user@example.com",
     "roles": ["admin"],
-    "permissions": ["users:read", "users:write", "tenants:read"]
+    "permissions": ["auth.users.view", "auth.users.manage", "auth.tenants.view"]
   }
 }`}
                 />

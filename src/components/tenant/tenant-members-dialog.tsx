@@ -259,7 +259,7 @@ export function TenantMembersDialog({ tenantId, tenantName }: TenantMembersDialo
                             <option value="editor">Editor</option>
                           </select>
                           <PermissionActionButton
-                            permission="users:write"
+                            permission="auth.users.manage"
                             icon={Trash2}
                             onClick={() => handleRemoveMember(member.user_id)}
                             variant="ghost"
