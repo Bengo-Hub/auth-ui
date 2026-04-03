@@ -25,6 +25,11 @@ interface BackupManifest {
   backups: BackupEntry[];
 }
 
+interface DownloadProgress {
+  loaded: number;
+  total: number;
+}
+
 function formatDate(unixTimestamp: number): string {
   return new Date(unixTimestamp * 1000).toLocaleString();
 }
@@ -38,8 +43,15 @@ function timeAgo(unixTimestamp: number): string {
   return `${days} day${days > 1 ? 's' : ''} ago`;
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)}M`;
+}
+
 export default function BackupsPage() {
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [progress, setProgress] = useState<DownloadProgress | null>(null);
 
   const {
     data: manifest,
@@ -60,11 +72,40 @@ export default function BackupsPage() {
   const handleDownload = async (filename: string) => {
     try {
       setDownloading(filename);
-      const response = await apiClient.get(`/api/v1/admin/backups/${filename}`, {
-        responseType: 'blob',
+      setProgress({ loaded: 0, total: 0 });
+
+      // Use fetch API with streaming for real-time progress tracking
+      const baseURL = apiClient.defaults.baseURL || '';
+      const response = await fetch(`${baseURL}/api/v1/admin/backups/${filename}`, {
+        credentials: 'include',
       });
-      const blob = (response as any)?.data ?? response;
-      const url = window.URL.createObjectURL(blob as Blob);
+
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.statusText}`);
+      }
+
+      const contentLength = response.headers.get('Content-Length');
+      const total = contentLength ? parseInt(contentLength, 10) : 0;
+      setProgress({ loaded: 0, total });
+
+      // Stream the response body with progress tracking
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Streaming not supported');
+
+      const chunks: Uint8Array[] = [];
+      let loaded = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        loaded += value.length;
+        setProgress({ loaded, total });
+      }
+
+      // Combine chunks and trigger download
+      const blob = new Blob(chunks as BlobPart[], { type: 'application/gzip' });
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
@@ -76,6 +117,7 @@ export default function BackupsPage() {
       alert('Failed to download backup. Please try again.');
     } finally {
       setDownloading(null);
+      setProgress(null);
     }
   };
 
@@ -90,7 +132,7 @@ export default function BackupsPage() {
             Database Backups
           </h1>
           <p className="text-muted-foreground mt-1">
-            PostgreSQL backups are created daily at 2:00 AM UTC and retained for 2 days.
+            PostgreSQL backups are created daily at 2:00 AM UTC and retained for 6 days.
             Download before they are automatically removed.
           </p>
         </div>
@@ -110,7 +152,7 @@ export default function BackupsPage() {
         <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="text-sm">
           <p className="font-medium text-amber-800 dark:text-amber-200">
-            Backups are retained for 2 days only
+            Backups are retained for 6 days only
           </p>
           <p className="text-amber-700 dark:text-amber-300 mt-1">
             Download any backup you need to keep before it is automatically deleted.
@@ -150,42 +192,60 @@ export default function BackupsPage() {
           </div>
         ) : (
           <div className="divide-y">
-            {backups.map((backup) => (
-              <div
-                key={backup.filename}
-                className="px-4 py-3 flex items-center justify-between hover:bg-muted/20 transition-colors"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <FileArchive className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium font-mono truncate">
-                      {backup.filename}
-                    </p>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                      <span>{backup.size}</span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {timeAgo(backup.created_at)}
-                      </span>
-                      <span>{formatDate(backup.created_at)}</span>
+            {backups.map((backup) => {
+              const isDownloading = downloading === backup.filename;
+              const pct = progress && progress.total > 0
+                ? Math.round((progress.loaded / progress.total) * 100)
+                : null;
+
+              return (
+                <div
+                  key={backup.filename}
+                  className="px-4 py-3 flex items-center justify-between hover:bg-muted/20 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <FileArchive className="h-5 w-5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium font-mono truncate">
+                        {backup.filename}
+                      </p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                        <span>{backup.size}</span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {timeAgo(backup.created_at)}
+                        </span>
+                        <span>{formatDate(backup.created_at)}</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {isDownloading && progress && (
+                      <span className="text-xs font-mono text-muted-foreground tabular-nums">
+                        {progress.total > 0
+                          ? `${formatBytes(progress.loaded)}/${formatBytes(progress.total)} (${pct}%)`
+                          : formatBytes(progress.loaded)}
+                      </span>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownload(backup.filename)}
+                      disabled={isDownloading}
+                    >
+                      {isDownloading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                      <span className="ml-2 hidden sm:inline">
+                        {isDownloading && pct !== null ? `${pct}%` : 'Download'}
+                      </span>
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownload(backup.filename)}
-                  disabled={downloading === backup.filename}
-                >
-                  {downloading === backup.filename ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                  <span className="ml-2 hidden sm:inline">Download</span>
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
