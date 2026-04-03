@@ -83,6 +83,8 @@ export function SignupForm() {
   const stateParam = searchParams.get('state');
   const scope = searchParams.get('scope');
   const defaultTenant = searchParams.get('tenant') || '';
+  // When a tenant slug is provided, we auto-join that org and skip Step 2
+  const hasTenantContext = !!defaultTenant;
 
   // OAuth2 pre-fill params (set by auth-api when redirecting a new OAuth user to signup)
   const oauthProvider = searchParams.get('oauth_provider') || ''; // e.g. 'google'
@@ -95,6 +97,7 @@ export function SignupForm() {
   const [step, setStep] = useState<Step>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tenantAutoResolved, setTenantAutoResolved] = useState(false);
 
   // Step 1 — Account
   const [name, setName] = useState(oauthPrefillName);
@@ -156,6 +159,29 @@ export function SignupForm() {
     return () => clearTimeout(timer);
   }, [orgSearch, orgAction, searchOrg]);
 
+  // Auto-resolve tenant from defaultTenant slug on mount (background, skip Step 2)
+  useEffect(() => {
+    if (!defaultTenant || tenantAutoResolved) return;
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_AUTH_API_URL || 'https://sso.codevertexitsolutions.com'}/api/v1/tenants/by-slug/${encodeURIComponent(defaultTenant)}`,
+          { headers: { Accept: 'application/json' } }
+        );
+        if (res.ok) {
+          const tenant: TenantResult = await res.json();
+          if (tenant?.id) {
+            setSelectedTenant(tenant);
+            setOrgAction('join_existing');
+            setTenantAutoResolved(true);
+          }
+        }
+      } catch {
+        // Silent failure — user can still manually select org if auto-resolve fails
+      }
+    })();
+  }, [defaultTenant, tenantAutoResolved]);
+
   // Auto-generate slug from org name
   useEffect(() => {
     setNewOrgSlug(
@@ -192,6 +218,11 @@ export function SignupForm() {
   const nextStep = () => {
     setError(null);
     if (step === 0 && !validateStep0()) return;
+    // When tenant context is known, skip Step 2 and submit directly from Step 0
+    if (step === 0 && hasTenantContext && tenantAutoResolved && selectedTenant) {
+      handleSubmit();
+      return;
+    }
     if (step === 1 && !validateStep1()) { return; }
     if (step === 1) {
       // Step 1 is the final step — submit directly
@@ -279,7 +310,8 @@ export function SignupForm() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
-      <StepBar step={step} />
+      {/* Hide step bar when tenant context is known (single-step registration) */}
+      {!hasTenantContext && <StepBar step={step} />}
 
       {error && (
         <div className="flex items-start gap-2 p-4 text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl">
@@ -314,7 +346,9 @@ export function SignupForm() {
           scope={scope}
         />
       )}
-      {step === 1 && (
+      {/* Subscription plan step removed — all tenants auto-assigned STARTER with free trial */}
+      {/* Step 2 only visible when no tenant context */}
+      {step === 1 && !hasTenantContext && (
         <Step1
           orgAction={orgAction}
           setOrgAction={setOrgAction}
@@ -336,17 +370,16 @@ export function SignupForm() {
           setHqBranchName={setHqBranchName}
         />
       )}
-      {/* Subscription plan step removed — all tenants auto-assigned STARTER with free trial */}
 
       <div className="flex gap-3 pt-2">
-        {step > 0 && (
+        {step > 0 && !hasTenantContext && (
           <Button type="button" onClick={prevStep} variant="outline"
             className="flex-[0_0_auto] h-12 px-6 rounded-xl border-slate-200 dark:border-slate-700">
             <ChevronLeft className="w-5 h-5" />
           </Button>
         )}
 
-        {step === 0 ? (
+        {step === 0 && !hasTenantContext ? (
           <Button type="button" onClick={nextStep}
             className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 transition-all">
             Continue <ChevronRight className="w-4 h-4 ml-1" />
@@ -355,7 +388,7 @@ export function SignupForm() {
           <Button
             type="button"
             onClick={nextStep}
-            disabled={isLoading}
+            disabled={isLoading || (hasTenantContext && !tenantAutoResolved)}
             className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
@@ -365,7 +398,7 @@ export function SignupForm() {
         )}
       </div>
 
-      {step === 1 && (
+      {step === 1 && !hasTenantContext && (
         <p className="text-xs text-center text-slate-400 dark:text-slate-500">
           All accounts start with a free STARTER plan.{' '}
           <a href="/terms" className="text-primary hover:underline">Terms</a> &{' '}
