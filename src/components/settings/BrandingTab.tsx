@@ -65,7 +65,14 @@ export function BrandingTab() {
     e.preventDefault();
     try {
       setSaving(true);
-      await api.put(`/api/v1/tenants/${activeTenant?.id}`, tenantData);
+      // Filter empty strings from metadata to avoid overwriting existing values with blanks
+      const cleanMetadata = tenantData.metadata
+        ? Object.fromEntries(
+            Object.entries(tenantData.metadata).filter(([, v]) => v !== '' && v != null)
+          )
+        : undefined;
+      const payload = { ...tenantData, metadata: cleanMetadata };
+      await api.put(`/api/v1/tenants/${activeTenant?.id}`, payload);
       toast({
         title: 'Success',
         description: 'Organization settings updated successfully.',
