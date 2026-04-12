@@ -36,6 +36,7 @@ const ORG_SIZES = [
 ];
 
 const USE_CASES = [
+  { value: 'fbo', label: 'Forever Living Products (FBO)' },
   { value: 'hospitality', label: 'Hospitality (Restaurant, Cafe, Bar)' },
   { value: 'retail', label: 'Retail / Shop' },
   { value: 'e_commerce', label: 'Online Store / E-commerce' },
@@ -118,6 +119,8 @@ export function SignupForm() {
   const [orgSize, setOrgSize] = useState('');
   const [useCases, setUseCases] = useState<string[]>([]);
   const [hqBranchName, setHqBranchName] = useState('Main/HQ');
+  const [distribId, setDistribId] = useState(''); // FLP distributor ID (used as slug for FBO tenants)
+  const isFBO = useCases.includes('fbo');
 
   // Toggle a use case in the multi-select list
   const toggleUseCase = (value: string) => {
@@ -182,16 +185,28 @@ export function SignupForm() {
     })();
   }, [defaultTenant, tenantAutoResolved]);
 
-  // Auto-generate slug from org name
+  // Auto-generate slug: FBO uses distributor ID as slug; others use org name
   useEffect(() => {
-    setNewOrgSlug(
-      newOrgName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-        .slice(0, 64)
-    );
-  }, [newOrgName]);
+    if (isFBO && distribId.trim()) {
+      // FBO: slug = distributor ID (numeric, no transformation)
+      setNewOrgSlug(distribId.trim());
+    } else {
+      setNewOrgSlug(
+        newOrgName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          .slice(0, 64)
+      );
+    }
+  }, [newOrgName, isFBO, distribId]);
+
+  // FBO: auto-fill org name from Step 1 name
+  useEffect(() => {
+    if (isFBO && name.trim() && !newOrgName) {
+      setNewOrgName(name.trim());
+    }
+  }, [isFBO, name, newOrgName]);
 
   // ── Step validation ─────────────────────────────────────────────────────────
   const validateStep0 = () => {
@@ -210,6 +225,7 @@ export function SignupForm() {
       if (!selectedTenant) { setError('Please search and select an organisation'); return false; }
     } else {
       if (!newOrgName.trim()) { setError('Organisation name is required'); return false; }
+      if (isFBO && !distribId.trim()) { setError('FLP Distributor ID is required for FBO registration'); return false; }
       if (!newOrgSlug.trim()) { setError('Organisation slug is required'); return false; }
     }
     return true;
@@ -368,6 +384,9 @@ export function SignupForm() {
           toggleUseCase={toggleUseCase}
           hqBranchName={hqBranchName}
           setHqBranchName={setHqBranchName}
+          distribId={distribId}
+          setDistribId={setDistribId}
+          isFBO={isFBO}
         />
       )}
 
@@ -524,7 +543,7 @@ function Step1({
   orgAction, setOrgAction, orgSearch, setOrgSearch, searchResults,
   selectedTenant, setSelectedTenant, isSearching, newOrgName, setNewOrgName,
   newOrgSlug, setNewOrgSlug, orgSize, setOrgSize, useCases, toggleUseCase,
-  hqBranchName, setHqBranchName
+  hqBranchName, setHqBranchName, distribId, setDistribId, isFBO,
 }: any) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -570,13 +589,23 @@ function Step1({
               <Input placeholder="Acme Inc." value={newOrgName} onChange={(e) => setNewOrgName(e.target.value)} className="pl-10 h-11 rounded-xl" />
             </div>
           </div>
+          {isFBO && (
+            <div className="space-y-2">
+              <Label>FLP Distributor ID</Label>
+              <div className="relative">
+                <Shield className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                <Input placeholder="e.g. 254200047984" value={distribId} onChange={(e) => setDistribId(e.target.value.replace(/\D/g, ''))} className="pl-10 h-11 rounded-xl" />
+              </div>
+              <p className="text-[10px] text-slate-500">Your Forever Living Products distributor ID — used as your unique business identifier</p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label>URL Slug</Label>
             <div className="relative font-mono text-sm">
               <span className="absolute left-3 top-3 text-slate-400">@</span>
               <Input value={newOrgSlug} readOnly disabled className="pl-8 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-70" />
             </div>
-            <p className="text-[10px] text-slate-500">Auto-generated from organisation name</p>
+            <p className="text-[10px] text-slate-500">{isFBO ? 'Set from your distributor ID' : 'Auto-generated from organisation name'}</p>
           </div>
           <div className="space-y-2">
             <Label>Primary Branch Name</Label>
