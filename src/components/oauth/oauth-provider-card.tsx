@@ -105,6 +105,7 @@ export function OAuthProviderCard({
       <div className="mb-5 flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <ProviderLogo
+            providerId={provider.id}
             slug={provider.logoSlug}
             color={provider.logoColor}
             brandColor={provider.brandColor}

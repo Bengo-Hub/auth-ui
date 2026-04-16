@@ -2,20 +2,22 @@
 
 import { useAuthStore } from '@/store/auth-store';
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Building2, 
-  Globe, 
-  Mail, 
-  Phone, 
+import {
+  Building2,
+  Globe,
+  Mail,
+  Phone,
   Image as ImageIcon,
   Palette,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 
 const INDUSTRIES = [
@@ -34,32 +36,30 @@ const INDUSTRIES = [
 
 export function BrandingTab() {
   const activeTenant = useAuthStore((state) => state.activeTenant);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [tenantData, setTenantData] = useState<any>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (activeTenant?.id) {
-      fetchTenant();
-    }
-  }, [activeTenant?.id]);
-
-  const fetchTenant = async () => {
-    try {
-      setLoading(true);
+  // Use React Query so loading/error/retry is handled cleanly and the
+  // spinner clears whether the request succeeds, fails, or never fires
+  // (e.g. user has no active tenant yet).
+  const tenantQuery = useQuery({
+    queryKey: ['tenant', activeTenant?.id],
+    queryFn: async () => {
       const res = await api.get(`/api/v1/tenants/${activeTenant?.id}`);
-      setTenantData(res.data);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load organization details.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+      return res.data;
+    },
+    enabled: !!activeTenant?.id,
+    staleTime: 30_000,
+  });
+
+  // Sync server data into the editable local state exactly once per fetch.
+  // React Query drives loading/error; local state only tracks user edits.
+  useEffect(() => {
+    if (tenantQuery.data && !tenantData) {
+      setTenantData(tenantQuery.data);
     }
-  };
+  }, [tenantQuery.data, tenantData]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,10 +99,41 @@ export function BrandingTab() {
     }));
   };
 
-  if (loading) {
+  if (!activeTenant?.id) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center">
+        <AlertCircle className="h-8 w-8 text-amber-500" />
+        <p className="font-semibold text-slate-700 dark:text-slate-200">
+          No active organisation selected
+        </p>
+        <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+          Pick an organisation from the tenant switcher to edit its branding.
+        </p>
+      </div>
+    );
+  }
+
+  if (tenantQuery.isLoading && !tenantData) {
     return (
       <div className="flex items-center justify-center p-20">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (tenantQuery.isError && !tenantData) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-rose-200 bg-rose-50/50 p-12 text-center dark:border-rose-900/40 dark:bg-rose-950/30">
+        <AlertCircle className="h-8 w-8 text-rose-500" />
+        <p className="font-semibold text-slate-700 dark:text-slate-200">
+          Could not load organisation details
+        </p>
+        <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+          {(tenantQuery.error as Error)?.message || 'Please try again.'}
+        </p>
+        <Button variant="outline" onClick={() => tenantQuery.refetch()}>
+          Retry
+        </Button>
       </div>
     );
   }

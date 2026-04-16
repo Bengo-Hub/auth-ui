@@ -132,6 +132,7 @@ function OAuthButton({
         <Loader2 className="w-5 h-5 animate-spin" />
       ) : (
         <ProviderLogo
+          providerId={provider.id}
           slug={provider.logoSlug}
           color={provider.logoColor}
           brandColor={provider.brandColor}
