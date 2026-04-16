@@ -118,9 +118,34 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.7, ease: "easeOut" }}
-              className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 font-medium max-w-2xl lg:mx-0 mx-auto mb-12 leading-relaxed"
+              className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 font-medium max-w-2xl lg:mx-0 mx-auto mb-6 leading-relaxed"
             >
               Empower your enterprise with a premium unified identity layer. Secure access, cross-service billing, and infinite scaling for your digital ecosystem.
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.7, ease: 'easeOut' }}
+              className="text-sm text-slate-500 dark:text-slate-500 max-w-2xl lg:mx-0 mx-auto mb-12"
+            >
+              When you sign in with Google, Microsoft, or GitHub we request only your basic
+              profile (email, name, picture) to identify your account. We never access
+              third-party data beyond that. See our{' '}
+              <Link
+                href="/privacy"
+                className="font-semibold text-primary underline underline-offset-2 hover:opacity-80"
+              >
+                Privacy Policy
+              </Link>{' '}
+              and{' '}
+              <Link
+                href="/terms-of-service"
+                className="font-semibold text-primary underline underline-offset-2 hover:opacity-80"
+              >
+                Terms of Service
+              </Link>
+              .
             </motion.p>
 
             <motion.div
