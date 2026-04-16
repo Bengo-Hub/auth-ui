@@ -43,13 +43,16 @@ export function BrandingTab() {
   // Use React Query so loading/error/retry is handled cleanly and the
   // spinner clears whether the request succeeds, fails, or never fires
   // (e.g. user has no active tenant yet).
+  //
+  // auth-api only exposes GET by slug publicly; there is no public GET by id.
+  // Use the slug endpoint that always exists.
   const tenantQuery = useQuery({
-    queryKey: ['tenant', activeTenant?.id],
+    queryKey: ['tenant', activeTenant?.slug],
     queryFn: async () => {
-      const res = await api.get(`/api/v1/tenants/${activeTenant?.id}`);
+      const res = await api.get(`/api/v1/tenants/by-slug/${activeTenant?.slug}`);
       return res.data;
     },
-    enabled: !!activeTenant?.id,
+    enabled: !!activeTenant?.slug,
     staleTime: 30_000,
   });
 
@@ -72,7 +75,11 @@ export function BrandingTab() {
           )
         : undefined;
       const payload = { ...tenantData, metadata: cleanMetadata };
-      await api.put(`/api/v1/tenants/${activeTenant?.id}`, payload);
+      // PUT the tenant via the admin route. requireAdmin now accepts
+      // platform owners and tenant admins, so a tenant admin editing
+      // their own org is allowed (cross-tenant writes are guarded by
+      // the tenant_id URL parameter matching the caller's active tenant).
+      await api.put(`/api/v1/admin/tenants/${activeTenant?.id}`, payload);
       toast({
         title: 'Success',
         description: 'Organization settings updated successfully.',
