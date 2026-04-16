@@ -19,7 +19,10 @@ export interface User {
     name: string;
     slug: string;
   };
-  tenants: Array<{
+  // /api/v1/auth/me currently returns `tenant` (singular primary). `tenants` is
+  // reserved for the future multi-tenant membership list endpoint; treat both
+  // as optional so consumers can fall back gracefully.
+  tenants?: Array<{
     id: string;
     name: string;
     slug: string;

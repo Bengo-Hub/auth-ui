@@ -22,7 +22,12 @@ interface User {
   name?: string;
   roles: string[];
   permissions?: string[];
-  tenants: Array<Tenant & { roles: string[] }>;
+  tenants?: Array<Tenant & { roles: string[] }>;
+  // /api/v1/auth/me returns the user's primary tenant as a single nested
+  // object (not in a list). Use it as the default activeTenant when tenants[]
+  // is empty so per-tenant UI (branding, settings) has something to scope to.
+  tenant?: Tenant;
+  is_platform_owner?: boolean;
 }
 
 interface AuthState {
@@ -45,8 +50,12 @@ export const useAuthStore = create<AuthState>()(
       isLoading: true,
       setUser: (user) => {
         set({ user, isAuthenticated: !!user, isLoading: false });
-        if (user && user.tenants.length > 0 && !useAuthStore.getState().activeTenant) {
-          set({ activeTenant: user.tenants[0] });
+        // Bootstrap activeTenant once per login. Prefer the membership list,
+        // fall back to user.tenant (the primary tenant /me returns when the
+        // user has no explicit multi-tenant membership payload yet).
+        if (user && !useAuthStore.getState().activeTenant) {
+          const first = user.tenants?.[0] ?? user.tenant;
+          if (first) set({ activeTenant: first });
         }
       },
       setActiveTenant: (activeTenant) => set({ activeTenant }),
