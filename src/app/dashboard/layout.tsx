@@ -13,7 +13,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { isAuthenticated, isLoading } = useAuthStore();
-  const { user, isLoading: meLoading, hasRole } = useAuth(true);
+  const { user, isLoading: meLoading, isPlatformOwner } = useAuth(true);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -23,14 +23,26 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, isLoading, meLoading, router]);
 
+  // Platform-owner-only routes: every section under /dashboard/platform/*,
+  // plus cross-tenant and platform-secret surfaces. Tenant-users should not
+  // reach these even by typing the URL directly.
+  const PLATFORM_OWNER_ROUTES = [
+    '/dashboard/platform',
+    '/dashboard/tenants',
+    '/dashboard/integrations',
+    '/dashboard/developer',
+    '/dashboard/api-keys',
+  ];
+
   useEffect(() => {
-    if (meLoading) return; // Skip check while user data is loading
-    const isPlatformRoute = pathname?.startsWith('/dashboard/platform');
-    const canAccessPlatform = user && (hasRole('superuser') || hasRole('admin') || hasRole('super_admin'));
-    if (user && isPlatformRoute && !canAccessPlatform) {
+    if (meLoading) return;
+    const requiresPlatform = PLATFORM_OWNER_ROUTES.some(
+      (prefix) => pathname === prefix || pathname?.startsWith(prefix + '/'),
+    );
+    if (user && requiresPlatform && !isPlatformOwner) {
       router.replace('/unauthorized');
     }
-  }, [user, pathname, router, hasRole, meLoading]);
+  }, [user, pathname, router, isPlatformOwner, meLoading]);
 
   if (isLoading || meLoading) {
     return (

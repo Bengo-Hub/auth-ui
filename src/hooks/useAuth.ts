@@ -86,6 +86,12 @@ export function useAuth(enabled = true) {
     return user.permissions?.includes(permission) ?? false;
   };
 
+  // Platform-owner gate. auth-api mints is_platform_owner=true for users whose
+  // primary tenant is "codevertex". Pages that manage the whole platform —
+  // OAuth clients, all tenants, integration secrets, DB backups — must use
+  // this flag, not individual roles.
+  const isPlatformOwner = !!user?.is_platform_owner;
+
   return {
     user,
     isLoading,
@@ -93,6 +99,7 @@ export function useAuth(enabled = true) {
     error: query.error,
     hasRole,
     hasPermission,
+    isPlatformOwner,
     isAuthenticated: !!user && !query.isError,
     refetch: query.refetch,
   };

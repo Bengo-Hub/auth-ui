@@ -26,11 +26,13 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  permission?: string;
-  role?: string;
   newTab?: boolean;
 }
 
+// Navigation visible to every authenticated user. Scope is always "me" or
+// "my active tenant" — no cross-tenant or platform-wide data. Tenant users
+// manage their organisation's branding, info, and their own profile from
+// here.
 const NAV_ITEMS: NavItem[] = [
   {
     title: 'Overview',
@@ -43,46 +45,48 @@ const NAV_ITEMS: NavItem[] = [
     icon: User,
   },
   {
+    title: 'Settings',
+    href: '/dashboard/settings',
+    icon: Settings,
+  },
+];
+
+// Platform Admin section — ONLY shown to users with is_platform_owner = true.
+// Covers surfaces that manage the whole platform: the OAuth client registry,
+// every tenant in the system, platform-level integration secrets, the
+// developer portal, and database backups. Payment gateways and notifications
+// are owned by treasury-ui and notifications-ui respectively.
+const PLATFORM_ADMIN_ITEMS: NavItem[] = [
+  {
     title: 'Organizations',
     href: '/dashboard/tenants',
     icon: Building2,
-    permission: 'auth.preferences.change',
+  },
+  {
+    title: 'OAuth Clients',
+    href: '/dashboard/platform/clients',
+    icon: Key,
+  },
+  {
+    title: 'Integrations',
+    href: '/dashboard/integrations',
+    icon: Wrench,
   },
   {
     title: 'Developer',
     href: '/dashboard/developer',
     icon: Code2,
-    permission: 'auth.preferences.change',
-  },
-  {
-    title: 'Settings',
-    href: '/dashboard/settings',
-    icon: Settings,
-    permission: 'auth.preferences.change',
-  },
-];
-
-// Payment gateways and notifications are owned by treasury-ui and notifications-ui respectively.
-// Platform admin links to those services are available from the service directory (landing).
-const PLATFORM_ADMIN_ITEMS: NavItem[] = [
-  {
-    title: 'OAuth Clients',
-    href: '/dashboard/platform/clients',
-    icon: Key,
-    role: 'superuser',
-  },
-  {
-    title: 'Membership Tiers',
-    href: 'https://pricing.codevertexitsolutions.com/codevertex/platform/plans',
-    icon: Wrench,
-    newTab: true,
-    role: 'superuser'
   },
   {
     title: 'DB Backups',
     href: '/dashboard/platform/backups',
     icon: Database,
-    role: 'superuser',
+  },
+  {
+    title: 'Membership Tiers',
+    href: 'https://pricing.codevertexitsolutions.com/codevertex/platform/plans',
+    icon: ExternalLink,
+    newTab: true,
   },
 ];
 
@@ -93,16 +97,12 @@ export function DashboardSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const logout = useLogout();
   const { tenant } = useTenant();
-  const { hasRole, hasPermission } = useAuth();
+  const { isPlatformOwner } = useAuth();
 
-  const isPlatformAdmin = hasRole('superuser') || hasRole('admin') || hasRole('super_admin');
-
-  const visibleNavItems = NAV_ITEMS.filter(item => {
-    if (item.href === '/dashboard/tenants' && !isPlatformAdmin) return false;
-    if (item.permission) return hasPermission(item.permission);
-    if (item.role) return hasRole(item.role);
-    return true;
-  });
+  // Regular nav is the same for every authenticated user (profile is
+  // self-scoped, settings is active-tenant-scoped). Platform section is
+  // gated entirely on is_platform_owner.
+  const visibleNavItems = NAV_ITEMS;
 
   return (
     <aside
@@ -180,8 +180,8 @@ export function DashboardSidebar() {
           );
         })}
 
-        {/* Platform Admin Section */}
-        {isPlatformAdmin && PLATFORM_ADMIN_ITEMS.length > 0 && (
+        {/* Platform Admin Section — visible only to platform owners */}
+        {isPlatformOwner && PLATFORM_ADMIN_ITEMS.length > 0 && (
           <>
             <div className="pt-6 pb-2">
               {!isCollapsed && (
