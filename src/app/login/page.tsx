@@ -5,41 +5,37 @@ import { ArrowRight, Fingerprint, Globe, Loader2, Shield, Zap } from 'lucide-rea
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { LoginForm } from '@/components/auth/LoginForm';
 import { SSOConnectionsSVG } from '@/components/ui/SSOConnectionsSVG';
+import { ProviderLogo } from '@/components/oauth/provider-logo';
+import { oauthProviders, type OAuthProviderDef } from '@/lib/oauth/catalog';
 import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl } from '@/lib/utils';
 
-// Official OAuth Provider Logos (SVG)
-function GoogleLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-    </svg>
-  );
-}
+type ActiveIntegration = {
+  name: string;
+  display_name: string;
+  category?: string;
+  logo_slug?: string;
+  brand_color?: string;
+};
 
-function GitHubLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" fill="currentColor"/>
-    </svg>
-  );
-}
-
-function MicrosoftLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0 0h11.377v11.372H0V0z" fill="#F25022"/>
-      <path d="M12.623 0H24v11.372H12.623V0z" fill="#7FBA00"/>
-      <path d="M0 12.623h11.377V24H0V12.623z" fill="#00A4EF"/>
-      <path d="M12.623 12.623H24V24H12.623V12.623z" fill="#FFB900"/>
-    </svg>
-  );
+function useActiveOAuthProviders(tenantSlug: string): OAuthProviderDef[] {
+  const { data } = useQuery<ActiveIntegration[]>({
+    queryKey: ['active_integrations', 'oauth', tenantSlug],
+    queryFn: async () => {
+      const qs = new URLSearchParams({ category: 'oauth' });
+      if (tenantSlug) qs.set('tenant_slug', tenantSlug);
+      const { data } = await apiClient.get(`/api/v1/auth/integrations/active?${qs}`);
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  // Only expose providers that are both (a) in the catalog and (b) active in auth-api.
+  const enabledNames = new Set((data ?? []).map((i) => i.name));
+  return oauthProviders.filter((p) => enabledNames.has(p.id));
 }
 
 // Animated feature cards for the right side
@@ -93,47 +89,35 @@ const floatingAnimation = {
   },
 };
 
-// OAuth button component with loading state
+// OAuth button driven by catalog entry. Loading state is local.
 function OAuthButton({
   provider,
-  icon: Icon,
-  label,
   fullWidth = false,
 }: {
-  provider: 'google' | 'github' | 'microsoft';
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
+  provider: OAuthProviderDef;
   fullWidth?: boolean;
 }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
   const handleOAuthLogin = async () => {
     setIsLoading(true);
-    setError(null);
-
     try {
-      // Get return_to from URL params, validated to prevent open redirect
       const returnTo = getSafeReturnUrl(searchParams.get('return_to'), '/dashboard');
-      // When no tenant in URL, send empty so auth-api can resolve tenant from user's primary org (same as LoginForm).
       const tenantSlug = searchParams.get('tenant') ?? '';
 
-      // Call the OAuth start endpoint
-      const response = await apiClient.post(`/api/v1/auth/oauth/${provider}/start`, {
+      const response = await apiClient.post(`/api/v1/auth/oauth/${provider.id}/start`, {
         return_to: returnTo,
         tenant_slug: tenantSlug,
       });
 
-      // The backend returns an authorization URL to redirect to
       if (response.data?.authorization_url) {
         window.location.href = response.data.authorization_url;
       } else {
         throw new Error('No authorization URL returned');
       }
     } catch (err: any) {
-      console.error(`OAuth ${provider} error:`, err);
-      setError(err.message || `Failed to start ${provider} login`);
+      console.error(`OAuth ${provider.id} error:`, err);
       setIsLoading(false);
     }
   };
@@ -147,10 +131,45 @@ function OAuthButton({
       {isLoading ? (
         <Loader2 className="w-5 h-5 animate-spin" />
       ) : (
-        <Icon className="w-5 h-5" />
+        <ProviderLogo
+          slug={provider.logoSlug}
+          color={provider.logoColor}
+          brandColor={provider.brandColor}
+          name={provider.name}
+          size={20}
+          className="!p-0 !ring-0 !bg-transparent"
+        />
       )}
-      {fullWidth ? `Continue with ${label}` : label}
+      {fullWidth ? `Continue with ${provider.name}` : provider.name}
     </button>
+  );
+}
+
+function OAuthButtonGroup() {
+  const searchParams = useSearchParams();
+  const tenantSlug = searchParams.get('tenant') ?? '';
+  const providers = useActiveOAuthProviders(tenantSlug);
+
+  if (providers.length === 0) return null;
+  if (providers.length === 1) {
+    return (
+      <div className="space-y-3 mb-6">
+        <OAuthButton provider={providers[0]} fullWidth />
+      </div>
+    );
+  }
+  const [primary, ...rest] = providers;
+  return (
+    <div className="space-y-3 mb-6">
+      <OAuthButton provider={primary} fullWidth />
+      {rest.length > 0 && (
+        <div className={`grid gap-3 ${rest.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {rest.map((p) => (
+            <OAuthButton key={p.id} provider={p} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -236,15 +255,9 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* OAuth Buttons */}
+          {/* OAuth Buttons — only the providers configured in auth-api render */}
           <Suspense fallback={<div className="h-24 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-xl" />}>
-            <div className="space-y-3 mb-6">
-              <OAuthButton provider="google" icon={GoogleLogo} label="Google" fullWidth />
-              <div className="grid grid-cols-2 gap-3">
-                <OAuthButton provider="github" icon={GitHubLogo} label="GitHub" />
-                <OAuthButton provider="microsoft" icon={MicrosoftLogo} label="Microsoft" />
-              </div>
-            </div>
+            <OAuthButtonGroup />
           </Suspense>
 
           {/* Divider */}
