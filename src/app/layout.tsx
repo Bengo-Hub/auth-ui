@@ -64,6 +64,13 @@ export default function RootLayout({
             <PWAInstallPrompt />
           </Providers>
         </ThemeProvider>
+        <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 py-4 px-6 text-center text-xs text-slate-500 dark:text-slate-400">
+          <span>Codevertex SSO &mdash; Codevertex IT Solutions</span>
+          <span className="mx-2">&middot;</span>
+          <a href="/privacy" className="underline hover:text-slate-700 dark:hover:text-slate-300">Privacy Policy</a>
+          <span className="mx-2">&middot;</span>
+          <a href="/terms-of-service" className="underline hover:text-slate-700 dark:hover:text-slate-300">Terms of Service</a>
+        </footer>
       </body>
     </html>
   );
