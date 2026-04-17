@@ -174,6 +174,19 @@ function OAuthButtonGroup() {
   );
 }
 
+function OAuthErrorBanner() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get('oauth_error');
+  if (!error) return null;
+  return (
+    <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400">
+      {error === 'access_denied'
+        ? 'Sign-in was cancelled.'
+        : `OAuth error: ${decodeURIComponent(error)}`}
+    </div>
+  );
+}
+
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900 overflow-hidden">
@@ -255,6 +268,11 @@ export default function LoginPage() {
               Sign in to your enterprise account
             </p>
           </div>
+
+          {/* OAuth error banner (shown when redirected back from a failed/cancelled flow) */}
+          <Suspense fallback={null}>
+            <OAuthErrorBanner />
+          </Suspense>
 
           {/* OAuth Buttons — only the providers configured in auth-api render */}
           <Suspense fallback={<div className="h-24 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-xl" />}>

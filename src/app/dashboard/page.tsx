@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuthStore } from '@/store/auth-store';
+import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
 import {
     ArrowRight,
@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { Greeting } from '@/components/dashboard/Greeting';
 
 export default function DashboardPage() {
-  const user = useAuthStore((state) => state.user);
+  const { user } = useAuth();
 
   const stats = [
     {
