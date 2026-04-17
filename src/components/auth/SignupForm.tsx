@@ -120,6 +120,7 @@ export function SignupForm() {
   const [useCases, setUseCases] = useState<string[]>([]);
   const [hqBranchName, setHqBranchName] = useState('Main/HQ');
   const [distribId, setDistribId] = useState(''); // FLP distributor ID (used as slug for FBO tenants)
+  const [phoneNumber, setPhoneNumber] = useState(''); // Required for FBO
   const isFBO = useCases.includes('fbo');
 
   // Toggle a use case in the multi-select list
@@ -209,14 +210,30 @@ export function SignupForm() {
   }, [isFBO, name, newOrgName]);
 
   // ── Step validation ─────────────────────────────────────────────────────────
+  // Toast-style password feedback instead of harsh error banner
+  const [passwordHint, setPasswordHint] = useState<string | null>(null);
+
   const validateStep0 = () => {
     if (!name.trim()) { setError('Full name is required'); return false; }
     if (!email.trim()) { setError('Email is required'); return false; }
-    // Password only required for non-OAuth flows
     if (!isOAuthFlow) {
-      if (password.length < 8) { setError('Password must be at least 8 characters'); return false; }
-      if (password !== confirmPassword) { setError('Passwords do not match'); return false; }
+      if (password.length < 8) {
+        setPasswordHint('Password must be at least 8 characters. Use a mix of letters, numbers, and symbols.');
+        setTimeout(() => setPasswordHint(null), 5000);
+        return false;
+      }
+      if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+        setPasswordHint('Tip: Include at least one uppercase letter and one number for a strong password.');
+        setTimeout(() => setPasswordHint(null), 5000);
+        return false;
+      }
+      if (password !== confirmPassword) {
+        setPasswordHint('Passwords do not match. Please re-enter your confirmation password.');
+        setTimeout(() => setPasswordHint(null), 5000);
+        return false;
+      }
     }
+    setPasswordHint(null);
     return true;
   };
 
@@ -226,6 +243,7 @@ export function SignupForm() {
     } else {
       if (!newOrgName.trim()) { setError('Organisation name is required'); return false; }
       if (isFBO && !distribId.trim()) { setError('FLP Distributor ID is required for FBO registration'); return false; }
+      if (isFBO && !phoneNumber.trim()) { setError('Phone number is required for FBO registration (WhatsApp contact)'); return false; }
       if (!newOrgSlug.trim()) { setError('Organisation slug is required'); return false; }
     }
     return true;
@@ -335,6 +353,12 @@ export function SignupForm() {
           <span>{error}</span>
         </div>
       )}
+      {passwordHint && (
+        <div className="flex items-start gap-2 p-3 text-sm text-amber-700 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-300 border border-amber-200 dark:border-amber-700 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+          <Shield className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span>{passwordHint}</span>
+        </div>
+      )}
 
       {step === 0 && (
         <Step0
@@ -387,6 +411,8 @@ export function SignupForm() {
           distribId={distribId}
           setDistribId={setDistribId}
           isFBO={isFBO}
+          phoneNumber={phoneNumber}
+          setPhoneNumber={setPhoneNumber}
         />
       )}
 
@@ -506,6 +532,9 @@ function Step0({
               </div>
             </div>
           </div>
+          <p className="text-[10px] text-slate-400 flex items-center gap-1">
+            <Shield className="w-3 h-3" /> Min 8 chars, at least 1 uppercase letter and 1 number
+          </p>
         </>
       )}
 
@@ -544,6 +573,7 @@ function Step1({
   selectedTenant, setSelectedTenant, isSearching, newOrgName, setNewOrgName,
   newOrgSlug, setNewOrgSlug, orgSize, setOrgSize, useCases, toggleUseCase,
   hqBranchName, setHqBranchName, distribId, setDistribId, isFBO,
+  phoneNumber, setPhoneNumber,
 }: any) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -590,14 +620,24 @@ function Step1({
             </div>
           </div>
           {isFBO && (
-            <div className="space-y-2">
-              <Label>FLP Distributor ID</Label>
-              <div className="relative">
-                <Shield className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                <Input placeholder="e.g. 254200047984" value={distribId} onChange={(e) => setDistribId(e.target.value.replace(/\D/g, ''))} className="pl-10 h-11 rounded-xl" />
+            <>
+              <div className="space-y-2">
+                <Label>FLP Distributor ID <span className="text-rose-500">*</span></Label>
+                <div className="relative">
+                  <Shield className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                  <Input placeholder="e.g. 254200047984" value={distribId} onChange={(e) => setDistribId(e.target.value.replace(/\D/g, ''))} className="pl-10 h-11 rounded-xl" />
+                </div>
+                <p className="text-[10px] text-slate-500">Your Forever Living Products distributor ID — used as your unique business identifier</p>
               </div>
-              <p className="text-[10px] text-slate-500">Your Forever Living Products distributor ID — used as your unique business identifier</p>
-            </div>
+              <div className="space-y-2">
+                <Label>WhatsApp / Phone Number <span className="text-rose-500">*</span></Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-slate-400 text-xs">📱</span>
+                  <Input placeholder="e.g. 0743793901 or 254743793901" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9+\s-]/g, ''))} className="pl-10 h-11 rounded-xl" />
+                </div>
+                <p className="text-[10px] text-slate-500">Your WhatsApp number for customer enquiries. Supports KE, UG, TZ, RW, BI, ET country codes.</p>
+              </div>
+            </>
           )}
           <div className="space-y-2">
             <Label>URL Slug</Label>
