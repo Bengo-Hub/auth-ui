@@ -7,12 +7,24 @@ import apiClient from '@/lib/api-client';
 import { isValidReturnUrl } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Loader2, Mail, Lock, Eye, EyeOff, User, Building2, Search,
-  CheckCircle2, ChevronRight, ChevronLeft, Zap,
-  ArrowRight, AlertCircle, Plus, Shield, Github, Chrome, Cpu,
+    AlertCircle,
+    Building2,
+    CheckCircle2,
+    ChevronLeft,
+    ChevronRight,
+    Chrome, Cpu,
+    Eye, EyeOff,
+    Github,
+    Loader2,
+    Lock,
+    Mail,
+    Search,
+    Shield,
+    User,
+    Zap
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -322,7 +334,20 @@ export function SignupForm() {
         : '/api/v1/auth/register';
       await apiClient.post(endpoint, payload);
 
-      // Redirect to login preserving OIDC params
+      // For OAuth flows, session is already established by auth-api
+      // Redirect directly to callback to complete redirect flow
+      if (isOAuthFlow) {
+        const callbackUrl = new URL('/auth/callback', window.location.origin);
+        if (isValidReturnUrl(returnTo)) callbackUrl.searchParams.set('return_to', returnTo!);
+        if (clientId) callbackUrl.searchParams.set('client_id', clientId);
+        if (redirectUri) callbackUrl.searchParams.set('redirect_uri', redirectUri);
+        if (stateParam) callbackUrl.searchParams.set('state', stateParam);
+        if (scope) callbackUrl.searchParams.set('scope', scope);
+        router.push(callbackUrl.pathname + callbackUrl.search);
+        return;
+      }
+
+      // For non-OAuth flows, redirect to login so user signs in with their password
       const loginUrl = new URL('/login', window.location.origin);
       if (isValidReturnUrl(returnTo)) loginUrl.searchParams.set('return_to', returnTo!);
       if (clientId) loginUrl.searchParams.set('client_id', clientId);
