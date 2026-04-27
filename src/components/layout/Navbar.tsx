@@ -70,17 +70,12 @@ export default function Navbar() {
               <Activity className="w-4 h-4" />
               Status
             </Link>
+            
             <Link
-              href="/privacy"
+              href="/about"
               className="px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              Privacy
-            </Link>
-            <Link
-              href="/terms-of-service"
-              className="px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              Terms
+              About
             </Link>
 
             <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
