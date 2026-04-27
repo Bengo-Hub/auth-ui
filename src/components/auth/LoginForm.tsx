@@ -63,6 +63,14 @@ export function LoginForm() {
     userTenants: TenantSuggestion[];
   } | null>(null);
 
+  // Terms acceptance interstitial state (for existing users without accepted terms)
+  const [termsRequired, setTermsRequired] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsLoading, setTermsLoading] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
+  // Store post-login redirect info so we can execute it after terms are accepted
+  const [pendingRedirect, setPendingRedirect] = useState<(() => void) | null>(null);
+
   const switchToTenant = (slug: string) => {
     // Rebuild the current URL with the new tenant slug and reload
     const url = new URL(window.location.href);
@@ -102,7 +110,7 @@ export function LoginForm() {
         mfa_required?: boolean;
         mfa_method?: string;
         user_id?: string;
-        user?: { id: string; email: string; name?: string; roles?: string[]; permissions?: string[]; tenants?: Array<{ id: string; name: string; slug: string; roles: string[] }> };
+        user?: { id: string; email: string; name?: string; roles?: string[]; permissions?: string[]; terms_accepted?: boolean; tenants?: Array<{ id: string; name: string; slug: string; roles: string[] }> };
         roles?: string[];
         permissions?: string[];
       };
@@ -125,29 +133,33 @@ export function LoginForm() {
         });
       }
 
-      // Prefer return_to when it's an absolute URL: full page redirect so the browser sends
-      // the session cookie (required for service-originated login and for redirecting to another app).
-      if (returnTo && returnTo.startsWith('http') && isValidReturnUrl(returnTo)) {
-        window.location.href = returnTo;
+      // Build the redirect action we'll execute after login (or after terms acceptance).
+      const executeRedirect = () => {
+        if (returnTo && returnTo.startsWith('http') && isValidReturnUrl(returnTo)) {
+          window.location.href = returnTo;
+          return;
+        }
+        if (clientId && redirectUri) {
+          const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+          const authorizeUrl = new URL('/api/v1/authorize', ssoBase.replace(/\/$/, ''));
+          authorizeUrl.searchParams.set('client_id', clientId);
+          authorizeUrl.searchParams.set('redirect_uri', redirectUri);
+          if (stateParam) authorizeUrl.searchParams.set('state', stateParam);
+          if (scope) authorizeUrl.searchParams.set('scope', scope);
+          window.location.href = authorizeUrl.toString();
+          return;
+        }
+        router.push(getSafeReturnUrl(returnTo));
+      };
+
+      // If user has not accepted terms, show interstitial before redirecting.
+      if (user && user.terms_accepted === false) {
+        setPendingRedirect(() => executeRedirect);
+        setTermsRequired(true);
         return;
       }
 
-      // If we have OIDC params but no return_to, build the SSO authorize URL and redirect there
-      // (must use SSO origin so the browser hits auth-api and sends the session cookie).
-      if (clientId && redirectUri) {
-        const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
-        const authorizeUrl = new URL('/api/v1/authorize', ssoBase.replace(/\/$/, ''));
-        authorizeUrl.searchParams.set('client_id', clientId);
-        authorizeUrl.searchParams.set('redirect_uri', redirectUri);
-        if (stateParam) authorizeUrl.searchParams.set('state', stateParam);
-        if (scope) authorizeUrl.searchParams.set('scope', scope);
-
-        window.location.href = authorizeUrl.toString();
-        return;
-      }
-
-      // Relative return_to or default: client-side navigation
-      router.push(getSafeReturnUrl(returnTo));
+      executeRedirect();
     } catch (err: any) {
       const code = err.response?.data?.code;
       const details = err.response?.data?.details;
@@ -187,6 +199,94 @@ export function LoginForm() {
     setTotpCode('');
     setMfaError(null);
   };
+
+  const handleAcceptTerms = async () => {
+    if (!termsAccepted) {
+      setTermsError('Please check the box to confirm you have read and agreed to the terms.');
+      return;
+    }
+    setTermsLoading(true);
+    setTermsError(null);
+    try {
+      await apiClient.post('/api/v1/auth/me/accept-terms', {});
+      if (pendingRedirect) pendingRedirect();
+    } catch {
+      setTermsError('Failed to save your acceptance. Please try again.');
+    } finally {
+      setTermsLoading(false);
+    }
+  };
+
+  // Terms acceptance interstitial (one-time, for existing users)
+  if (termsRequired) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center space-y-3">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <ShieldCheck className="h-7 w-7 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Terms & Privacy</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            We&apos;ve updated our Terms of Service and Privacy Policy. Please review and accept to continue.
+          </p>
+        </div>
+
+        {termsError && (
+          <div className="p-4 text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl">
+            {termsError}
+          </div>
+        )}
+
+        <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+          termsAccepted
+            ? 'border-primary bg-primary/5'
+            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+        }`}>
+          <div className="relative mt-0.5 flex-shrink-0">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="sr-only"
+            />
+            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+              termsAccepted ? 'bg-primary border-primary' : 'border-slate-300 dark:border-slate-600'
+            }`}>
+              {termsAccepted && (
+                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </div>
+          <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed select-none">
+            I have read and agree to the{' '}
+            <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium" onClick={(e) => e.stopPropagation()}>
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium" onClick={(e) => e.stopPropagation()}>
+              Privacy Policy
+            </a>.{' '}
+            <span className="text-rose-500">*</span>
+          </span>
+        </label>
+
+        <Button
+          type="button"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
+          disabled={termsLoading}
+          onClick={handleAcceptTerms}
+        >
+          {termsLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            'Accept & Continue'
+          )}
+        </Button>
+      </div>
+    );
+  }
 
   // MFA challenge screen
   if (mfaRequired) {
