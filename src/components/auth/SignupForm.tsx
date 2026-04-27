@@ -119,6 +119,7 @@ export function SignupForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Step 2 — Organisation
   const [orgAction, setOrgAction] = useState<'join_existing' | 'create_new'>('join_existing');
@@ -245,6 +246,10 @@ export function SignupForm() {
         return false;
       }
     }
+    if (!termsAccepted) {
+      setError('You must accept the Terms of Service and Privacy Policy to create an account.');
+      return false;
+    }
     setPasswordHint(null);
     return true;
   };
@@ -297,6 +302,7 @@ export function SignupForm() {
       email,
       tenant_slug: tenantSlug,
       org_action: orgAction,
+      terms_accepted: termsAccepted,
       profile: {
         name,
         org_size: orgSize || undefined,
@@ -409,6 +415,8 @@ export function SignupForm() {
           redirectUri={redirectUri}
           stateParam={stateParam}
           scope={scope}
+          termsAccepted={termsAccepted}
+          setTermsAccepted={setTermsAccepted}
         />
       )}
       {/* Subscription plan step removed — all tenants auto-assigned STARTER with free trial */}
@@ -470,9 +478,7 @@ export function SignupForm() {
 
       {step === 1 && !hasTenantContext && (
         <p className="text-xs text-center text-slate-400 dark:text-slate-500">
-          All accounts start with a free STARTER plan.{' '}
-          <a href="/terms" className="text-primary hover:underline">Terms</a> &{' '}
-          <a href="/privacy" className="text-primary hover:underline">Privacy</a>.
+          All accounts start with a free STARTER plan.
         </p>
       )}
     </div>
@@ -512,7 +518,7 @@ function Step0({
   confirmPassword, setConfirmPassword, showPassword, setShowPassword,
   showConfirmPassword, setShowConfirmPassword, isOAuthFlow, oauthProvider,
   oauthPrefillEmail, socialProviders, defaultTenant, returnTo, clientId,
-  redirectUri, stateParam, scope
+  redirectUri, stateParam, scope, termsAccepted, setTermsAccepted,
 }: any) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -589,6 +595,56 @@ function Step0({
           );
         })}
       </div>
+
+      {/* Terms & Privacy acceptance — required before account creation */}
+      <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+        termsAccepted
+          ? 'border-primary bg-primary/5'
+          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+      }`}>
+        <div className="relative mt-0.5 flex-shrink-0">
+          <input
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="sr-only"
+          />
+          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+            termsAccepted
+              ? 'bg-primary border-primary'
+              : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
+          }`}>
+            {termsAccepted && (
+              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
+                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </div>
+        </div>
+        <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed select-none">
+          I have read and agree to the{' '}
+          <a
+            href="/terms-of-service"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="font-bold text-primary hover:underline"
+          >
+            Terms of Service
+          </a>
+          {' '}and{' '}
+          <a
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="font-bold text-primary hover:underline"
+          >
+            Privacy Policy
+          </a>
+          . <span className="text-rose-500">*</span>
+        </span>
+      </label>
     </div>
   );
 }

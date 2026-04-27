@@ -4,6 +4,7 @@
 // Services are grouped by category for easy navigation.
 
 import {
+    BarChart2,
     Bell,
     Box,
     Briefcase,
@@ -15,6 +16,7 @@ import {
     ShoppingCart,
     Ticket,
     Truck,
+    TrendingUp,
     Wifi,
     Zap,
 } from 'lucide-react';
@@ -80,6 +82,10 @@ export const PRODUCTION_DOMAINS = {
   truload: 'https://truload.codevertexitsolutions.com',
   truloadApi: 'https://truloadapi.codevertexitsolutions.com',
   iot: 'https://iot.codevertexitsolutions.com',
+
+  // Marketing
+  marketflow: 'https://marketflow.codevertexitsolutions.com',
+  marketflowApi: 'https://marketflowapi.codevertexitsolutions.com',
 
   // Infrastructure
   notifications: 'https://notifications.codevertexitsolutions.com',
@@ -218,6 +224,34 @@ export const SERVICES: Service[] = [
     gradient: 'from-rose-500 to-red-500',
     category: 'enterprise',
     status: 'coming-soon',
+  },
+
+  // Marketing & CRM
+  {
+    id: 'marketflow',
+    name: 'MarketFlow CRM',
+    shortName: 'MarketFlow',
+    description: 'AI-powered marketing automation for SMBs and direct-selling entrepreneurs. Lead funnels, nurture sequences, and cross-platform ad analytics in one dashboard.',
+    icon: TrendingUp,
+    svgIcon: '/svgs/services/marketflow.svg',
+    url: PRODUCTION_DOMAINS.marketflow,
+    apiUrl: PRODUCTION_DOMAINS.marketflowApi,
+    color: 'bg-violet-500',
+    gradient: 'from-violet-500 to-pink-500',
+    category: 'enterprise',
+    status: 'beta',
+  },
+  {
+    id: 'analytics',
+    name: 'Codevertex Analytics',
+    shortName: 'Analytics',
+    description: 'Business intelligence and data visualization. Executive dashboards powered by Apache Superset for data-driven decision making across your operations.',
+    icon: BarChart2,
+    url: PRODUCTION_DOMAINS.superset,
+    color: 'bg-emerald-500',
+    gradient: 'from-emerald-500 to-teal-500',
+    category: 'enterprise',
+    status: 'live',
   },
 
   // Specialized - Industry-specific
