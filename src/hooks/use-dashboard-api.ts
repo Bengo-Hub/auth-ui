@@ -278,3 +278,104 @@ export function useDeleteOAuthClient() {
     },
   });
 }
+
+// ── Users (platform admin) ───────────────────────────────────────────────────
+
+export interface UserMembership {
+  tenant_id: string;
+  roles: string[];
+  status: string;
+}
+
+export interface PlatformUser {
+  id: string;
+  email: string;
+  status: string;
+  primary_tenant_id?: string;
+  profile?: Record<string, any>;
+  last_login_at?: string;
+  terms_accepted: boolean;
+  memberships?: UserMembership[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UsersResponse {
+  users: PlatformUser[];
+  pagination: { total: number; page: number; limit: number; pages: number };
+}
+
+export const userKeys = {
+  all: (params?: Record<string, string>) => ['admin', 'users', params ?? {}] as const,
+  detail: (id: string) => ['admin', 'users', id] as const,
+};
+
+export function useAdminUsers(params: { status?: string; tenant_id?: string; search?: string; page?: number; limit?: number } = {}) {
+  const q = new URLSearchParams();
+  if (params.status) q.set('status', params.status);
+  if (params.tenant_id) q.set('tenant_id', params.tenant_id);
+  if (params.search) q.set('search', params.search);
+  if (params.page) q.set('page', String(params.page));
+  if (params.limit) q.set('limit', String(params.limit));
+  const qs = q.toString();
+
+  return useQuery({
+    queryKey: userKeys.all(Object.fromEntries(q)),
+    queryFn: async () => {
+      const response = await apiClient.get<UsersResponse>(`/api/v1/admin/users${qs ? '?' + qs : ''}`);
+      return ((response as unknown as { data?: UsersResponse }).data ?? response) as UsersResponse;
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+export function useAdminUser(id: string) {
+  return useQuery({
+    queryKey: userKeys.detail(id),
+    queryFn: async () => {
+      const response = await apiClient.get<PlatformUser>(`/api/v1/admin/users/${id}`);
+      return ((response as unknown as { data?: PlatformUser }).data ?? response) as PlatformUser;
+    },
+    enabled: !!id,
+    staleTime: STALE_MS,
+  });
+}
+
+export function useUpdateAdminUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: { id: string; email?: string; profile?: Record<string, any> }) => {
+      const response = await apiClient.patch(`/api/v1/admin/users/${id}`, payload);
+      return ((response as unknown as { data?: PlatformUser }).data ?? response) as PlatformUser;
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all() });
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(vars.id) });
+    },
+  });
+}
+
+export function useAdminUserAction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, action }: { id: string; action: 'suspend' | 'deactivate' | 'activate' }) => {
+      const response = await apiClient.post(`/api/v1/admin/users/${id}/${action}`, {});
+      return (response as { data?: any }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all() });
+    },
+  });
+}
+
+export function useDeleteAdminUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/api/v1/admin/users/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all() });
+    },
+  });
+}

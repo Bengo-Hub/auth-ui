@@ -16,6 +16,7 @@ import {
   Menu,
   Settings,
   User,
+  Users,
   Wrench
 } from 'lucide-react';
 import Link from 'next/link';
@@ -76,6 +77,11 @@ const PLATFORM_ADMIN_ITEMS: NavItem[] = [
     title: 'Developer',
     href: '/dashboard/developer',
     icon: Code2,
+  },
+  {
+    title: 'Users',
+    href: '/dashboard/platform/users',
+    icon: Users,
   },
   {
     title: 'DB Backups',
