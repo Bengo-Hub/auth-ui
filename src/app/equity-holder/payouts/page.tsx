@@ -1,7 +1,9 @@
 'use client';
 
-import { usePortal } from '../layout';
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState } from 'react';
+import { usePortal } from '../equity-portal-context';
 
 const TREASURY_API = process.env.NEXT_PUBLIC_TREASURY_API_URL || 'https://finance.codevertexitsolutions.com';
 

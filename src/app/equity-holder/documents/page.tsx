@@ -1,8 +1,10 @@
 'use client';
 
-import { usePortal } from '../layout';
-import { useState } from 'react';
+export const dynamic = 'force-dynamic';
+
 import api from '@/lib/api-client';
+import { useState } from 'react';
+import { usePortal } from '../equity-portal-context';
 
 const DOC_TYPES = ['EPA', 'MSA', 'DPA'] as const;
 type DocType = typeof DOC_TYPES[number];
