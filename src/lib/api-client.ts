@@ -36,6 +36,8 @@ const PUBLIC_ROUTES = [
   '/status',          // Status page
   '/docs',            // Documentation
   '/pricing',         // Pricing page
+  '/equity-holder',   // Equity portal — token-authenticated, no session cookie
+  '/p',              // Short-link redirects
 ];
 
 // Check if current path is a public route
