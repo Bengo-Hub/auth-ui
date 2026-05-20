@@ -12,13 +12,16 @@ import {
     ClipboardCopy,
     Code2,
     Copy,
+    Cpu,
     ExternalLink,
     Globe,
     Key,
     Loader2,
     Package,
     Plus,
+    RefreshCw,
     ShieldAlert,
+    ShieldOff,
     Terminal,
     Trash2,
 } from 'lucide-react';
@@ -46,7 +49,7 @@ interface APIKey {
   created_at: string;
 }
 
-type ActiveTab = 'oauth' | 'api-keys';
+type ActiveTab = 'oauth' | 'api-keys' | 'apps';
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
@@ -70,32 +73,32 @@ export default function DeveloperPortal() {
       </header>
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl w-fit">
-        <button
-          onClick={() => setActiveTab('oauth')}
-          className={`px-6 py-3 rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'oauth'
-              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-          }`}
-        >
-          <Globe className="h-4 w-4 inline-block mr-2" />
-          OAuth Clients
-        </button>
-        <button
-          onClick={() => setActiveTab('api-keys')}
-          className={`px-6 py-3 rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'api-keys'
-              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-          }`}
-        >
-          <Key className="h-4 w-4 inline-block mr-2" />
-          API Keys
-        </button>
+      <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl w-fit overflow-x-auto">
+        {(
+          [
+            { id: 'oauth', label: 'OAuth Clients', icon: Globe },
+            { id: 'api-keys', label: 'API Keys', icon: Key },
+            { id: 'apps', label: 'Apps', icon: Cpu },
+          ] as { id: ActiveTab; label: string; icon: React.ComponentType<{ className?: string }> }[]
+        ).map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+              activeTab === id
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+          >
+            <Icon className="h-4 w-4 inline-block mr-2" />
+            {label}
+          </button>
+        ))}
       </div>
 
-      {activeTab === 'oauth' ? <OAuthSection /> : <APIKeySection />}
+      {activeTab === 'oauth' && <OAuthSection />}
+      {activeTab === 'api-keys' && <APIKeySection />}
+      {activeTab === 'apps' && <DeveloperAppSection />}
 
       {/* Resources & Documentation */}
       <ResourcesSection />
@@ -694,6 +697,254 @@ function APIKeySection() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       )
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+// ── Developer Apps Section ───────────────────────────────────────────────────
+
+interface DevApp {
+  id: string;
+  name: string;
+  description?: string;
+  app_type: string;
+  client_id: string;
+  key_prefix: string;
+  scopes?: string[];
+  status: string;
+  last_used_at?: string;
+  created_at: string;
+}
+
+function DeveloperAppSection() {
+  const [apps, setApps] = useState<DevApp[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newToken, setNewToken] = useState<string | null>(null);
+  const [tokenCopied, setTokenCopied] = useState(false);
+  const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
+  const [appName, setAppName] = useState('');
+  const [appScopes, setAppScopes] = useState('');
+
+  const fetchApps = useCallback(async () => {
+    try {
+      const res = await apiClient.get<DevApp[]>('/api/v1/admin/apps');
+      setApps((Array.isArray(res.data) ? res.data : []).filter((a) => a.app_type === 'tenant'));
+    } catch {
+      setApps([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchApps(); }, [fetchApps]);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
+    try {
+      const res = await apiClient.post<{ token: string }>('/api/v1/admin/apps', {
+        name: appName,
+        app_type: 'tenant',
+        scopes: appScopes.split(',').map((s) => s.trim()).filter(Boolean),
+      });
+      setNewToken(res.data.token);
+      setAppName('');
+      setAppScopes('');
+      setShowCreate(false);
+      fetchApps();
+    } catch (err) {
+      console.error('Failed to create app', err);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleRotate = async (id: string) => {
+    try {
+      const res = await apiClient.post<{ token: string }>(`/api/v1/admin/apps/${id}/rotate`);
+      setNewToken(res.data.token);
+      fetchApps();
+    } catch (err) {
+      console.error('Failed to rotate token', err);
+    }
+  };
+
+  const handleRevoke = async (id: string) => {
+    try {
+      await apiClient.post(`/api/v1/admin/apps/${id}/revoke`);
+      setRevokeTarget(null);
+      fetchApps();
+    } catch (err) {
+      console.error('Failed to revoke app', err);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* One-time token banner */}
+      {newToken && (
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+        >
+          <div className="flex items-start gap-3 mb-4">
+            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-bold text-amber-900 dark:text-amber-200">Save this token — it won&apos;t be shown again</p>
+              <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">Store it securely in your service config or environment.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 p-4 bg-white dark:bg-slate-800 rounded-xl text-sm font-mono break-all border border-amber-300 dark:border-amber-700 text-slate-900 dark:text-slate-200">
+              {newToken}
+            </code>
+            <Button variant="outline" size="icon" className="h-12 w-12 rounded-xl border-amber-300 shrink-0"
+              onClick={() => { navigator.clipboard.writeText(newToken); setTokenCopied(true); setTimeout(() => setTokenCopied(false), 2000); }}>
+              {tokenCopied ? <Check className="h-4 w-4 text-green-500" /> : <ClipboardCopy className="h-4 w-4" />}
+            </Button>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setNewToken(null)} className="mt-3 text-amber-600 dark:text-amber-400">
+            I&apos;ve saved my token
+          </Button>
+        </motion.div>
+      )}
+
+      {/* Create form */}
+      {showCreate ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm"
+        >
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Cpu className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Create App Token</h2>
+              <p className="text-slate-500 dark:text-slate-400">Generates a bng_app_* token for service integration.</p>
+            </div>
+          </div>
+          <form onSubmit={handleCreate} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">App Name *</Label>
+                <Input required value={appName} onChange={(e) => setAppName(e.target.value)}
+                  placeholder="My Integration App"
+                  className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
+              </div>
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Scopes <span className="font-normal text-slate-400">(comma-separated)</span></Label>
+                <Input value={appScopes} onChange={(e) => setAppScopes(e.target.value)}
+                  placeholder="read:orders, write:inventory"
+                  className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button type="submit" disabled={isCreating}
+                className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
+                {isCreating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Creating...</> : 'Create App'}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setShowCreate(false)}
+                className="h-14 px-8 rounded-2xl border-slate-200 dark:border-slate-700 font-bold dark:text-white">
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </motion.div>
+      ) : (
+        <div className="flex justify-start">
+          <Button onClick={() => setShowCreate(true)}
+            className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
+            <Plus className="h-5 w-5 mr-2" />
+            Create App Token
+          </Button>
+        </div>
+      )}
+
+      {/* Apps list */}
+      <section className="space-y-6">
+        <h2 className="text-2xl font-black text-slate-900 dark:text-white">Your Apps</h2>
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          </div>
+        ) : apps.length === 0 ? (
+          <div className="p-20 rounded-[3rem] bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
+            <Cpu className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+            <p className="text-slate-500 dark:text-slate-400">No apps yet. Create one to get a bng_app_* token.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {apps.map((app) => (
+              <motion.div key={app.id}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center ${
+                      app.status === 'active' ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-slate-100 dark:bg-slate-800'
+                    }`}>
+                      <Cpu className={`h-5 w-5 ${app.status === 'active' ? 'text-emerald-500' : 'text-slate-400'}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-slate-900 dark:text-white truncate">{app.name}</h3>
+                        <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          app.status === 'active'
+                            ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-500'
+                        }`}>{app.status}</span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        <code className="font-mono text-xs">{app.key_prefix}...</code>
+                        <span>Created {new Date(app.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      </div>
+                      {app.scopes && app.scopes.length > 0 && (
+                        <div className="flex gap-1.5 flex-wrap mt-2">
+                          {app.scopes.map((s) => (
+                            <span key={s} className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-mono text-slate-600 dark:text-slate-400">{s}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {app.status === 'active' && (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => handleRotate(app.id)}
+                          className="rounded-xl border-slate-200 dark:border-slate-700 font-bold text-xs dark:text-white">
+                          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                          Rotate
+                        </Button>
+                        {revokeTarget === app.id ? (
+                          <div className="flex items-center gap-1">
+                            <Button variant="destructive" size="sm" className="rounded-xl text-xs font-bold"
+                              onClick={() => handleRevoke(app.id)}>Confirm</Button>
+                            <Button variant="ghost" size="sm" className="rounded-xl text-xs"
+                              onClick={() => setRevokeTarget(null)}>Cancel</Button>
+                          </div>
+                        ) : (
+                          <Button variant="ghost" size="icon"
+                            className="text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl"
+                            onClick={() => setRevokeTarget(app.id)}>
+                            <ShieldOff className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

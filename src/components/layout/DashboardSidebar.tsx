@@ -8,6 +8,7 @@ import {
   Building2,
   ChevronLeft,
   Code2,
+  Cpu,
   Database,
   ExternalLink,
   Key,
@@ -84,6 +85,11 @@ const PLATFORM_ADMIN_ITEMS: NavItem[] = [
     icon: Users,
   },
   {
+    title: 'Apps & Keys',
+    href: '/dashboard/platform/apps',
+    icon: Cpu,
+  },
+  {
     title: 'DB Backups',
     href: '/dashboard/platform/backups',
     icon: Database,
@@ -113,7 +119,7 @@ export function DashboardSidebar() {
   return (
     <aside
       className={cn(
-        'sticky top-0 h-screen flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out z-30',
+        'sticky top-0 h-screen hidden lg:flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out z-30',
         isCollapsed ? 'w-20' : 'w-64'
       )}
     >

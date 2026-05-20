@@ -4,6 +4,12 @@ import { useTenant } from '@/components/providers/tenant-provider';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -13,37 +19,152 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { JoinOrganizationDialog } from '@/components/organizations/JoinOrganizationDialog';
+import { useAuth } from '@/hooks/useAuth';
 import { useLogout } from '@/hooks/useLogout';
 import { useAuthStore } from '@/store/auth-store';
+import { cn } from '@/lib/utils';
 import {
   Bell,
+  Building2,
+  Code2,
+  Cpu,
+  Database,
+  ExternalLink,
   Home,
+  Key,
+  LayoutDashboard,
   LogOut,
+  Menu,
   Search,
   Settings,
-  User
+  User,
+  Users,
+  Wrench,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+
+const MOBILE_NAV_ITEMS = [
+  { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+  { title: 'Profile', href: '/dashboard/profile', icon: User },
+  { title: 'Settings', href: '/dashboard/settings', icon: Settings },
+];
+
+const MOBILE_PLATFORM_ITEMS = [
+  { title: 'Organizations', href: '/dashboard/tenants', icon: Building2 },
+  { title: 'OAuth Clients', href: '/dashboard/platform/clients', icon: Key },
+  { title: 'Integrations', href: '/dashboard/integrations', icon: Wrench },
+  { title: 'Developer', href: '/dashboard/developer', icon: Code2 },
+  { title: 'Apps & Keys', href: '/dashboard/platform/apps', icon: Cpu },
+  { title: 'Users', href: '/dashboard/platform/users', icon: Users },
+  { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
+  { title: 'Membership Tiers', href: 'https://pricing.codevertexitsolutions.com/codevertex/platform/plans', icon: ExternalLink, newTab: true },
+];
 
 export function DashboardTopNav() {
   const user = useAuthStore((state) => state.user);
   const logout = useLogout();
   const { getServiceTitle } = useTenant();
+  const { isPlatformOwner } = useAuth();
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const displayTitle = getServiceTitle('SSO');
 
   return (
     <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-8 flex items-center justify-between">
-      {/* Left: Branded Title */}
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard" className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
+      {/* Left: hamburger (mobile) + title */}
+      <div className="flex items-center gap-3">
+        {/* Hamburger — only on mobile where sidebar is hidden */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden rounded-xl"
+          onClick={() => setMobileOpen(true)}
+        >
+          <Menu className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+        </Button>
+        <Link href="/dashboard" className="hidden lg:flex p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
           <Home className="h-5 w-5 text-primary" />
         </Link>
-        <h1 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase truncate max-w-[150px] sm:max-w-none">
+        <h1 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase truncate max-w-[130px] sm:max-w-none">
           {displayTitle}
         </h1>
       </div>
+
+      {/* Mobile nav drawer */}
+      <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
+        <DialogContent className="sm:max-w-xs w-[85vw] h-full max-h-screen fixed left-0 top-0 bottom-0 rounded-none rounded-r-3xl p-0 border-l-0 overflow-y-auto">
+          <DialogHeader className="px-6 pt-8 pb-4">
+            <DialogTitle className="text-left font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              Navigation
+            </DialogTitle>
+          </DialogHeader>
+          <nav className="px-4 pb-8 space-y-1">
+            {MOBILE_NAV_ITEMS.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm',
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800',
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.title}
+                </Link>
+              );
+            })}
+
+            {isPlatformOwner && (
+              <>
+                <div className="pt-4 pb-2 px-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-1.5">
+                    <Wrench className="h-3 w-3" /> Platform
+                  </p>
+                </div>
+                {MOBILE_PLATFORM_ITEMS.map((item) => {
+                  const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      target={item.newTab ? '_blank' : undefined}
+                      rel={item.newTab ? 'noopener noreferrer' : undefined}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm',
+                        isActive
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800',
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.title}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => { logout(); setMobileOpen(false); }}
+                className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl text-rose-500 font-bold text-sm hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
+          </nav>
+        </DialogContent>
+      </Dialog>
 
       {/* Center: Search (Placeholder) - Hidden on mobile */}
       <div className="hidden lg:flex relative w-80 xl:w-96 max-w-full">

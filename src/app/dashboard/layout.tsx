@@ -2,6 +2,7 @@
 
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 import { DashboardTopNav } from '@/components/layout/DashboardTopNav';
+import { VeraWidget } from '@/components/vera/VeraWidget';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/auth-store';
 import { usePathname, useRouter } from 'next/navigation';
@@ -61,12 +62,13 @@ export default function DashboardLayout({
       <DashboardSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardTopNav />
-        <main className="flex-1 overflow-y-auto p-8 lg:p-12">
+        <main className="flex-1 overflow-y-auto p-6 lg:p-12">
           <div className="max-w-6xl mx-auto">
             {children}
           </div>
         </main>
       </div>
+      <VeraWidget />
     </div>
   );
 }
