@@ -37,6 +37,7 @@ import {
   Menu,
   Search,
   Settings,
+  Store,
   User,
   Users,
   Wrench,
@@ -49,6 +50,7 @@ const MOBILE_NAV_ITEMS = [
   { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Profile', href: '/dashboard/profile', icon: User },
   { title: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { title: 'My Organization', href: '/dashboard/my-tenant', icon: Store, tenantOnly: true },
 ];
 
 const MOBILE_PLATFORM_ITEMS = [
@@ -102,7 +104,7 @@ export function DashboardTopNav() {
             </DialogTitle>
           </DialogHeader>
           <nav className="px-4 pb-8 space-y-1">
-            {MOBILE_NAV_ITEMS.map((item) => {
+            {MOBILE_NAV_ITEMS.filter((item) => !('tenantOnly' in item && item.tenantOnly && isPlatformOwner)).map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link

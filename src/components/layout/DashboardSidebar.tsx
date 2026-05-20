@@ -16,6 +16,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  Store,
   User,
   Users,
   Wrench
@@ -111,10 +112,11 @@ export function DashboardSidebar() {
   const { tenant } = useTenant();
   const { isPlatformOwner } = useAuth();
 
-  // Regular nav is the same for every authenticated user (profile is
-  // self-scoped, settings is active-tenant-scoped). Platform section is
-  // gated entirely on is_platform_owner.
-  const visibleNavItems = NAV_ITEMS;
+  // Inject "My Organization" for tenant members (non-platform-owners with a primary tenant)
+  const myTenantItem: NavItem | null = (!isPlatformOwner && !!tenant)
+    ? { title: 'My Organization', href: '/dashboard/my-tenant', icon: Store }
+    : null;
+  const visibleNavItems = myTenantItem ? [...NAV_ITEMS, myTenantItem] : NAV_ITEMS;
 
   return (
     <aside
