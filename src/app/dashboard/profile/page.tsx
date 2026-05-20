@@ -65,6 +65,30 @@ function ProfileTab() {
   const [email, setEmail] = useState(user?.email || '');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
+
+  const handleSaveAvatar = async () => {
+    if (!avatarUrl.trim()) return;
+    setIsSavingAvatar(true);
+    try {
+      const response = await apiClient.patch('/api/v1/auth/me', { profile_picture_url: avatarUrl.trim() });
+      const updated = (response as { data?: Record<string, any> }).data as Record<string, any> | undefined;
+      if (updated && user) {
+        setUser({ ...user, ...updated, roles: updated.roles ?? user.roles ?? [], permissions: updated.permissions ?? user.permissions ?? [], tenants: updated.tenants ?? user.tenants ?? [] });
+      }
+      setAvatarDialogOpen(false);
+      setAvatarUrl('');
+      setMessage({ type: 'success', text: 'Avatar updated!' });
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to update avatar' });
+    } finally {
+      setIsSavingAvatar(false);
+    }
+  };
+
+  const avatarSrc = (user as Record<string, any>)?.profile?.profile_picture_url as string | undefined;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,12 +114,48 @@ function ProfileTab() {
         <div className="p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm text-center">
           <div className="relative inline-block mb-6">
             <div className="w-32 h-32 rounded-[2.5rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-800 shadow-xl">
-              <UserIcon className="h-16 w-16 text-slate-300 dark:text-slate-600" />
+              {avatarSrc ? (
+                <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <UserIcon className="h-16 w-16 text-slate-300 dark:text-slate-600" />
+              )}
             </div>
-            <button className="absolute bottom-0 right-0 p-3 bg-primary text-white rounded-2xl shadow-lg hover:scale-110 transition-transform">
+            <button
+              type="button"
+              onClick={() => setAvatarDialogOpen(true)}
+              className="absolute bottom-0 right-0 p-3 bg-primary text-white rounded-2xl shadow-lg hover:scale-110 transition-transform"
+            >
               <Camera className="h-5 w-5" />
             </button>
           </div>
+          {avatarDialogOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl max-w-sm w-full p-6 space-y-4">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Update Avatar</h3>
+                <p className="text-sm text-slate-500">Paste a public image URL for your profile picture.</p>
+                <input
+                  type="url"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  placeholder="https://example.com/avatar.jpg"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-slate-900 dark:text-white"
+                />
+                <div className="flex gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => { setAvatarDialogOpen(false); setAvatarUrl(''); }}
+                    className="px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >Cancel</button>
+                  <button
+                    type="button"
+                    onClick={handleSaveAvatar}
+                    disabled={isSavingAvatar || !avatarUrl.trim()}
+                    className="px-4 py-2 text-sm font-bold rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  >{isSavingAvatar ? 'Saving…' : 'Save'}</button>
+                </div>
+              </div>
+            </div>
+          )}
           <h3 className="text-xl font-bold text-slate-900 dark:text-white">{user?.name || 'No Name Set'}</h3>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{user?.email}</p>
           <div className="flex flex-wrap justify-center gap-2">
@@ -157,7 +217,7 @@ function SecurityTab() {
     if (newPassword.length < 12) { toast({ title: 'Error', description: 'Password must be at least 12 characters.', variant: 'destructive' }); return; }
     setChangingPassword(true);
     try {
-      await apiClient.post('/api/v1/auth/password-reset/confirm', { current_password: currentPassword, new_password: newPassword });
+      await apiClient.post('/api/v1/auth/me/change-password', { current_password: currentPassword, new_password: newPassword });
       toast({ title: 'Password updated', description: 'Your password has been changed successfully.' });
       setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
     } catch (err: any) {
