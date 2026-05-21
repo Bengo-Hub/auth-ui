@@ -151,17 +151,12 @@ export function SignupForm() {
     }
     setIsSearching(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_AUTH_API_URL || 'https://sso.codevertexitsolutions.com'}/api/v1/tenants/by-slug/${encodeURIComponent(query)}`,
-        { headers: { Accept: 'application/json' } }
+      const res = await apiClient.get<TenantResult>(
+        `/api/v1/tenants/by-slug/${encodeURIComponent(query)}`,
       );
-      if (res.ok) {
-        const tenant: TenantResult = await res.json();
-        if (tenant?.id) setSearchResults([tenant]);
-        else setSearchResults([]);
-      } else {
-        setSearchResults([]);
-      }
+      const tenant = (res as any)?.data ?? res;
+      if (tenant?.id) setSearchResults([tenant as TenantResult]);
+      else setSearchResults([]);
     } catch {
       setSearchResults([]);
     } finally {
@@ -181,17 +176,14 @@ export function SignupForm() {
     if (!defaultTenant || tenantAutoResolved) return;
     (async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_AUTH_API_URL || 'https://sso.codevertexitsolutions.com'}/api/v1/tenants/by-slug/${encodeURIComponent(defaultTenant)}`,
-          { headers: { Accept: 'application/json' } }
+        const res = await apiClient.get<TenantResult>(
+          `/api/v1/tenants/by-slug/${encodeURIComponent(defaultTenant)}`,
         );
-        if (res.ok) {
-          const tenant: TenantResult = await res.json();
-          if (tenant?.id) {
-            setSelectedTenant(tenant);
-            setOrgAction('join_existing');
-            setTenantAutoResolved(true);
-          }
+        const tenant = (res as any)?.data ?? res;
+        if (tenant?.id) {
+          setSelectedTenant(tenant as TenantResult);
+          setOrgAction('join_existing');
+          setTenantAutoResolved(true);
         }
       } catch {
         // Silent failure — user can still manually select org if auto-resolve fails

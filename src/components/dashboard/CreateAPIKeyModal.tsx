@@ -1,19 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-    X, 
-    Key, 
-    Shield, 
-    Globe, 
-    Loader2, 
-    Copy, 
+import {
+    X,
+    Key,
+    Shield,
+    Globe,
+    Loader2,
+    Copy,
     CheckCircle2,
     AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import apiClient from '@/lib/api-client';
 
 interface CreateAPIKeyModalProps {
     isOpen: boolean;
@@ -35,22 +36,12 @@ export function CreateAPIKeyModal({ isOpen, onClose, onSuccess }: CreateAPIKeyMo
         e.preventDefault();
         try {
             setLoading(true);
-            const response = await fetch('/api/v1/admin/api-keys', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                },
-                body: JSON.stringify({
-                    name,
-                    service,
-                    expires_in: parseInt(expiresIn)
-                })
+            const res = await apiClient.post('/api/v1/admin/api-keys', {
+                name,
+                service,
+                expires_in: parseInt(expiresIn),
             });
-
-            if (!response.ok) throw new Error('Failed to generate API key');
-            
-            const data = await response.json();
+            const data = (res as any)?.data ?? res;
             setCreatedKey(data);
             onSuccess();
         } catch (error) {

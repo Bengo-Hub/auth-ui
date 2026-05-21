@@ -2,33 +2,13 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from 'react';
 import { usePortal } from '../equity-portal-context';
-
-const TREASURY_API = process.env.NEXT_PUBLIC_TREASURY_API_URL || 'https://finance.codevertexitsolutions.com';
-
-interface Payout {
-    id: string;
-    period_start: string;
-    period_end: string;
-    payout_amount: number;
-    status: string;
-}
+import { useEquityPayouts } from '@/hooks/use-equity-portal';
 
 export default function EquityDashboard() {
     const { holderID, token } = usePortal();
-    const [payouts, setPayouts] = useState<Payout[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetch(`${TREASURY_API}/api/v1/platform/equity-holders/${holderID}/payouts`, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then((r) => r.json())
-            .then((d) => setPayouts(d.payouts ?? []))
-            .catch(() => {})
-            .finally(() => setLoading(false));
-    }, [holderID, token]);
+    const { data, isLoading } = useEquityPayouts(holderID, token);
+    const payouts = data?.payouts ?? [];
 
     const totalEarned = payouts.filter(p => p.status === 'completed').reduce((s, p) => s + Number(p.payout_amount), 0);
     const pending = payouts.filter(p => p.status === 'pending').reduce((s, p) => s + Number(p.payout_amount), 0);
@@ -41,14 +21,14 @@ export default function EquityDashboard() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <SummaryCard label="Total Earned" value={`KES ${totalEarned.toLocaleString()}`} loading={loading} />
-                <SummaryCard label="Pending Payout" value={`KES ${pending.toLocaleString()}`} loading={loading} />
-                <SummaryCard label="Total Payouts" value={payouts.length.toString()} loading={loading} />
+                <SummaryCard label="Total Earned" value={`KES ${totalEarned.toLocaleString()}`} loading={isLoading} />
+                <SummaryCard label="Pending Payout" value={`KES ${pending.toLocaleString()}`} loading={isLoading} />
+                <SummaryCard label="Total Payouts" value={payouts.length.toString()} loading={isLoading} />
             </div>
 
             <div>
                 <h2 className="text-lg font-semibold mb-3">Recent Payouts</h2>
-                {loading ? (
+                {isLoading ? (
                     <div className="text-sm text-muted-foreground">Loading...</div>
                 ) : payouts.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No payouts yet.</p>

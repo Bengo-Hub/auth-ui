@@ -2,38 +2,13 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from 'react';
 import { usePortal } from '../equity-portal-context';
-
-const TREASURY_API = process.env.NEXT_PUBLIC_TREASURY_API_URL || 'https://finance.codevertexitsolutions.com';
-
-interface Payout {
-    id: string;
-    period_start: string;
-    period_end: string;
-    gross_revenue: number;
-    tax_amount: number;
-    payout_amount: number;
-    net_payout: number;
-    status: string;
-    provider_reference?: string;
-    created_at: string;
-}
+import { useEquityPayouts } from '@/hooks/use-equity-portal';
 
 export default function EquityPayouts() {
     const { holderID, token } = usePortal();
-    const [payouts, setPayouts] = useState<Payout[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetch(`${TREASURY_API}/api/v1/platform/equity-holders/${holderID}/payouts`, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then((r) => r.json())
-            .then((d) => setPayouts(d.payouts ?? []))
-            .catch(() => {})
-            .finally(() => setLoading(false));
-    }, [holderID, token]);
+    const { data, isLoading } = useEquityPayouts(holderID, token);
+    const payouts = data?.payouts ?? [];
 
     return (
         <div className="space-y-6">
@@ -42,7 +17,7 @@ export default function EquityPayouts() {
                 <p className="text-muted-foreground text-sm mt-1">Complete record of all equity payouts</p>
             </div>
 
-            {loading ? (
+            {isLoading ? (
                 <div className="text-sm text-muted-foreground">Loading...</div>
             ) : payouts.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-8 text-center">No payouts recorded yet.</p>
