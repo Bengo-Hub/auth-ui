@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTenantMembers, type MemberFilters, type TenantMember } from '@/hooks/use-dashboard-api';
 import { useToast } from '@/hooks/use-toast';
 import apiClient from '@/lib/api-client';
-import { subscriptionApi, type Plan, type ServiceSubscriptionEntry } from '@/lib/subscription-api';
+import { subscriptionApi, type Plan, type ServiceSubscriptionEntry, type ServiceChargePlan } from '@/lib/subscription-api';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -447,10 +447,16 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
     staleTime: 2 * 60 * 1000,
   });
 
-  const { data: plans = [], isLoading: plansLoading } = useQuery({
+  const { data: allPlans = [], isLoading: plansLoading } = useQuery({
     queryKey: ['plans-by-service', activeService],
     queryFn: () => subscriptionApi.getPlansByService(activeService),
     staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: allServiceCharges = [], isLoading: chargesLoading } = useQuery({
+    queryKey: ['service-charge-plans'],
+    queryFn: () => subscriptionApi.getServiceChargePlans(),
+    staleTime: 10 * 60 * 1000,
   });
 
   const serviceMap = new Map<string, ServiceSubscriptionEntry>(
@@ -459,6 +465,13 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
 
   const current = serviceMap.get(activeService);
   const isActiveService = current?.status === 'ACTIVE' || current?.status === 'TRIAL';
+
+  const monthlyPlans = allPlans.filter((p) => p.billing_cycle === 'MONTHLY');
+  const annualPlans = allPlans.filter((p) => p.billing_cycle === 'ANNUAL');
+  const oneTimePlans = allPlans.filter((p) => p.billing_cycle === 'ONE_TIME');
+  const serviceCharges = allServiceCharges.filter((sc) =>
+    sc.applicable_services?.includes(activeService)
+  );
 
   return (
     <div className="space-y-6">
@@ -484,23 +497,55 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
         })}
       </div>
 
-      {/* Current subscription for this service */}
+      {/* Current subscription status */}
       {serviceLoading ? (
         <div className="h-20 w-full rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
       ) : isActiveService ? (
-        <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-700 flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-0.5">Active Plan</p>
-            <p className="text-lg font-black text-slate-900 dark:text-white">{current?.plan_name ?? current?.plan_code}</p>
-            {current?.current_period_end && (
-              <p className="text-xs text-slate-500 mt-0.5">
-                Renews {new Date(current.current_period_end).toLocaleDateString()}
-              </p>
-            )}
+        <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-700">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-0.5">Active Plan</p>
+              <p className="text-lg font-black text-slate-900 dark:text-white">{current?.plan_name ?? current?.plan_code}</p>
+              {current?.current_period_end && (
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Renews {new Date(current.current_period_end).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                current?.status === 'ACTIVE'
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+                  : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
+              }`}>{current?.status}</span>
+              <a
+                href={`${SUBSCRIPTIONS_BASE}/plans?service=${activeService}&plan=${current?.plan_code}`}
+                target="_blank" rel="noopener noreferrer"
+              >
+                <Button size="sm" variant="outline" className="rounded-xl gap-1 h-8 text-xs">
+                  Manage <ExternalLink className="h-3 w-3" />
+                </Button>
+              </a>
+            </div>
           </div>
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
-            {current?.status}
-          </span>
+          {/* Active plan features summary */}
+          {serviceData?.subscription?.features && serviceData.subscription.features.length > 0 && current?.plan_code === serviceData.subscription.plan_code && (
+            <div className="mt-4 pt-4 border-t border-emerald-200 dark:border-emerald-700/50">
+              <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2">Included Features</p>
+              <div className="flex flex-wrap gap-1.5">
+                {serviceData.subscription.features.slice(0, 8).map((f) => (
+                  <span key={f} className="px-2 py-0.5 rounded-lg text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium capitalize">
+                    {f.replace(/_/g, ' ')}
+                  </span>
+                ))}
+                {serviceData.subscription.features.length > 8 && (
+                  <span className="px-2 py-0.5 rounded-lg text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 font-medium">
+                    +{serviceData.subscription.features.length - 8} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-700">
@@ -510,38 +555,75 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
         </div>
       )}
 
-      {/* Plans */}
-      <div>
-        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">
-          Available Plans — {SERVICE_TAG_LABELS[activeService]}
-        </h3>
+      {/* Monthly Plans */}
+      {(plansLoading || monthlyPlans.length > 0) && (
+        <PlanSection
+          title={`Monthly Plans — ${SERVICE_TAG_LABELS[activeService]}`}
+          plans={monthlyPlans}
+          isLoading={plansLoading}
+          currentPlanCode={current?.plan_code}
+          billingLabel="/mo"
+          serviceTag={activeService}
+          tenantSlug={tenantSlug}
+        />
+      )}
 
-        {plansLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => <div key={i} className="h-48 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />)}
+      {/* Annual Plans */}
+      {(plansLoading || annualPlans.length > 0) && (
+        <PlanSection
+          title={`Annual Plans — ${SERVICE_TAG_LABELS[activeService]}`}
+          subtitle="Save up to 10% vs monthly billing"
+          plans={annualPlans}
+          isLoading={plansLoading}
+          currentPlanCode={current?.plan_code}
+          billingLabel="/yr"
+          serviceTag={activeService}
+          tenantSlug={tenantSlug}
+          monthlyPlans={monthlyPlans}
+        />
+      )}
+
+      {/* One-Time Plans */}
+      {oneTimePlans.length > 0 && (
+        <PlanSection
+          title={`One-Time Licence — ${SERVICE_TAG_LABELS[activeService]}`}
+          subtitle="Pay once, use forever. No recurring fees."
+          plans={oneTimePlans}
+          isLoading={false}
+          currentPlanCode={current?.plan_code}
+          billingLabel="one-time"
+          serviceTag={activeService}
+          tenantSlug={tenantSlug}
+        />
+      )}
+
+      {/* Service Charge Plans */}
+      {!chargesLoading && serviceCharges.length > 0 && (
+        <div>
+          <div className="flex items-baseline gap-2 mb-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">
+              Service Charge Plans — {SERVICE_TAG_LABELS[activeService]}
+            </h3>
+            <span className="text-xs text-slate-400">Commission-based, no monthly fee</span>
           </div>
-        ) : plans.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-700 text-center">
-            <p className="text-sm text-slate-400">No plans available for this service yet.</p>
-          </div>
-        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {plans.filter((p) => p.billing_cycle === 'MONTHLY').map((plan) => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                isCurrentPlan={current?.plan_code === plan.plan_code}
-                serviceTag={activeService}
-                tenantSlug={tenantSlug}
-              />
+            {serviceCharges.map((sc) => (
+              <ServiceChargePlanCard key={sc.id} plan={sc} />
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* All sections empty */}
+      {!plansLoading && monthlyPlans.length === 0 && annualPlans.length === 0 && oneTimePlans.length === 0 && serviceCharges.length === 0 && (
+        <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-700 text-center">
+          <p className="text-sm text-slate-400">No plans available for {SERVICE_TAG_LABELS[activeService]} yet.</p>
+        </div>
+      )}
 
       <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700">
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          For invoices, payment history, and annual plan options, visit the{' '}
+          For invoices, payment history, and upgrade options, visit the{' '}
           <a
             href={`${SUBSCRIPTIONS_BASE}/plans?service=${activeService}`}
             target="_blank" rel="noopener noreferrer"
@@ -555,18 +637,83 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
   );
 }
 
+function PlanSection({
+  title,
+  subtitle,
+  plans,
+  isLoading,
+  currentPlanCode,
+  billingLabel,
+  serviceTag,
+  tenantSlug,
+  monthlyPlans,
+}: {
+  title: string;
+  subtitle?: string;
+  plans: Plan[];
+  isLoading: boolean;
+  currentPlanCode?: string;
+  billingLabel: string;
+  serviceTag: string;
+  tenantSlug: string;
+  monthlyPlans?: Plan[];
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline gap-2 mb-4">
+        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">{title}</h3>
+        {subtitle && <span className="text-xs text-emerald-600 font-medium">{subtitle}</span>}
+      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => <div key={i} className="h-48 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {plans.map((plan) => {
+            // Find the equivalent monthly plan to compute savings
+            const monthlyEquiv = monthlyPlans?.find((m) =>
+              m.tier_order === plan.tier_order
+            );
+            const monthlyCost = monthlyEquiv ? monthlyEquiv.base_price * 12 : null;
+            const savings = monthlyCost && plan.base_price < monthlyCost
+              ? Math.round(((monthlyCost - plan.base_price) / monthlyCost) * 100)
+              : null;
+
+            return (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                isCurrentPlan={currentPlanCode === plan.plan_code}
+                serviceTag={serviceTag}
+                tenantSlug={tenantSlug}
+                billingLabel={billingLabel}
+                savingsPct={savings ?? undefined}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PlanCard({
   plan,
   isCurrentPlan,
   serviceTag,
   tenantSlug,
+  billingLabel,
+  savingsPct,
 }: {
   plan: Plan;
   isCurrentPlan: boolean;
   serviceTag: string;
   tenantSlug: string;
+  billingLabel?: string;
+  savingsPct?: number;
 }) {
-  const features = (plan.features ?? []).slice(0, 5);
+  const features = (plan.features ?? []).filter((f) => f.is_included !== false).slice(0, 5);
 
   return (
     <motion.div
@@ -583,16 +730,21 @@ function PlanCard({
           <p className="font-bold text-slate-900 dark:text-white text-sm">{plan.name}</p>
           <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{plan.description}</p>
         </div>
-        {isCurrentPlan && (
-          <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">Current</span>
-        )}
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          {isCurrentPlan && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">Current</span>
+          )}
+          {savingsPct && savingsPct > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Save {savingsPct}%</span>
+          )}
+        </div>
       </div>
 
       <div>
         <span className="text-2xl font-black text-slate-900 dark:text-white">
           KES {plan.base_price.toLocaleString()}
         </span>
-        <span className="text-xs text-slate-400 ml-1">/mo</span>
+        <span className="text-xs text-slate-400 ml-1">{billingLabel ?? '/mo'}</span>
       </div>
 
       {features.length > 0 && (
@@ -600,7 +752,7 @@ function PlanCard({
           {features.map((f, i) => (
             <li key={i} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
               <Check className="h-3 w-3 text-emerald-500 shrink-0" />
-              <span className="capitalize">{f.name || f.code || String(f)}</span>
+              <span className="capitalize">{(f.name || f.code || String(f)).replace(/_/g, ' ')}</span>
             </li>
           ))}
         </ul>
@@ -621,6 +773,40 @@ function PlanCard({
         </Button>
       </a>
     </motion.div>
+  );
+}
+
+function ServiceChargePlanCard({ plan }: { plan: ServiceChargePlan }) {
+  const chargeLabel =
+    plan.charge_type === 'PERCENTAGE'
+      ? `${plan.charge_value}% per transaction`
+      : plan.charge_type === 'FIXED_PER_TRANSACTION'
+      ? `KES ${plan.charge_value} per transaction`
+      : `Tiered`;
+
+  return (
+    <div className="p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-bold text-slate-900 dark:text-white text-sm">{plan.name}</p>
+          <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{plan.description}</p>
+        </div>
+        {plan.is_default && (
+          <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">Default</span>
+        )}
+      </div>
+      <div>
+        <span className="text-lg font-black text-slate-900 dark:text-white">{chargeLabel}</span>
+        {(plan.min_charge || plan.max_charge) && (
+          <p className="text-xs text-slate-400 mt-0.5">
+            {plan.min_charge ? `Min KES ${plan.min_charge}` : ''}
+            {plan.min_charge && plan.max_charge ? ' · ' : ''}
+            {plan.max_charge ? `Cap KES ${plan.max_charge}` : ''}
+          </p>
+        )}
+      </div>
+      <p className="text-xs text-slate-400">No monthly subscription fee. Platform commission applied per transaction.</p>
+    </div>
   );
 }
 
