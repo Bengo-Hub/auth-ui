@@ -46,7 +46,8 @@ const SERVICE_TAG_LABELS: Record<string, string> = {
 
 const ALL_SERVICE_TAGS = Object.keys(SERVICE_TAG_LABELS);
 
-const SUBSCRIPTIONS_BASE = 'https://pricingapi.codevertexitsolutions.com';
+// Front-end plans portal (subscriptions-ui), NOT the API
+const SUBSCRIPTIONS_BASE = 'https://pricing.codevertexitsolutions.com';
 
 type Tab = 'overview' | 'branding' | 'team' | 'billing' | 'support';
 
