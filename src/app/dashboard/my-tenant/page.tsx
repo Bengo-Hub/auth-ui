@@ -180,13 +180,17 @@ const TEAM_ROLES = [
   'manager',             // Store/operations manager
   'staff',               // General cross-service staff
   'member',              // Basic ordering/tenant member
+  'viewer',              // Read-only access for auditors/observers
   'cashier',             // POS cashier / treasury cashier
   'waiter',              // POS hospitality waiter
   'kitchen',             // POS kitchen display
   'bar',                 // POS bar display
   'receptionist',        // POS hotel receptionist
-  'rider',               // Logistics delivery rider
+  'rider',               // Logistics motorcycle delivery rider
+  'driver',              // Logistics fleet/cargo driver
   'delivery_coordinator',// Ordering/logistics dispatch coordinator
+  'technician',          // Field technician (ISP billing / IT services)
+  'customer',            // B2C end-user / ordering customer / ISP subscriber
 ];
 
 function TeamTab({ tenantId }: { tenantId: string }) {
