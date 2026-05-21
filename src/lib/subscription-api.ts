@@ -2,6 +2,26 @@ import axios from 'axios';
 
 const SUBSCRIPTION_API_BASE = 'https://pricingapi.codevertexitsolutions.com/api/v1';
 
+export interface ServiceSubscriptionEntry {
+  service_tag: string;
+  status: 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELLED' | 'NONE';
+  plan_code?: string;
+  plan_name?: string;
+  current_period_end?: string;
+}
+
+export interface ServiceSubscriptionsResult {
+  tenant_id: string;
+  subscription?: {
+    id: string;
+    plan_code: string;
+    plan_name: string;
+    status: string;
+    current_period_end: string;
+  };
+  services: ServiceSubscriptionEntry[];
+}
+
 export interface Plan {
   id: string;
   ID?: string;
@@ -67,8 +87,23 @@ export const subscriptionApi = {
 
   getPlanByCode: async (code: string): Promise<Plan> => {
     const response = await axios.get(`${SUBSCRIPTION_API_BASE}/plans/code/${code}`);
-    // API returns {plan: {...}} — unwrap
     const data = response.data;
     return normalizePlan(data.plan ?? data);
-  }
+  },
+
+  getPlansByService: async (serviceTag: string): Promise<Plan[]> => {
+    const response = await axios.get(`${SUBSCRIPTION_API_BASE}/plans`, {
+      params: { service: serviceTag, active: 'true' },
+    });
+    const raw = response.data;
+    const arr: any[] = Array.isArray(raw) ? raw : (raw.plans ?? []);
+    return arr.map(normalizePlan).sort((a, b) => a.tier_order - b.tier_order);
+  },
+
+  getServiceSubscriptions: async (tenantId: string): Promise<ServiceSubscriptionsResult> => {
+    const response = await axios.get(`/api/subscriptions`, {
+      params: { tenant_id: tenantId },
+    });
+    return response.data;
+  },
 };
