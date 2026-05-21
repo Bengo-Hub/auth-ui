@@ -12,12 +12,15 @@ import {
     Building2,
     CreditCard,
     ExternalLink,
+    KeyRound,
     Loader2,
     MessageCircle,
     Palette,
     Plus,
+    Search,
     Trash2,
     Users,
+    X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
@@ -148,12 +151,20 @@ function TenantOverview({ tenant, user }: { tenant: { id: string; name: string; 
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 
+type Member = { user_id: string; email?: string; name?: string; roles?: string[]; outlet?: string; is_active?: boolean };
+
 function TeamTab({ tenantId }: { tenantId: string }) {
   const { data: members = [], isLoading, refetch } = useTenantMembers(tenantId, true);
   const { toast } = useToast();
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
   const [isInviting, setIsInviting] = useState(false);
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [pinTarget, setPinTarget] = useState<Member | null>(null);
+  const [pin, setPin] = useState('');
+  const [pinService, setPinService] = useState('pos');
+  const [isPinSaving, setIsPinSaving] = useState(false);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,6 +192,34 @@ function TeamTab({ tenantId }: { tenantId: string }) {
     }
   };
 
+  const handleSetPin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pinTarget || pin.length !== 4) return;
+    setIsPinSaving(true);
+    try {
+      await apiClient.post(`/api/v1/admin/tenants/${tenantId}/members/${pinTarget.user_id}/service-pin`, {
+        service: pinService,
+        pin,
+      });
+      toast({ title: `PIN set for ${pinTarget.name ?? pinTarget.email}` });
+      setPinTarget(null);
+      setPin('');
+    } catch {
+      toast({ title: 'Failed to set PIN', variant: 'destructive' });
+    } finally {
+      setIsPinSaving(false);
+    }
+  };
+
+  const allRoles = Array.from(new Set((members as Member[]).flatMap((m) => m.roles ?? ['member'])));
+
+  const filtered = (members as Member[]).filter((m) => {
+    const q = search.toLowerCase();
+    const matchesSearch = !q || (m.name?.toLowerCase().includes(q) ?? false) || (m.email?.toLowerCase().includes(q) ?? false);
+    const matchesRole = !roleFilter || (m.roles ?? ['member']).includes(roleFilter);
+    return matchesSearch && matchesRole;
+  });
+
   return (
     <div className="space-y-8">
       {/* Invite form */}
@@ -203,7 +242,12 @@ function TeamTab({ tenantId }: { tenantId: string }) {
             <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}
               className="w-full h-12 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
               <option value="member">Member</option>
+              <option value="manager">Manager</option>
               <option value="admin">Admin</option>
+              <option value="cashier">Cashier</option>
+              <option value="waiter">Waiter</option>
+              <option value="kitchen">Kitchen</option>
+              <option value="receptionist">Receptionist</option>
             </select>
           </div>
           <div className="flex items-end">
@@ -215,19 +259,41 @@ function TeamTab({ tenantId }: { tenantId: string }) {
         </form>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or email…"
+            className="h-11 pl-9 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
+          className="h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium w-full sm:w-44">
+          <option value="">All Roles</option>
+          {allRoles.map((r) => <option key={r} value={r} className="capitalize">{r}</option>)}
+        </select>
+      </div>
+
       {/* Members list */}
       <section className="space-y-4">
-        <h2 className="text-xl font-black text-slate-900 dark:text-white">Team Members</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-black text-slate-900 dark:text-white">Team Members</h2>
+          <span className="text-sm text-slate-400 font-medium">{filtered.length} of {(members as Member[]).length}</span>
+        </div>
         {isLoading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : members.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="p-16 rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
             <Users className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-500 dark:text-slate-400">No members yet. Invite someone above.</p>
+            <p className="text-slate-500 dark:text-slate-400">No members found.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {members.map((m: { user_id: string; email?: string; name?: string; roles?: string[] }) => (
+            {filtered.map((m) => (
               <div key={m.user_id}
                 className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
                 <div className="flex items-center gap-3">
@@ -237,14 +303,20 @@ function TeamTab({ tenantId }: { tenantId: string }) {
                   <div>
                     <p className="font-bold text-slate-900 dark:text-white text-sm">{m.name ?? m.email}</p>
                     {m.name && m.email && <p className="text-xs text-slate-400">{m.email}</p>}
+                    {m.outlet && <p className="text-xs text-slate-400 mt-0.5">{m.outlet}</p>}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 capitalize">
                     {m.roles?.[0] ?? 'member'}
                   </span>
+                  <Button variant="outline" size="sm"
+                    className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+                    onClick={() => { setPinTarget(m); setPin(''); }}>
+                    <KeyRound className="h-3 w-3" /> Set PIN
+                  </Button>
                   <Button variant="ghost" size="icon"
-                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl"
+                    className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl"
                     onClick={() => handleRemove(m.user_id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -254,6 +326,49 @@ function TeamTab({ tenantId }: { tenantId: string }) {
           </div>
         )}
       </section>
+
+      {/* Set PIN Modal */}
+      {pinTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl w-full max-w-sm p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <KeyRound className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Set Service PIN</h3>
+                <p className="text-xs text-slate-400 mt-0.5">{pinTarget.name ?? pinTarget.email}</p>
+              </div>
+            </div>
+            <form onSubmit={handleSetPin} className="space-y-5">
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Service</Label>
+                <select value={pinService} onChange={(e) => setPinService(e.target.value)}
+                  className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
+                  <option value="pos">POS</option>
+                  <option value="inventory">Inventory</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">4-Digit PIN</Label>
+                <Input required type="password" inputMode="numeric" maxLength={4} pattern="[0-9]{4}"
+                  value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="••••"
+                  className="h-12 rounded-2xl text-center text-2xl tracking-widest border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono" />
+                <p className="text-xs text-slate-400">Staff will use this PIN to log in on the terminal.</p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1 h-12 rounded-2xl"
+                  onClick={() => { setPinTarget(null); setPin(''); }}>Cancel</Button>
+                <Button type="submit" disabled={isPinSaving || pin.length !== 4}
+                  className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold">
+                  {isPinSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save PIN'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

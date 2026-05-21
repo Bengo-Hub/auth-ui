@@ -49,6 +49,19 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)}M`;
 }
 
+const SIX_DAYS_SECS = 6 * 24 * 3600;
+const TWENTY_FIVE_HOURS_SECS = 25 * 3600;
+
+function isOveraged(unixTimestamp: number): boolean {
+  return (Date.now() / 1000 - unixTimestamp) > SIX_DAYS_SECS;
+}
+
+function isRecentBackupMissing(backups: BackupEntry[]): boolean {
+  if (backups.length === 0) return false;
+  const newest = Math.max(...backups.map((b) => b.created_at));
+  return (Date.now() / 1000 - newest) > TWENTY_FIVE_HOURS_SECS;
+}
+
 export default function BackupsPage() {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [progress, setProgress] = useState<DownloadProgress | null>(null);
@@ -161,6 +174,28 @@ export default function BackupsPage() {
         </div>
       </div>
 
+      {/* No-recent-backup alert — fires when the newest backup is >25h old */}
+      {!isLoading && !error && backups.length > 0 && isRecentBackupMissing(backups) && (
+        <div className="rounded-lg border border-red-300 bg-red-50 dark:bg-red-950/20 dark:border-red-800 p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-medium text-red-800 dark:text-red-200">
+              Backup CronJob may have stopped running
+            </p>
+            <p className="text-red-700 dark:text-red-300 mt-1">
+              No backup has been created in the last 25 hours. Check the{' '}
+              <code className="text-xs bg-red-100 dark:bg-red-900 px-1 py-0.5 rounded">
+                postgresql-backup
+              </code>{' '}
+              CronJob in the <strong>infra</strong> namespace:
+              {' '}<code className="text-xs bg-red-100 dark:bg-red-900 px-1 py-0.5 rounded">
+                kubectl get cronjob postgresql-backup -n infra
+              </code>
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Backups list */}
       <div className="rounded-lg border">
         <div className="px-4 py-3 border-b bg-muted/30 flex items-center justify-between">
@@ -197,6 +232,7 @@ export default function BackupsPage() {
               const pct = progress && progress.total > 0
                 ? Math.round((progress.loaded / progress.total) * 100)
                 : null;
+              const aged = isOveraged(backup.created_at);
 
               return (
                 <div
@@ -206,9 +242,16 @@ export default function BackupsPage() {
                   <div className="flex items-center gap-3 min-w-0">
                     <FileArchive className="h-5 w-5 text-muted-foreground shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium font-mono truncate">
-                        {backup.filename}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium font-mono truncate">
+                          {backup.filename}
+                        </p>
+                        {aged && (
+                          <span className="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/30 px-2 py-0.5 text-xs font-semibold text-red-700 dark:text-red-400 shrink-0">
+                            Overdue
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                         <span>{backup.size}</span>
                         <span className="flex items-center gap-1">
