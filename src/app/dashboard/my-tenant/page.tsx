@@ -465,6 +465,12 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
 
   const current = serviceMap.get(activeService);
   const isActiveService = current?.status === 'ACTIVE' || current?.status === 'TRIAL';
+  const isExpiredService = current?.status === 'EXPIRED';
+  const isCancelledService = current?.status === 'CANCELLED';
+  const hasEverSubscribed = !!current?.status && current.status !== 'NONE';
+
+  // Find the current plan's tier_order for upgrade/downgrade determination
+  const currentPlanObj = allPlans.find((p) => p.plan_code === current?.plan_code);
 
   const monthlyPlans = allPlans.filter((p) => p.billing_cycle === 'MONTHLY');
   const annualPlans = allPlans.filter((p) => p.billing_cycle === 'ANNUAL');
@@ -480,6 +486,7 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
         {ALL_SERVICE_TAGS.map((tag) => {
           const entry = serviceMap.get(tag);
           const hasActive = entry?.status === 'ACTIVE' || entry?.status === 'TRIAL';
+          const isExpired = entry?.status === 'EXPIRED';
           return (
             <button
               key={tag}
@@ -491,6 +498,7 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
               }`}
             >
               {hasActive && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+              {isExpired && <span className="h-1.5 w-1.5 rounded-full bg-red-400" />}
               {SERVICE_TAG_LABELS[tag]}
             </button>
           );
@@ -518,17 +526,13 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
                   ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
                   : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
               }`}>{current?.status}</span>
-              <a
-                href={`${SUBSCRIPTIONS_BASE}/plans?service=${activeService}&plan=${current?.plan_code}`}
-                target="_blank" rel="noopener noreferrer"
-              >
+              <a href={`${SUBSCRIPTIONS_BASE}/plans?service=${activeService}&plan=${current?.plan_code}`} target="_blank" rel="noopener noreferrer">
                 <Button size="sm" variant="outline" className="rounded-xl gap-1 h-8 text-xs">
                   Manage <ExternalLink className="h-3 w-3" />
                 </Button>
               </a>
             </div>
           </div>
-          {/* Active plan features summary */}
           {serviceData?.subscription?.features && serviceData.subscription.features.length > 0 && current?.plan_code === serviceData.subscription.plan_code && (
             <div className="mt-4 pt-4 border-t border-emerald-200 dark:border-emerald-700/50">
               <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2">Included Features</p>
@@ -547,6 +551,50 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
             </div>
           )}
         </div>
+      ) : isExpiredService ? (
+        <div className="p-5 rounded-2xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-700">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-red-600 dark:text-red-400 mb-0.5">Subscription Expired</p>
+              <p className="text-lg font-black text-slate-900 dark:text-white">{current?.plan_name ?? current?.plan_code}</p>
+              {current?.current_period_end && (
+                <p className="text-xs text-red-500 mt-0.5">
+                  Expired {new Date(current.current_period_end).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400">EXPIRED</span>
+              <a href={`${SUBSCRIPTIONS_BASE}/subscribe?plan=${current?.plan_code}`} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" className="rounded-xl gap-1 h-8 text-xs bg-red-600 hover:bg-red-700 text-white">
+                  Renew Now <ArrowUpRight className="h-3 w-3" />
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : isCancelledService ? (
+        <div className="p-5 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-0.5">Subscription Cancelled</p>
+              <p className="text-lg font-black text-slate-900 dark:text-white">{current?.plan_name ?? current?.plan_code}</p>
+              {current?.current_period_end && (
+                <p className="text-xs text-amber-500 mt-0.5">
+                  Access until {new Date(current.current_period_end).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">CANCELLED</span>
+              <a href={`${SUBSCRIPTIONS_BASE}/subscribe?plan=${current?.plan_code}`} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" variant="outline" className="rounded-xl gap-1 h-8 text-xs border-amber-400 text-amber-700">
+                  Resubscribe <ArrowUpRight className="h-3 w-3" />
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
       ) : (
         <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-700">
           <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -561,7 +609,9 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
           title={`Monthly Plans — ${SERVICE_TAG_LABELS[activeService]}`}
           plans={monthlyPlans}
           isLoading={plansLoading}
-          currentPlanCode={current?.plan_code}
+          currentEntry={current}
+          currentPlanTierOrder={currentPlanObj?.tier_order}
+          hasEverSubscribed={hasEverSubscribed}
           billingLabel="/mo"
           serviceTag={activeService}
           tenantSlug={tenantSlug}
@@ -575,7 +625,9 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
           subtitle="Save up to 10% vs monthly billing"
           plans={annualPlans}
           isLoading={plansLoading}
-          currentPlanCode={current?.plan_code}
+          currentEntry={current}
+          currentPlanTierOrder={currentPlanObj?.tier_order}
+          hasEverSubscribed={hasEverSubscribed}
           billingLabel="/yr"
           serviceTag={activeService}
           tenantSlug={tenantSlug}
@@ -590,7 +642,9 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
           subtitle="Pay once, use forever. No recurring fees."
           plans={oneTimePlans}
           isLoading={false}
-          currentPlanCode={current?.plan_code}
+          currentEntry={current}
+          currentPlanTierOrder={currentPlanObj?.tier_order}
+          hasEverSubscribed={hasEverSubscribed}
           billingLabel="one-time"
           serviceTag={activeService}
           tenantSlug={tenantSlug}
@@ -642,7 +696,9 @@ function PlanSection({
   subtitle,
   plans,
   isLoading,
-  currentPlanCode,
+  currentEntry,
+  currentPlanTierOrder,
+  hasEverSubscribed,
   billingLabel,
   serviceTag,
   tenantSlug,
@@ -652,7 +708,9 @@ function PlanSection({
   subtitle?: string;
   plans: Plan[];
   isLoading: boolean;
-  currentPlanCode?: string;
+  currentEntry?: ServiceSubscriptionEntry;
+  currentPlanTierOrder?: number;
+  hasEverSubscribed: boolean;
   billingLabel: string;
   serviceTag: string;
   tenantSlug: string;
@@ -670,21 +728,22 @@ function PlanSection({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {plans.map((plan) => {
-            // Find the equivalent monthly plan to compute savings
-            const monthlyEquiv = monthlyPlans?.find((m) =>
-              m.tier_order === plan.tier_order
-            );
+          {plans.map((plan, idx) => {
+            const monthlyEquiv = monthlyPlans?.find((m) => m.tier_order === plan.tier_order);
             const monthlyCost = monthlyEquiv ? monthlyEquiv.base_price * 12 : null;
             const savings = monthlyCost && plan.base_price < monthlyCost
               ? Math.round(((monthlyCost - plan.base_price) / monthlyCost) * 100)
               : null;
+            const previousPlan = idx > 0 ? plans[idx - 1] : undefined;
 
             return (
               <PlanCard
                 key={plan.id}
                 plan={plan}
-                isCurrentPlan={currentPlanCode === plan.plan_code}
+                previousPlan={previousPlan}
+                currentEntry={currentEntry}
+                currentPlanTierOrder={currentPlanTierOrder}
+                hasEverSubscribed={hasEverSubscribed}
                 serviceTag={serviceTag}
                 tenantSlug={tenantSlug}
                 billingLabel={billingLabel}
@@ -700,28 +759,86 @@ function PlanSection({
 
 function PlanCard({
   plan,
-  isCurrentPlan,
+  previousPlan,
+  currentEntry,
+  currentPlanTierOrder,
+  hasEverSubscribed,
   serviceTag,
   tenantSlug,
   billingLabel,
   savingsPct,
 }: {
   plan: Plan;
-  isCurrentPlan: boolean;
+  previousPlan?: Plan;
+  currentEntry?: ServiceSubscriptionEntry;
+  currentPlanTierOrder?: number;
+  hasEverSubscribed: boolean;
   serviceTag: string;
   tenantSlug: string;
   billingLabel?: string;
   savingsPct?: number;
 }) {
-  const features = (plan.features ?? []).filter((f) => f.is_included !== false).slice(0, 5);
+  const isCurrentPlan = currentEntry?.plan_code === plan.plan_code;
+  const isExpiredCurrent = isCurrentPlan && currentEntry?.status === 'EXPIRED';
+  const isActiveSub = currentEntry?.status === 'ACTIVE' || currentEntry?.status === 'TRIAL';
+
+  // Determine button label and URL
+  let buttonLabel: string;
+  let buttonHref: string;
+  let buttonVariant: 'default' | 'outline' = 'default';
+
+  if (isCurrentPlan) {
+    if (isExpiredCurrent) {
+      buttonLabel = 'Renew';
+      buttonHref = `${SUBSCRIPTIONS_BASE}/subscribe?plan=${plan.plan_code}`;
+    } else {
+      buttonLabel = 'Manage';
+      buttonHref = `${SUBSCRIPTIONS_BASE}/plans?service=${serviceTag}&plan=${plan.plan_code}`;
+      buttonVariant = 'outline';
+    }
+  } else if (isActiveSub) {
+    const thisOrder = plan.tier_order ?? 0;
+    const curOrder = currentPlanTierOrder ?? 0;
+    if (thisOrder > curOrder) {
+      buttonLabel = 'Upgrade';
+      buttonHref = `${SUBSCRIPTIONS_BASE}/upgrade?plan=${plan.plan_code}`;
+    } else {
+      buttonLabel = 'Downgrade';
+      buttonHref = `${SUBSCRIPTIONS_BASE}/downgrade?plan=${plan.plan_code}`;
+      buttonVariant = 'outline';
+    }
+  } else if (hasEverSubscribed) {
+    buttonLabel = 'Subscribe';
+    buttonHref = `${SUBSCRIPTIONS_BASE}/subscribe?plan=${plan.plan_code}`;
+  } else {
+    buttonLabel = 'Subscribe';
+    buttonHref = `${SUBSCRIPTIONS_BASE}/subscribe?plan=${plan.plan_code}`;
+  }
+
+  // Differential features: show "All [prev plan] features" + only new features for higher tiers
+  const allFeatures = (plan.features ?? []).filter((f) => f.is_included !== false);
+  let displayFeatures: typeof allFeatures = [];
+  let prevPlanName: string | undefined;
+
+  if (previousPlan && allFeatures.length > 0) {
+    const prevCodes = new Set(
+      (previousPlan.features ?? []).filter((f) => f.is_included !== false).map((f) => f.code)
+    );
+    displayFeatures = allFeatures.filter((f) => !prevCodes.has(f.code)).slice(0, 4);
+    prevPlanName = previousPlan.name;
+  } else {
+    displayFeatures = allFeatures.slice(0, 5);
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className={`p-5 rounded-2xl border flex flex-col gap-4 transition-all ${
-        isCurrentPlan
+        isCurrentPlan && !isExpiredCurrent
           ? 'bg-primary/5 border-primary/40 dark:bg-primary/10'
+          : isExpiredCurrent
+          ? 'bg-red-50/50 dark:bg-red-900/5 border-red-200 dark:border-red-800'
           : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-primary/30'
       }`}
     >
@@ -731,8 +848,11 @@ function PlanCard({
           <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{plan.description}</p>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
-          {isCurrentPlan && (
+          {isCurrentPlan && !isExpiredCurrent && (
             <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">Current</span>
+          )}
+          {isExpiredCurrent && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-600">Expired</span>
           )}
           {savingsPct && savingsPct > 0 && (
             <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Save {savingsPct}%</span>
@@ -747,9 +867,19 @@ function PlanCard({
         <span className="text-xs text-slate-400 ml-1">{billingLabel ?? '/mo'}</span>
       </div>
 
-      {features.length > 0 && (
-        <ul className="space-y-1 flex-1">
-          {features.map((f, i) => (
+      {/* Differential feature list */}
+      {(prevPlanName || displayFeatures.length > 0) && (
+        <ul className="space-y-1.5 flex-1">
+          {prevPlanName && (
+            <li className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-500">
+              <Check className="h-3 w-3 text-slate-400 shrink-0" />
+              <span>All <span className="font-semibold">{prevPlanName}</span> features</span>
+            </li>
+          )}
+          {prevPlanName && displayFeatures.length > 0 && (
+            <li className="text-[10px] font-bold uppercase tracking-wider text-slate-400 pt-0.5 pl-5">plus:</li>
+          )}
+          {displayFeatures.map((f, i) => (
             <li key={i} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
               <Check className="h-3 w-3 text-emerald-500 shrink-0" />
               <span className="capitalize">{(f.name || f.code || String(f)).replace(/_/g, ' ')}</span>
@@ -758,17 +888,13 @@ function PlanCard({
         </ul>
       )}
 
-      <a
-        href={`${SUBSCRIPTIONS_BASE}/plans?service=${serviceTag}&plan=${plan.plan_code}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a href={buttonHref} target="_blank" rel="noopener noreferrer">
         <Button
           size="sm"
-          variant={isCurrentPlan ? 'outline' : 'default'}
-          className="w-full rounded-xl gap-1"
+          variant={buttonVariant}
+          className={`w-full rounded-xl gap-1 ${isExpiredCurrent ? 'bg-red-600 hover:bg-red-700 text-white border-0' : ''}`}
         >
-          {isCurrentPlan ? 'Manage' : 'Subscribe'}
+          {buttonLabel}
           <ArrowUpRight className="h-3 w-3" />
         </Button>
       </a>
