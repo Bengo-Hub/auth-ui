@@ -122,10 +122,27 @@ export interface TenantMember {
   tenant_id: string;
   email?: string;
   name?: string;
+  avatar_url?: string;
   roles: string[];
   status: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface MemberFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+  status?: string;
+}
+
+export interface PaginatedMembers {
+  data: TenantMember[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
 }
 
 interface AddTenantMemberPayload {
@@ -135,20 +152,39 @@ interface AddTenantMemberPayload {
 
 export const tenantMemberKeys = (tenantId: string) => ({
   all: () => ['tenant-members', tenantId] as const,
-  list: () => [...tenantMemberKeys(tenantId).all()] as const,
+  list: (filters?: MemberFilters) => [...tenantMemberKeys(tenantId).all(), filters ?? {}] as const,
 });
 
-export function useTenantMembers(tenantId: string | undefined, enabled = true) {
+export function useTenantMembers(
+  tenantId: string | undefined,
+  enabled = true,
+  filters: MemberFilters = {}
+) {
+  const { page = 1, limit = 20, search = '', role = '', status = '' } = filters;
   return useQuery({
-    queryKey: tenantId ? tenantMemberKeys(tenantId).list() : ['tenant-members'],
-    queryFn: async () => {
-      if (!tenantId) return [];
-      const response = await apiClient.get(`/api/v1/admin/tenants/${tenantId}/members`);
-      const data = (response as { data?: unknown }).data ?? response;
-      return Array.isArray(data) ? (data as TenantMember[]) : [];
+    queryKey: tenantId ? tenantMemberKeys(tenantId).list(filters) : ['tenant-members'],
+    queryFn: async (): Promise<PaginatedMembers> => {
+      if (!tenantId) return { data: [], total: 0, page: 1, limit, hasMore: false };
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', String(limit));
+      if (search) params.set('search', search);
+      if (role) params.set('role', role);
+      if (status) params.set('status', status);
+      const response = await apiClient.get(
+        `/api/v1/admin/tenants/${tenantId}/members?${params.toString()}`
+      );
+      const raw = (response as { data?: unknown }).data ?? response;
+      // Support both paginated { data, total, page, limit, hasMore } and legacy array
+      if (raw && typeof raw === 'object' && 'data' in (raw as object)) {
+        return raw as PaginatedMembers;
+      }
+      const arr = Array.isArray(raw) ? (raw as TenantMember[]) : [];
+      return { data: arr, total: arr.length, page: 1, limit: arr.length, hasMore: false };
     },
     enabled: enabled && !!tenantId,
     staleTime: STALE_MS,
+    placeholderData: (prev) => prev,
   });
 }
 

@@ -192,16 +192,16 @@ export function TenantMembersDialog({ tenantId, tenantName }: TenantMembersDialo
 
           {/* Members List */}
           <div className="space-y-3">
-            <h3 className="font-bold text-slate-900 dark:text-white">Team Members ({members?.length || 0})</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white">Team Members ({members?.total || 0})</h3>
 
             {isMembersLoading ? (
               <div className="p-8 text-center text-slate-400">
                 <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
                 Loading members...
               </div>
-            ) : members && members.length > 0 ? (
+            ) : members && members.data.length > 0 ? (
               <div className="space-y-2">
-                {members.map((member) => (
+                {members.data.map((member) => (
                   <div
                     key={member.user_id}
                     className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between"

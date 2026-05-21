@@ -2,8 +2,9 @@
 
 import { BrandingTab } from '@/components/settings/BrandingTab';
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/hooks/useAuth';
-import { useTenantMembers } from '@/hooks/use-dashboard-api';
+import { useTenantMembers, type MemberFilters, type TenantMember } from '@/hooks/use-dashboard-api';
 import { useToast } from '@/hooks/use-toast';
 import apiClient from '@/lib/api-client';
 import { subscriptionApi, type Plan, type ServiceSubscriptionEntry } from '@/lib/subscription-api';
@@ -26,7 +27,7 @@ import {
     Users,
     X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -122,11 +123,11 @@ export default function MyTenantPage() {
 // ── Overview ─────────────────────────────────────────────────────────────────
 
 function TenantOverview({ tenant, user }: { tenant: { id: string; name: string; slug: string }; user: ReturnType<typeof useAuth>['user'] }) {
-  const { data: members = [] } = useTenantMembers(tenant.id, true);
+  const { data: membersResult } = useTenantMembers(tenant.id, true);
 
   const stats = [
     { label: 'Organization', value: tenant.name, icon: Building2, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'Members', value: String(members.length || '—'), icon: Users, color: 'text-blue-500', bg: 'bg-blue-50' },
+    { label: 'Members', value: String(membersResult?.total || '—'), icon: Users, color: 'text-blue-500', bg: 'bg-blue-50' },
     { label: 'Plan', value: user?.subscription_plan ?? 'Free', icon: CreditCard, color: 'text-purple-500', bg: 'bg-purple-50' },
   ];
 
@@ -172,20 +173,44 @@ function TenantOverview({ tenant, user }: { tenant: { id: string; name: string; 
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 
-type Member = { user_id: string; email?: string; name?: string; roles?: string[]; outlet?: string; is_active?: boolean };
+const TEAM_ROLES = ['admin', 'manager', 'member', 'cashier', 'waiter', 'kitchen', 'receptionist'];
 
 function TeamTab({ tenantId }: { tenantId: string }) {
-  const { data: members = [], isLoading, refetch } = useTenantMembers(tenantId, true);
   const { toast } = useToast();
+  const [page, setPage] = useState(1);
+  const LIMIT = 20;
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
   const [isInviting, setIsInviting] = useState(false);
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
-  const [pinTarget, setPinTarget] = useState<Member | null>(null);
+  const [pinTarget, setPinTarget] = useState<TenantMember | null>(null);
   const [pin, setPin] = useState('');
   const [pinService, setPinService] = useState('pos');
   const [isPinSaving, setIsPinSaving] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const resetPage = useCallback(() => setPage(1), []);
+
+  useEffect(() => { resetPage(); }, [debouncedSearch, roleFilter, statusFilter, resetPage]);
+
+  const { data, isLoading, refetch } = useTenantMembers(tenantId, true, {
+    page,
+    limit: LIMIT,
+    search: debouncedSearch,
+    role: roleFilter,
+    status: statusFilter,
+  });
+
+  const members = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const hasMore = data?.hasMore ?? false;
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,15 +257,6 @@ function TeamTab({ tenantId }: { tenantId: string }) {
     }
   };
 
-  const allRoles = Array.from(new Set((members as Member[]).flatMap((m) => m.roles ?? ['member'])));
-
-  const filtered = (members as Member[]).filter((m) => {
-    const q = search.toLowerCase();
-    const matchesSearch = !q || (m.name?.toLowerCase().includes(q) ?? false) || (m.email?.toLowerCase().includes(q) ?? false);
-    const matchesRole = !roleFilter || (m.roles ?? ['member']).includes(roleFilter);
-    return matchesSearch && matchesRole;
-  });
-
   return (
     <div className="space-y-8">
       {/* Invite form */}
@@ -258,17 +274,11 @@ function TeamTab({ tenantId }: { tenantId: string }) {
               placeholder="colleague@company.com"
               className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
           </div>
-          <div className="w-40 space-y-1">
+          <div className="w-44 space-y-1">
             <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Role</Label>
             <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}
               className="w-full h-12 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
-              <option value="member">Member</option>
-              <option value="manager">Manager</option>
-              <option value="admin">Admin</option>
-              <option value="cashier">Cashier</option>
-              <option value="waiter">Waiter</option>
-              <option value="kitchen">Kitchen</option>
-              <option value="receptionist">Receptionist</option>
+              {TEAM_ROLES.map((r) => <option key={r} value={r} className="capitalize">{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
             </select>
           </div>
           <div className="flex items-end">
@@ -293,9 +303,17 @@ function TeamTab({ tenantId }: { tenantId: string }) {
           )}
         </div>
         <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
-          className="h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium w-full sm:w-44">
+          className="h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium w-full sm:w-40">
           <option value="">All Roles</option>
-          {allRoles.map((r) => <option key={r} value={r} className="capitalize">{r}</option>)}
+          {TEAM_ROLES.map((r) => <option key={r} value={r} className="capitalize">{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
+        </select>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+          className="h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium w-full sm:w-36">
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="pending">Pending</option>
+          <option value="suspended">Suspended</option>
         </select>
       </div>
 
@@ -303,34 +321,36 @@ function TeamTab({ tenantId }: { tenantId: string }) {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-black text-slate-900 dark:text-white">Team Members</h2>
-          <span className="text-sm text-slate-400 font-medium">{filtered.length} of {(members as Member[]).length}</span>
+          <span className="text-sm text-slate-400 font-medium">{total} member{total !== 1 ? 's' : ''}</span>
         </div>
         {isLoading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : filtered.length === 0 ? (
+        ) : members.length === 0 ? (
           <div className="p-16 rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
             <Users className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
             <p className="text-slate-500 dark:text-slate-400">No members found.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map((m) => (
+            {members.map((m) => (
               <div key={m.user_id}
                 className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-rose-400 flex items-center justify-center text-white font-bold text-xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-rose-400 flex items-center justify-center text-white font-bold text-xs shrink-0">
                     {(m.name ?? m.email ?? '?').charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <p className="font-bold text-slate-900 dark:text-white text-sm">{m.name ?? m.email}</p>
-                    {m.name && m.email && <p className="text-xs text-slate-400">{m.email}</p>}
-                    {m.outlet && <p className="text-xs text-slate-400 mt-0.5">{m.outlet}</p>}
+                  <div className="min-w-0">
+                    <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{m.name ?? m.email}</p>
+                    {m.name && m.email && <p className="text-xs text-slate-400 truncate">{m.email}</p>}
+                    <p className="text-xs text-slate-400 mt-0.5 capitalize">{m.status}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 capitalize">
-                    {m.roles?.[0] ?? 'member'}
-                  </span>
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                  {m.roles.slice(0, 2).map((r) => (
+                    <span key={r} className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 capitalize hidden sm:inline">
+                      {r}
+                    </span>
+                  ))}
                   <Button variant="outline" size="sm"
                     className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
                     onClick={() => { setPinTarget(m); setPin(''); }}>
@@ -346,6 +366,8 @@ function TeamTab({ tenantId }: { tenantId: string }) {
             ))}
           </div>
         )}
+
+        <Pagination page={page} total={total} limit={LIMIT} hasMore={hasMore} onPageChange={setPage} />
       </section>
 
       {/* Set PIN Modal */}
