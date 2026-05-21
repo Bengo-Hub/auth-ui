@@ -173,7 +173,21 @@ function TenantOverview({ tenant, user }: { tenant: { id: string; name: string; 
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 
-const TEAM_ROLES = ['admin', 'manager', 'member', 'cashier', 'waiter', 'kitchen', 'receptionist'];
+// Standard global roles as seeded by auth-api. Service-specific roles (e.g. inventory_admin,
+// finance_admin) are JIT-provisioned by each service and not listed here.
+const TEAM_ROLES = [
+  'admin',                // Full tenant admin (all services)
+  'manager',             // Store/operations manager
+  'staff',               // General cross-service staff
+  'member',              // Basic ordering/tenant member
+  'cashier',             // POS cashier / treasury cashier
+  'waiter',              // POS hospitality waiter
+  'kitchen',             // POS kitchen display
+  'bar',                 // POS bar display
+  'receptionist',        // POS hotel receptionist
+  'rider',               // Logistics delivery rider
+  'delivery_coordinator',// Ordering/logistics dispatch coordinator
+];
 
 function TeamTab({ tenantId }: { tenantId: string }) {
   const { toast } = useToast();
