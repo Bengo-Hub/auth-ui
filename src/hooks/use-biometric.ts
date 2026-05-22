@@ -44,15 +44,13 @@ export function useBiometric(options: UseBiometricOptions = {}) {
       setError(null);
 
       try {
+        // auth-ui is the SSO portal; authenticated users have a bb_session cookie
+        const authHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (accessToken) authHeaders['Authorization'] = `Bearer ${accessToken}`;
+
         const beginRes = await fetch(
           `${SSO_BASE_URL}/api/v1/auth/webauthn/register/begin`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
+          { method: 'POST', headers: authHeaders, credentials: 'include' }
         );
 
         if (!beginRes.ok) throw new Error('Failed to begin biometric registration');
@@ -76,10 +74,8 @@ export function useBiometric(options: UseBiometricOptions = {}) {
           `${SSO_BASE_URL}/api/v1/auth/webauthn/register/finish${nameParam}`,
           {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${accessToken}`,
-            },
+            headers: authHeaders,
+            credentials: 'include',
             body: JSON.stringify(credentialToJSON(credential)),
           }
         );
@@ -166,7 +162,12 @@ export function useBiometric(options: UseBiometricOptions = {}) {
           throw new Error(body.message || 'Biometric authentication failed');
         }
 
-        const tokens = await finishRes.json();
+        const raw = await finishRes.json();
+        const tokens = {
+          accessToken: raw.access_token ?? raw.accessToken,
+          refreshToken: raw.refresh_token ?? raw.refreshToken ?? '',
+          expiresIn: raw.expires_in ?? raw.expiresIn ?? 3600,
+        };
         setState('success');
         options.onAuthSuccess?.(tokens);
         return tokens;

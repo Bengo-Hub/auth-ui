@@ -90,10 +90,8 @@ export function PasskeysSection() {
     try {
       const beginRes = await fetch(`${SSO_BASE_URL}/api/v1/auth/webauthn/register/begin`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${(apiClient.defaults as any).headers?.Authorization ?? ''}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
       });
       if (!beginRes.ok) throw new Error('Failed to start passkey registration');
       const sessionKey = beginRes.headers.get('X-WebAuthn-Session') ?? '';
@@ -110,11 +108,8 @@ export function PasskeysSection() {
 
       const finishRes = await fetch(`${SSO_BASE_URL}/api/v1/auth/webauthn/register/finish`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-WebAuthn-Session': sessionKey,
-          Authorization: `Bearer ${(apiClient.defaults as any).headers?.Authorization ?? ''}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'X-WebAuthn-Session': sessionKey },
+        credentials: 'include',
         body: JSON.stringify(credentialToJSON(credential)),
       });
       if (!finishRes.ok) throw new Error('Failed to complete passkey registration');
