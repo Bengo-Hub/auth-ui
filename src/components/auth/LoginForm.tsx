@@ -7,6 +7,7 @@ import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl, isValidReturnUrl } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
 import { useBiometric } from '@/hooks/use-biometric';
+import { PasskeySetupNudge, wasDismissedRecently } from '@/components/auth/PasskeySetupNudge';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, ArrowLeft, ArrowRight, Building2, Chrome, Cpu, Eye, EyeOff, Github, Loader2, Lock, Mail, ShieldCheck, X } from 'lucide-react';
 import Link from 'next/link';
@@ -54,35 +55,30 @@ export function LoginForm() {
   const [biometricError, setBiometricError] = useState<string | null>(null);
 
   const { authenticate: biometricAuth, isSupported: biometricSupported, hasRegisteredCredential, isLoading: biometricLoading } = useBiometric({
-    onAuthSuccess: async (tokens) => {
-      try {
-        const meRes = await apiClient.get('/api/v1/auth/me', {
-          headers: { Authorization: `Bearer ${tokens.accessToken}` },
-        });
-        const user = meRes.data?.user ?? meRes.data;
-        if (user) {
-          setUser({
-            ...user,
-            roles: user.roles ?? [],
-            permissions: user.permissions ?? [],
-            tenants: user.tenants ?? [],
-          });
-        }
-        if (returnTo && returnTo.startsWith('http') && isValidReturnUrl(returnTo)) {
-          window.location.href = returnTo;
-        } else if (clientId && redirectUri) {
-          const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
-          const authorizeUrl = new URL('/api/v1/authorize', ssoBase.replace(/\/$/, ''));
-          authorizeUrl.searchParams.set('client_id', clientId);
-          authorizeUrl.searchParams.set('redirect_uri', redirectUri);
-          if (stateParam) authorizeUrl.searchParams.set('state', stateParam);
-          if (scope) authorizeUrl.searchParams.set('scope', scope);
-          window.location.href = authorizeUrl.toString();
-        } else {
-          router.push(getSafeReturnUrl(returnTo));
-        }
-      } catch {
-        setBiometricError('Biometric login succeeded but failed to load your profile. Please sign in with email.');
+    onAuthSuccess: async (_tokens, raw) => {
+      // Backend now returns full user/roles/permissions in WebAuthn finish response
+      // (same as email/password login via toAuthResponse). Use it directly.
+      const user = (raw?.user ?? {}) as Record<string, unknown>;
+      if (user?.id) {
+        setUser({
+          ...user,
+          roles: (raw?.roles as string[]) ?? [],
+          permissions: (raw?.permissions as string[]) ?? [],
+          tenants: (user.tenants as unknown[]) ?? [],
+        } as Parameters<typeof setUser>[0]);
+      }
+      if (returnTo && returnTo.startsWith('http') && isValidReturnUrl(returnTo)) {
+        window.location.href = returnTo;
+      } else if (clientId && redirectUri) {
+        const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+        const authorizeUrl = new URL('/api/v1/authorize', ssoBase.replace(/\/$/, ''));
+        authorizeUrl.searchParams.set('client_id', clientId);
+        authorizeUrl.searchParams.set('redirect_uri', redirectUri);
+        if (stateParam) authorizeUrl.searchParams.set('state', stateParam);
+        if (scope) authorizeUrl.searchParams.set('scope', scope);
+        window.location.href = authorizeUrl.toString();
+      } else {
+        router.push(getSafeReturnUrl(returnTo, '/dashboard'));
       }
     },
     onError: (err) => setBiometricError(err),
@@ -107,6 +103,10 @@ export function LoginForm() {
   const [termsError, setTermsError] = useState<string | null>(null);
   // Store post-login redirect info so we can execute it after terms are accepted
   const [pendingRedirect, setPendingRedirect] = useState<(() => void) | null>(null);
+
+  // Passkey setup nudge — shown after email/password login when no passkey registered
+  const [passkeyNudgeOpen, setPasskeyNudgeOpen] = useState(false);
+  const [passkeyNudgeToken, setPasskeyNudgeToken] = useState('');
 
   const switchToTenant = (slug: string) => {
     // Rebuild the current URL with the new tenant slug and reload
@@ -147,6 +147,7 @@ export function LoginForm() {
         mfa_required?: boolean;
         mfa_method?: string;
         user_id?: string;
+        access_token?: string;
         user?: { id: string; email: string; name?: string; roles?: string[]; permissions?: string[]; terms_accepted?: boolean; tenants?: Array<{ id: string; name: string; slug: string; roles: string[] }> };
         roles?: string[];
         permissions?: string[];
@@ -193,6 +194,15 @@ export function LoginForm() {
       if (user && user.terms_accepted === false) {
         setPendingRedirect(() => executeRedirect);
         setTermsRequired(true);
+        return;
+      }
+
+      // Show passkey setup nudge for users without one registered (email/password flow only).
+      const accessToken = data.access_token ?? '';
+      if (biometricSupported && !hasRegisteredCredential && accessToken && !wasDismissedRecently()) {
+        setPasskeyNudgeToken(accessToken);
+        setPendingRedirect(() => executeRedirect);
+        setPasskeyNudgeOpen(true);
         return;
       }
 
@@ -523,7 +533,7 @@ export function LoginForm() {
           )}
         </Button>
 
-        {(biometricSupported && hasRegisteredCredential) || socialProviders.length > 0 ? (
+        {(biometricSupported || socialProviders.length > 0) ? (
           <>
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
@@ -537,14 +547,14 @@ export function LoginForm() {
             </div>
 
             <div className="grid grid-cols-1 gap-3">
-              {biometricSupported && hasRegisteredCredential && (
+              {biometricSupported && (
                 <div className="flex flex-col gap-1">
                   <Button
                     type="button"
                     variant="outline"
                     className="h-12 rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 font-semibold"
-                    onClick={() => biometricAuth(email, tenantSlug || undefined)}
-                    disabled={biometricLoading || !email}
+                    onClick={() => biometricAuth(hasRegisteredCredential ? email : '', tenantSlug || undefined)}
+                    disabled={biometricLoading}
                   >
                     {biometricLoading ? (
                       <Loader2 className="mr-3 h-5 w-5 animate-spin" />
@@ -554,7 +564,8 @@ export function LoginForm() {
                         <path d="M8 11c0-2.21 1.79-4 4-4s4 1.79 4 4c0 1.5-.82 2.8-2 3.54M8 11c0 2.21 1.79 4 4 4" />
                       </svg>
                     )}
-                    Sign in with fingerprint
+                    <span className="md:hidden">Sign in with fingerprint</span>
+                    <span className="hidden md:inline">Sign in with passkey</span>
                   </Button>
                   {biometricError && (
                     <p className="text-xs text-rose-500 text-center">{biometricError}</p>
@@ -596,6 +607,16 @@ export function LoginForm() {
           </>
         ) : null}
       </form>
+
+      <PasskeySetupNudge
+        open={passkeyNudgeOpen}
+        accessToken={passkeyNudgeToken}
+        onClose={() => {
+          setPasskeyNudgeOpen(false);
+          pendingRedirect?.();
+          setPendingRedirect(null);
+        }}
+      />
     </>
   );
 }

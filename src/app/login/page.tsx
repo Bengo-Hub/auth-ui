@@ -244,15 +244,6 @@ export default function LoginPage() {
 
       {/* Right Side - Login Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 relative">
-        <div className="absolute top-8 left-8 lg:hidden">
-            <Link href="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-bold text-xl tracking-tighter">Codevertex</span>
-            </Link>
-        </div>
-
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

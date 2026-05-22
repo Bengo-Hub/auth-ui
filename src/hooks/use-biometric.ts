@@ -8,7 +8,7 @@ const SSO_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexi
 export type BiometricState = 'idle' | 'registering' | 'authenticating' | 'success' | 'error' | 'unsupported';
 
 export interface UseBiometricOptions {
-  onAuthSuccess?: (result: { accessToken: string; refreshToken: string; expiresIn: number }) => void;
+  onAuthSuccess?: (result: { accessToken: string; refreshToken: string; expiresIn: number }, raw?: Record<string, unknown>) => void;
   onError?: (error: string) => void;
 }
 
@@ -169,7 +169,7 @@ export function useBiometric(options: UseBiometricOptions = {}) {
           expiresIn: raw.expires_in ?? raw.expiresIn ?? 3600,
         };
         setState('success');
-        options.onAuthSuccess?.(tokens);
+        options.onAuthSuccess?.(tokens, raw);
         return tokens;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Authentication failed';

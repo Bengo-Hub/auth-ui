@@ -75,7 +75,7 @@ export function DashboardTopNav() {
   const displayTitle = getServiceTitle('SSO');
 
   return (
-    <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-8 flex items-center justify-between">
+    <header className="h-14 md:h-20 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-8 flex items-center justify-between">
       {/* Left: hamburger (mobile) + title */}
       <div className="flex items-center gap-3">
         {/* Hamburger — only on mobile where sidebar is hidden */}

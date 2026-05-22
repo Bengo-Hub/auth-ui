@@ -72,6 +72,13 @@ export function PWAInstallPrompt() {
       setDeferredPrompt(null);
       promptRef.current = null;
       setIsVisible(false);
+      // Request PWA permissions after install
+      if ("Notification" in window && Notification.permission === "default") {
+        await Notification.requestPermission();
+      }
+      if ("storage" in navigator && "persist" in navigator.storage) {
+        await navigator.storage.persist();
+      }
     }
   }, [deferredPrompt]);
 
