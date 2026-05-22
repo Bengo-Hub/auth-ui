@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl, isValidReturnUrl } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
+import { useBiometric } from '@/hooks/use-biometric';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, ArrowLeft, ArrowRight, Building2, Chrome, Cpu, Eye, EyeOff, Github, Loader2, Lock, Mail, ShieldCheck, X } from 'lucide-react';
 import Link from 'next/link';
@@ -50,6 +51,42 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [biometricError, setBiometricError] = useState<string | null>(null);
+
+  const { authenticate: biometricAuth, isSupported: biometricSupported, hasRegisteredCredential, isLoading: biometricLoading } = useBiometric({
+    onAuthSuccess: async (tokens) => {
+      try {
+        const meRes = await apiClient.get('/api/v1/auth/me', {
+          headers: { Authorization: `Bearer ${tokens.accessToken}` },
+        });
+        const user = meRes.data?.user ?? meRes.data;
+        if (user) {
+          setUser({
+            ...user,
+            roles: user.roles ?? [],
+            permissions: user.permissions ?? [],
+            tenants: user.tenants ?? [],
+          });
+        }
+        if (returnTo && returnTo.startsWith('http') && isValidReturnUrl(returnTo)) {
+          window.location.href = returnTo;
+        } else if (clientId && redirectUri) {
+          const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+          const authorizeUrl = new URL('/api/v1/authorize', ssoBase.replace(/\/$/, ''));
+          authorizeUrl.searchParams.set('client_id', clientId);
+          authorizeUrl.searchParams.set('redirect_uri', redirectUri);
+          if (stateParam) authorizeUrl.searchParams.set('state', stateParam);
+          if (scope) authorizeUrl.searchParams.set('scope', scope);
+          window.location.href = authorizeUrl.toString();
+        } else {
+          router.push(getSafeReturnUrl(returnTo));
+        }
+      } catch {
+        setBiometricError('Biometric login succeeded but failed to load your profile. Please sign in with email.');
+      }
+    },
+    onError: (err) => setBiometricError(err),
+  });
 
   // MFA challenge state
   const [mfaRequired, setMfaRequired] = useState(false);
@@ -486,7 +523,7 @@ export function LoginForm() {
           )}
         </Button>
 
-        {socialProviders.length > 0 && (
+        {(biometricSupported && hasRegisteredCredential) || socialProviders.length > 0 ? (
           <>
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
@@ -500,6 +537,30 @@ export function LoginForm() {
             </div>
 
             <div className="grid grid-cols-1 gap-3">
+              {biometricSupported && hasRegisteredCredential && (
+                <div className="flex flex-col gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-12 rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 font-semibold"
+                    onClick={() => biometricAuth(email, tenantSlug || undefined)}
+                    disabled={biometricLoading || !email}
+                  >
+                    {biometricLoading ? (
+                      <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                    ) : (
+                      <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M12 1C6.48 1 2 5.48 2 11c0 3.27 1.5 6.18 3.84 8.12M12 1c5.52 0 10 4.48 10 10 0 3.27-1.5 6.18-3.84 8.12M12 1v1m0 21v-1" />
+                        <path d="M8 11c0-2.21 1.79-4 4-4s4 1.79 4 4c0 1.5-.82 2.8-2 3.54M8 11c0 2.21 1.79 4 4 4" />
+                      </svg>
+                    )}
+                    Sign in with fingerprint
+                  </Button>
+                  {biometricError && (
+                    <p className="text-xs text-rose-500 text-center">{biometricError}</p>
+                  )}
+                </div>
+              )}
               {socialProviders.map((provider) => {
                 const providerKey = provider.name.replace('_oauth', '');
                 const Icon = providerKey === 'google' ? Chrome : providerKey === 'github' ? Github : Cpu;
@@ -533,7 +594,7 @@ export function LoginForm() {
               })}
             </div>
           </>
-        )}
+        ) : null}
       </form>
     </>
   );
