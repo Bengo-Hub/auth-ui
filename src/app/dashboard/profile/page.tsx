@@ -99,6 +99,7 @@ function ProfileTab() {
   const [name, setName] = useState(profile.name ?? user?.name ?? '');
   const [phone, setPhone] = useState(profile.phone ?? '');
   const [bio, setBio] = useState(profile.bio ?? '');
+  const [country, setCountry] = useState(profile.country ?? '');
   const [timezone, setTimezone] = useState(profile.timezone ?? 'UTC');
   const [locale, setLocale] = useState(profile.locale ?? 'en');
   const [isSaving, setIsSaving] = useState(false);
@@ -134,7 +135,7 @@ function ProfileTab() {
     setIsSaving(true);
     setMessage(null);
     try {
-      const response = await apiClient.patch('/api/v1/auth/me', { name, phone, bio, timezone, locale });
+      const response = await apiClient.patch('/api/v1/auth/me', { name, phone, bio, country, timezone, locale });
       const updated = (response as any)?.data as Record<string, any> | undefined;
       if (updated && user) {
         setUser({ ...user, ...(updated as any), roles: (updated as any).roles ?? user.roles ?? [], permissions: (updated as any).permissions ?? user.permissions ?? [], tenants: (updated as any).tenants ?? user.tenants ?? [] });
@@ -210,6 +211,12 @@ function ProfileTab() {
                   <Phone className="h-3 w-3" /> Phone Number
                 </Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} placeholder="+254 700 000 000" type="tel" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <Globe className="h-3 w-3" /> Country
+                </Label>
+                <Input value={country} onChange={(e) => setCountry(e.target.value)} className={inputCls} placeholder="e.g. Kenya" />
               </div>
             </div>
 

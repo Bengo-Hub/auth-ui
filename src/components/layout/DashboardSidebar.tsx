@@ -18,7 +18,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Settings,
   Store,
   User,
   Users,
@@ -43,8 +42,6 @@ interface NavGroup {
 
 const ACCOUNT_ITEMS: NavItem[] = [
   { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Profile', href: '/dashboard/profile', icon: User },
-  { title: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 const PLATFORM_ADMIN_ITEMS: NavItem[] = [

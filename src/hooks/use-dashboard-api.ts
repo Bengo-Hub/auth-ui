@@ -125,6 +125,7 @@ export interface TenantMember {
   avatar_url?: string;
   roles: string[];
   status: string;
+  outlet_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -135,6 +136,7 @@ export interface MemberFilters {
   search?: string;
   role?: string;
   status?: string;
+  outlet_id?: string;
 }
 
 export interface PaginatedMembers {
@@ -148,6 +150,7 @@ export interface PaginatedMembers {
 interface AddTenantMemberPayload {
   user_id: string;
   roles: string[];
+  outlet_id?: string;
 }
 
 export const tenantMemberKeys = (tenantId: string) => ({
@@ -160,7 +163,7 @@ export function useTenantMembers(
   enabled = true,
   filters: MemberFilters = {}
 ) {
-  const { page = 1, limit = 20, search = '', role = '', status = '' } = filters;
+  const { page = 1, limit = 20, search = '', role = '', status = '', outlet_id = '' } = filters;
   return useQuery({
     queryKey: tenantId ? tenantMemberKeys(tenantId).list(filters) : ['tenant-members'],
     queryFn: async (): Promise<PaginatedMembers> => {
@@ -171,6 +174,7 @@ export function useTenantMembers(
       if (search) params.set('search', search);
       if (role) params.set('role', role);
       if (status) params.set('status', status);
+      if (outlet_id) params.set('outlet_id', outlet_id);
       const response = await apiClient.get(
         `/api/v1/admin/tenants/${tenantId}/members?${params.toString()}`
       );

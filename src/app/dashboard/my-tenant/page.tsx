@@ -19,6 +19,7 @@ import {
     ExternalLink,
     KeyRound,
     Loader2,
+    MapPin,
     MessageCircle,
     Palette,
     Plus,
@@ -30,6 +31,13 @@ import {
 import { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
+interface TenantOutlet {
+  id: string;
+  name: string;
+  code?: string;
+  use_case?: string;
+}
 
 const SERVICE_TAG_LABELS: Record<string, string> = {
   ordering: 'Ordering',
@@ -202,6 +210,7 @@ function TeamTab({ tenantId }: { tenantId: string }) {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [outletFilter, setOutletFilter] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
   const [isInviting, setIsInviting] = useState(false);
@@ -209,6 +218,9 @@ function TeamTab({ tenantId }: { tenantId: string }) {
   const [pin, setPin] = useState('');
   const [pinService, setPinService] = useState('pos');
   const [isPinSaving, setIsPinSaving] = useState(false);
+  const [outletTarget, setOutletTarget] = useState<TenantMember | null>(null);
+  const [outletAssignId, setOutletAssignId] = useState('');
+  const [isAssigningOutlet, setIsAssigningOutlet] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -217,7 +229,19 @@ function TeamTab({ tenantId }: { tenantId: string }) {
 
   const resetPage = useCallback(() => setPage(1), []);
 
-  useEffect(() => { resetPage(); }, [debouncedSearch, roleFilter, statusFilter, resetPage]);
+  useEffect(() => { resetPage(); }, [debouncedSearch, roleFilter, statusFilter, outletFilter, resetPage]);
+
+  const { data: outletsData } = useQuery<TenantOutlet[]>({
+    queryKey: ['tenant-outlets', tenantId],
+    queryFn: async () => {
+      const res = await apiClient.get(`/api/v1/admin/tenants/${tenantId}/outlets`);
+      const raw = (res as { data?: unknown }).data ?? res;
+      return Array.isArray(raw) ? raw as TenantOutlet[] : [];
+    },
+    enabled: !!tenantId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const outlets = outletsData ?? [];
 
   const { data, isLoading, refetch } = useTenantMembers(tenantId, true, {
     page,
@@ -225,17 +249,22 @@ function TeamTab({ tenantId }: { tenantId: string }) {
     search: debouncedSearch,
     role: roleFilter,
     status: statusFilter,
+    outlet_id: outletFilter,
   });
 
   const members = data?.data ?? [];
   const total = data?.total ?? 0;
   const hasMore = data?.hasMore ?? false;
 
+  const [inviteOutletId, setInviteOutletId] = useState('');
+
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsInviting(true);
     try {
-      await apiClient.post(`/api/v1/admin/tenants/${tenantId}/members`, { email: inviteEmail, role: inviteRole });
+      const payload: Record<string, string> = { email: inviteEmail, role: inviteRole };
+      if (inviteOutletId) payload.outlet_id = inviteOutletId;
+      await apiClient.post(`/api/v1/admin/tenants/${tenantId}/members`, payload);
       setInviteEmail('');
       refetch();
       toast({ title: 'Member invited' });
@@ -243,6 +272,25 @@ function TeamTab({ tenantId }: { tenantId: string }) {
       toast({ title: 'Failed to invite member', variant: 'destructive' });
     } finally {
       setIsInviting(false);
+    }
+  };
+
+  const handleAssignOutlet = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!outletTarget) return;
+    setIsAssigningOutlet(true);
+    try {
+      await apiClient.patch(`/api/v1/admin/tenants/${tenantId}/members/${outletTarget.user_id}`, {
+        outlet_id: outletAssignId || null,
+      });
+      refetch();
+      toast({ title: `Outlet assigned for ${outletTarget.name ?? outletTarget.email}` });
+      setOutletTarget(null);
+      setOutletAssignId('');
+    } catch {
+      toast({ title: 'Failed to assign outlet', variant: 'destructive' });
+    } finally {
+      setIsAssigningOutlet(false);
     }
   };
 
@@ -286,8 +334,8 @@ function TeamTab({ tenantId }: { tenantId: string }) {
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">Invite Member</h2>
         </div>
-        <form onSubmit={handleInvite} className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 space-y-1">
+        <form onSubmit={handleInvite} className="flex flex-col md:flex-row gap-4 flex-wrap">
+          <div className="flex-1 min-w-[200px] space-y-1">
             <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Email</Label>
             <Input required type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="colleague@company.com"
@@ -300,6 +348,16 @@ function TeamTab({ tenantId }: { tenantId: string }) {
               {TEAM_ROLES.map((r) => <option key={r} value={r} className="capitalize">{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
             </select>
           </div>
+          {outlets.length > 0 && (
+            <div className="w-48 space-y-1">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Outlet (optional)</Label>
+              <select value={inviteOutletId} onChange={(e) => setInviteOutletId(e.target.value)}
+                className="w-full h-12 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
+                <option value="">Unassigned</option>
+                {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+              </select>
+            </div>
+          )}
           <div className="flex items-end">
             <Button type="submit" disabled={isInviting}
               className="h-12 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
@@ -310,8 +368,8 @@ function TeamTab({ tenantId }: { tenantId: string }) {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[160px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or email…"
             className="h-11 pl-9 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
@@ -334,6 +392,13 @@ function TeamTab({ tenantId }: { tenantId: string }) {
           <option value="pending">Pending</option>
           <option value="suspended">Suspended</option>
         </select>
+        {outlets.length > 0 && (
+          <select value={outletFilter} onChange={(e) => setOutletFilter(e.target.value)}
+            className="h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium w-full sm:w-44">
+            <option value="">All Outlets</option>
+            {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
+        )}
       </div>
 
       {/* Members list */}
@@ -361,7 +426,15 @@ function TeamTab({ tenantId }: { tenantId: string }) {
                   <div className="min-w-0">
                     <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{m.name ?? m.email}</p>
                     {m.name && m.email && <p className="text-xs text-slate-400 truncate">{m.email}</p>}
-                    <p className="text-xs text-slate-400 mt-0.5 capitalize">{m.status}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <p className="text-xs text-slate-400 capitalize">{m.status}</p>
+                      {m.outlet_id && outlets.length > 0 && (
+                        <span className="flex items-center gap-1 text-xs font-medium text-primary/80">
+                          <MapPin className="h-2.5 w-2.5" />
+                          {outlets.find((o) => o.id === m.outlet_id)?.name ?? 'Outlet'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
@@ -370,6 +443,13 @@ function TeamTab({ tenantId }: { tenantId: string }) {
                       {r}
                     </span>
                   ))}
+                  {outlets.length > 0 && (
+                    <Button variant="outline" size="sm"
+                      className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      onClick={() => { setOutletTarget(m); setOutletAssignId(m.outlet_id ?? ''); }}>
+                      <MapPin className="h-3 w-3" /> Outlet
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm"
                     className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
                     onClick={() => { setPinTarget(m); setPin(''); }}>
@@ -388,6 +468,42 @@ function TeamTab({ tenantId }: { tenantId: string }) {
 
         <Pagination page={page} total={total} limit={LIMIT} hasMore={hasMore} onPageChange={setPage} />
       </section>
+
+      {/* Assign Outlet Modal */}
+      {outletTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl w-full max-w-sm p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <MapPin className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Assign Outlet</h3>
+                <p className="text-xs text-slate-400 mt-0.5">{outletTarget.name ?? outletTarget.email}</p>
+              </div>
+            </div>
+            <form onSubmit={handleAssignOutlet} className="space-y-5">
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Home Outlet</Label>
+                <select value={outletAssignId} onChange={(e) => setOutletAssignId(e.target.value)}
+                  className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
+                  <option value="">Unassigned (tenant-wide)</option>
+                  {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}{o.use_case ? ` (${o.use_case})` : ''}</option>)}
+                </select>
+                <p className="text-xs text-slate-400">Sets the default outlet for PIN login and reporting.</p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1 h-12 rounded-2xl"
+                  onClick={() => { setOutletTarget(null); setOutletAssignId(''); }}>Cancel</Button>
+                <Button type="submit" disabled={isAssigningOutlet}
+                  className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold">
+                  {isAssigningOutlet ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assign'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Set PIN Modal */}
       {pinTarget && (
