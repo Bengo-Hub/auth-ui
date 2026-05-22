@@ -1,6 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Providers, ThemeProvider } from "@/components/providers";
 import { PWAInstallPrompt } from "@/components/pwa/pwa-install-prompt";
+import { PWAUpdateBanner } from "@/components/pwa/pwa-update-banner";
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -38,6 +39,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -62,6 +64,7 @@ export default function RootLayout({
             </MainLayout>
             <Toaster />
             <PWAInstallPrompt />
+            <PWAUpdateBanner />
           </Providers>
         </ThemeProvider>
         <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 py-4 px-6 text-center text-xs text-slate-500 dark:text-slate-400">

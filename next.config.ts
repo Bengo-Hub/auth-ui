@@ -5,6 +5,10 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
+  workboxOptions: {
+    skipWaiting: false,
+    clientsClaim: true,
+  },
 });
 
 // On Windows, standalone build uses symlinks and can fail with EPERM unless Developer Mode is on.
