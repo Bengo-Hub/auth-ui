@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PasskeysSection } from '@/components/settings/PasskeysSection';
 import { useRevokeSession, useSessions } from '@/hooks/use-dashboard-api';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +16,7 @@ import {
   Bell,
   Camera,
   CheckCircle,
+  Fingerprint,
   Globe,
   History,
   Key,
@@ -523,6 +525,14 @@ function SecurityTab() {
             </div>
           </div>
         )}
+      </FieldCard>
+
+      {/* Passkeys */}
+      <FieldCard>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center"><Fingerprint className="h-5 w-5 text-emerald-500" /></div>
+        </div>
+        <PasskeysSection />
       </FieldCard>
 
       {/* Sessions */}
