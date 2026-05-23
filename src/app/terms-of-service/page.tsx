@@ -18,9 +18,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — Codevertex IT Solutions',
+  title: 'Terms of Service — Codevertex Africa Limited',
   description:
-    'Terms of Service governing the use of Codevertex IT Solutions services, including the Codevertex SSO identity platform and the MarketFlow CRM SaaS platform.',
+    'Terms of Service governing the use of Codevertex Africa Limited services, including the Codevertex SSO identity platform and the MarketFlow CRM SaaS platform.',
 };
 
 const EFFECTIVE_DATE = 'April 27, 2026';
@@ -62,7 +62,7 @@ export default function TermsOfServicePage() {
           </p>
           <p className="mt-4 text-slate-600 dark:text-slate-400 leading-relaxed">
             These Terms of Service (&quot;Terms&quot; or &quot;Agreement&quot;) constitute a legally binding agreement between
-            you (&quot;User&quot;, &quot;you&quot;, or &quot;your&quot;) and <strong>Codevertex IT Solutions</strong> (also trading as Bengo Hub),
+            you (&quot;User&quot;, &quot;you&quot;, or &quot;your&quot;) and <strong>Codevertex Africa Limited</strong> (also trading as Bengo Hub),
             a technology company registered in Kenya (&quot;Codevertex&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), governing your
             access to and use of all Codevertex services.
           </p>
@@ -118,7 +118,7 @@ export default function TermsOfServicePage() {
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white">1. Overview &amp; Parties</h2>
               </div>
               <p>
-                These Terms govern your access to and use of all services provided by Codevertex IT Solutions,
+                These Terms govern your access to and use of all services provided by Codevertex Africa Limited,
                 including:
               </p>
               <ul>
@@ -128,7 +128,7 @@ export default function TermsOfServicePage() {
                 <li>Any associated APIs, mobile applications, or integrations that reference these Terms</li>
               </ul>
               <p>
-                <strong>Codevertex IT Solutions</strong> is registered and operating from Pioneer House, 2nd
+                <strong>Codevertex Africa Limited</strong> is registered and operating from Pioneer House, 2nd
                 Floor, Oginga Street, Kisumu, Kenya. Corporate email:{' '}
                 <a href="mailto:info@codevertexitsolutions.com" className="text-primary">
                   info@codevertexitsolutions.com
@@ -454,7 +454,7 @@ export default function TermsOfServicePage() {
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white">14. Indemnification</h2>
               </div>
               <p>
-                You agree to indemnify, defend, and hold harmless Codevertex IT Solutions, its officers,
+                You agree to indemnify, defend, and hold harmless Codevertex Africa Limited, its officers,
                 directors, employees, and agents from and against any claims, damages, losses, costs, and
                 expenses (including reasonable legal fees) arising out of or relating to: (a) your use of
                 the services in violation of these Terms; (b) Your Content; (c) your violation of any

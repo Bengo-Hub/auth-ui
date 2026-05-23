@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth-store';
 export default function Footer() {
   const activeTenant = useAuthStore((state) => state.activeTenant);
   const currentYear = new Date().getFullYear();
-  const tenantName = activeTenant?.name || 'Codevertex IT Solutions';
+  const tenantName = activeTenant?.name || 'Codevertex Africa Limited';
 
   return (
     <footer className="w-full mt-auto border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
@@ -121,7 +121,7 @@ export default function Footer() {
                   className="h-4 w-auto brightness-0 invert dark:brightness-100 dark:invert-0"
                 />
                 <span className="text-xs font-black tracking-tight uppercase">
-                  Powered by <span className="text-primary">Codevertex IT Solutions</span>
+                  Powered by <span className="text-primary">Codevertex Africa Limited</span>
                 </span>
               </a>
             </div>

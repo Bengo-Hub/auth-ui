@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { getTenantBySlug, type TenantBrand } from '@/lib/tenant-api';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
@@ -25,7 +25,7 @@ const DEFAULT_BRAND: TenantBrand = {
   logoUrl: '/images/logo/codevertex.png',
   primaryColor: '#5B1C4D',
   secondaryColor: '#ea8022',
-  orgName: 'Codevertex IT Solutions',
+  orgName: 'Codevertex Africa Limited',
 };
 
 export function TenantProvider({ children }: { children: ReactNode }) {

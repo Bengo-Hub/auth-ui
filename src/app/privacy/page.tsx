@@ -19,9 +19,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Codevertex IT Solutions',
+  title: 'Privacy Policy — Codevertex Africa Limited',
   description:
-    'Privacy Policy for Codevertex IT Solutions and the Codevertex SSO / accounts identity platform. Learn how we collect, use, and protect your personal data.',
+    'Privacy Policy for Codevertex Africa Limited and the Codevertex SSO / accounts identity platform. Learn how we collect, use, and protect your personal data.',
 };
 
 const LAST_UPDATED = 'April 27, 2026';
@@ -57,7 +57,7 @@ export default function PrivacyPolicyPage() {
             Last updated: <strong>{LAST_UPDATED}</strong> · Effective: <strong>{EFFECTIVE_DATE}</strong>
           </p>
           <p className="mt-4 text-slate-600 dark:text-slate-400 leading-relaxed">
-            Codevertex IT Solutions (&quot;Codevertex&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting
+            Codevertex Africa Limited (&quot;Codevertex&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting
             your personal information and your right to privacy. This Privacy Policy explains how we collect,
             use, disclose, and safeguard your information when you use our services, including the Codevertex
             SSO platform at{' '}
@@ -114,7 +114,7 @@ export default function PrivacyPolicyPage() {
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white">1. Overview &amp; Scope</h2>
               </div>
               <p>
-                This Privacy Policy applies to all services operated by <strong>Codevertex IT Solutions</strong>{' '}
+                This Privacy Policy applies to all services operated by <strong>Codevertex Africa Limited</strong>{' '}
                 (also trading as Bengo Hub), a technology company registered in Kenya with its principal office at
                 Pioneer House, 2nd Floor, Oginga Street, Kisumu, Kenya.
               </p>

@@ -25,9 +25,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'About Us — Codevertex IT Solutions',
+  title: 'About Us — Codevertex Africa Limited',
   description:
-    "Codevertex IT Solutions is a premier technology firm headquartered in Kisumu, Kenya. Learn about our mission to architect Africa's digital renaissance through enterprise software, AI, and talent development.",
+    "Codevertex Africa Limited is a premier technology firm headquartered in Kisumu, Kenya. Learn about our mission to architect Africa's digital renaissance through enterprise software, AI, and talent development.",
 };
 
 const STATS = [
@@ -199,7 +199,7 @@ export default function AboutUsPage() {
             </span>
           </h1>
           <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-3xl mb-12">
-            Codevertex IT Solutions is a purpose-driven technology enterprise committed to closing the digital
+            Codevertex Africa Limited is a purpose-driven technology enterprise committed to closing the digital
             divide and shaping the future of African commerce and industry. We go beyond software development —
             we design and deploy integrated digital ecosystems.
           </p>
