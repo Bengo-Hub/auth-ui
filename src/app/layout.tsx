@@ -19,9 +19,9 @@ export const metadata: Metadata = {
   description: "The central identity and access management portal for the Codevertex ecosystem.",
   manifest: "/manifest.json",
   icons: {
-    icon: "/svgs/logo.svg",
+    icon: [{ url: "/svgs/logo.svg", type: "image/svg+xml" }, { url: "/images/logo/codevertex.png" }],
     shortcut: "/svgs/logo.svg",
-    apple: "/svgs/logo.svg",
+    apple: "/images/logo/codevertex.png",
   },
   appleWebApp: {
     capable: true,
