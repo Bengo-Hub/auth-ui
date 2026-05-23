@@ -1,24 +1,28 @@
 'use client';
 
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { Home, Settings, ShieldCheck, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const NAV_ITEMS = [
-  { title: 'Home',     href: '/dashboard',                      icon: Home },
-  { title: 'Profile',  href: '/dashboard/profile',              icon: User },
-  { title: 'Security', href: '/dashboard/profile?tab=security', icon: ShieldCheck },
-  { title: 'Settings', href: '/dashboard/settings',             icon: Settings },
+const BASE_NAV_ITEMS = [
+  { title: 'Home',     href: '/dashboard',                      icon: Home,       platformOnly: false },
+  { title: 'Profile',  href: '/dashboard/profile',              icon: User,       platformOnly: false },
+  { title: 'Security', href: '/dashboard/profile?tab=security', icon: ShieldCheck, platformOnly: false },
+  { title: 'Settings', href: '/dashboard/settings',             icon: Settings,   platformOnly: true },
 ];
 
 export function DashboardBottomNav() {
   const pathname = usePathname();
+  const { isPlatformOwner } = useAuth();
+
+  const navItems = BASE_NAV_ITEMS.filter((item) => !item.platformOnly || isPlatformOwner);
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 md:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 safe-area-pb">
       <div className="flex items-stretch">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive =
             item.href === '/dashboard'
               ? pathname === '/dashboard'
