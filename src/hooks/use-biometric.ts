@@ -117,6 +117,7 @@ export function useBiometric(options: UseBiometricOptions = {}) {
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ email }),
           }
         );
@@ -153,6 +154,7 @@ export function useBiometric(options: UseBiometricOptions = {}) {
               'Content-Type': 'application/json',
               'X-WebAuthn-Session': sessionKey,
             },
+            credentials: 'include',
             body: JSON.stringify(credentialToJSON(assertion)),
           }
         );

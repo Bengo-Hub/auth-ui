@@ -4,12 +4,6 @@ import { useTenant } from '@/components/providers/tenant-provider';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -23,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useLogout } from '@/hooks/useLogout';
 import { useAuthStore } from '@/store/auth-store';
 import { cn } from '@/lib/utils';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bell,
   Building2,
@@ -41,6 +36,7 @@ import {
   User,
   Users,
   Wrench,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -95,50 +91,51 @@ export function DashboardTopNav() {
         </h1>
       </div>
 
-      {/* Mobile nav drawer */}
-      <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
-        <DialogContent className="sm:max-w-xs w-[85vw] h-full max-h-screen fixed left-0 top-0 bottom-0 rounded-none rounded-r-3xl p-0 border-l-0 overflow-y-auto">
-          <DialogHeader className="px-6 pt-8 pb-4">
-            <DialogTitle className="text-left font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              Navigation
-            </DialogTitle>
-          </DialogHeader>
-          <nav className="px-4 pb-8 space-y-1">
-            {MOBILE_NAV_ITEMS.filter((item) => !('tenantOnly' in item && item.tenantOnly && isPlatformOwner)).map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
+      {/* Mobile nav drawer — right-side slide with backdrop */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+              onClick={() => setMobileOpen(false)}
+            />
+            {/* Drawer */}
+            <motion.div
+              key="drawer"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed top-0 right-0 bottom-0 z-50 w-4/5 max-w-sm bg-white dark:bg-slate-900 shadow-2xl flex flex-col overflow-y-auto lg:hidden"
+            >
+              {/* Drawer header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
+                <span className="font-black text-slate-900 dark:text-white uppercase tracking-tight text-sm">
+                  Navigation
+                </span>
+                <button
                   onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm',
-                    isActive
-                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800',
-                  )}
+                  className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  aria-label="Close menu"
                 >
-                  <item.icon className="h-4 w-4" />
-                  {item.title}
-                </Link>
-              );
-            })}
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-            {isPlatformOwner && (
-              <>
-                <div className="pt-4 pb-2 px-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-1.5">
-                    <Wrench className="h-3 w-3" /> Platform
-                  </p>
-                </div>
-                {MOBILE_PLATFORM_ITEMS.map((item) => {
-                  const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+              {/* Nav links */}
+              <nav className="flex-1 px-4 py-4 space-y-1">
+                {MOBILE_NAV_ITEMS.filter((item) => !('tenantOnly' in item && item.tenantOnly && isPlatformOwner)).map((item) => {
+                  const isActive = pathname === item.href;
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      target={item.newTab ? '_blank' : undefined}
-                      rel={item.newTab ? 'noopener noreferrer' : undefined}
                       onClick={() => setMobileOpen(false)}
                       className={cn(
                         'flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm',
@@ -152,21 +149,52 @@ export function DashboardTopNav() {
                     </Link>
                   );
                 })}
-              </>
-            )}
 
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => { logout(); setMobileOpen(false); }}
-                className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl text-rose-500 font-bold text-sm hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </button>
-            </div>
-          </nav>
-        </DialogContent>
-      </Dialog>
+                {isPlatformOwner && (
+                  <>
+                    <div className="pt-4 pb-2 px-4">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-1.5">
+                        <Wrench className="h-3 w-3" /> Platform
+                      </p>
+                    </div>
+                    {MOBILE_PLATFORM_ITEMS.map((item) => {
+                      const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          target={item.newTab ? '_blank' : undefined}
+                          rel={item.newTab ? 'noopener noreferrer' : undefined}
+                          onClick={() => setMobileOpen(false)}
+                          className={cn(
+                            'flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm',
+                            isActive
+                              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800',
+                          )}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {item.title}
+                        </Link>
+                      );
+                    })}
+                  </>
+                )}
+
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    onClick={() => { logout(); setMobileOpen(false); }}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl text-rose-500 font-bold text-sm hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </button>
+                </div>
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Center: Search (Placeholder) - Hidden on mobile */}
       <div className="hidden lg:flex relative w-80 xl:w-96 max-w-full">

@@ -197,13 +197,23 @@ export function LoginForm() {
         return;
       }
 
-      // Show passkey setup nudge for users without one registered (email/password flow only).
+      // Show passkey setup nudge based on server-side credentials count (reliable across devices).
       const accessToken = data.access_token ?? '';
-      if (biometricSupported && !hasRegisteredCredential && accessToken && !wasDismissedRecently()) {
-        setPasskeyNudgeToken(accessToken);
-        setPendingRedirect(() => executeRedirect);
-        setPasskeyNudgeOpen(true);
-        return;
+      if (biometricSupported && accessToken && !wasDismissedRecently()) {
+        try {
+          const credsRes = await apiClient.get('/api/v1/auth/webauthn/credentials', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const hasServerCredentials = ((credsRes.data as any)?.credentials?.length ?? 0) > 0;
+          if (!hasServerCredentials) {
+            setPasskeyNudgeToken(accessToken);
+            setPendingRedirect(() => executeRedirect);
+            setPasskeyNudgeOpen(true);
+            return;
+          }
+        } catch {
+          // If the credentials check fails, proceed to redirect without nudge
+        }
       }
 
       executeRedirect();
