@@ -20,7 +20,7 @@ export default function Footer() {
                 <img
                   src="/images/logo/codevertex.png"
                   alt="Codevertex Africa Limited"
-                  className="h-10 w-auto dark:brightness-0 dark:invert"
+                  className="h-20 w-auto dark:brightness-0 dark:invert"
                 />
                 <span className="text-sm font-black uppercase tracking-tight">
                   Codevertex SSO

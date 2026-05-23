@@ -18,12 +18,12 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 lg:h-20">
+        <div className="flex justify-between h-20 lg:h-24">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center group gap-3">
               <div className="relative flex items-center justify-center p-2 rounded-xl bg-gradient-to-br from-primary/10 to-transparent group-hover:from-primary/20 transition-all duration-500">
-                <img src="/images/logo/codevertex.png" alt="Codevertex Africa Limited" className="h-14 w-auto object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-md dark:brightness-0 dark:invert" />
+                <img src="/images/logo/codevertex.png" alt="Codevertex Africa Limited" className="h-16 lg:h-20 w-auto object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-md dark:brightness-0 dark:invert" />
               </div>
               <div className="flex flex-col">
                 <span className="text-lg lg:text-xl font-black tracking-tight text-slate-900 dark:text-white">
