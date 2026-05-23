@@ -21,7 +21,7 @@ export function useLogout() {
     useAuthStore.getState().logout();
     queryClient.removeQueries({ queryKey: ['me'] });
     if (typeof window !== 'undefined') {
-      window.location.href = '/';
+      window.location.href = '/login';
     }
   };
 }
