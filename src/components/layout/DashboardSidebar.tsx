@@ -208,7 +208,7 @@ export function DashboardSidebar() {
               alt={tenant.name}
               className={cn(
                 'object-contain transition-all duration-500',
-                isCollapsed ? 'w-10 h-10' : 'h-12 w-auto',
+                isCollapsed ? 'h-10 w-auto' : 'h-14 w-auto',
               )}
             />
           ) : (
@@ -217,7 +217,7 @@ export function DashboardSidebar() {
               alt="Codevertex"
               className={cn(
                 'object-contain transition-all duration-500',
-                isCollapsed ? 'w-12 h-12' : 'w-48 h-16',
+                isCollapsed ? 'h-10 w-auto' : 'h-16 w-auto',
               )}
             />
           )}

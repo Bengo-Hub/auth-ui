@@ -19,8 +19,8 @@ export default function Footer() {
               <Link href="/" className="flex items-center gap-2 text-slate-900 dark:text-white">
                 <img
                   src="/images/logo/codevertex.png"
-                  alt="Codevertex"
-                  className="h-5 w-auto dark:brightness-0 dark:invert"
+                  alt="Codevertex Africa Limited"
+                  className="h-10 w-auto dark:brightness-0 dark:invert"
                 />
                 <span className="text-sm font-black uppercase tracking-tight">
                   Codevertex SSO
@@ -117,8 +117,8 @@ export default function Footer() {
               >
                 <img
                   src="/images/logo/codevertex.png"
-                  alt="Codevertex"
-                  className="h-4 w-auto brightness-0 invert dark:brightness-100 dark:invert-0"
+                  alt="Codevertex Africa Limited"
+                  className="h-7 w-auto brightness-0 invert dark:brightness-100 dark:invert-0"
                 />
                 <span className="text-xs font-black tracking-tight uppercase">
                   Powered by <span className="text-primary">Codevertex Africa Limited</span>

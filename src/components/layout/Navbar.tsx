@@ -23,7 +23,7 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center group gap-3">
               <div className="relative flex items-center justify-center p-2 rounded-xl bg-gradient-to-br from-primary/10 to-transparent group-hover:from-primary/20 transition-all duration-500">
-                <img src="/images/logo/codevertex.png" alt="Codevertex" className="h-8 w-auto object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-md dark:brightness-110" />
+                <img src="/images/logo/codevertex.png" alt="Codevertex Africa Limited" className="h-14 w-auto object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-md dark:brightness-0 dark:invert" />
               </div>
               <div className="flex flex-col">
                 <span className="text-lg lg:text-xl font-black tracking-tight text-slate-900 dark:text-white">

@@ -212,8 +212,8 @@ export default function ResetPasswordPage() {
             <Link href="/" className="inline-flex items-center gap-3 mb-6">
               <img
                 src="/images/logo/codevertex.png"
-                alt="Codevertex"
-                className="h-12 w-12 object-contain"
+                alt="Codevertex Africa Limited"
+                className="h-14 w-auto object-contain dark:brightness-0 dark:invert"
               />
               <div className="text-left">
                 <span className="block text-2xl font-black tracking-tight text-slate-900 dark:text-white">
