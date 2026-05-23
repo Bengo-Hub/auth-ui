@@ -9,6 +9,9 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ['var(--font-poppins)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -50,12 +53,13 @@ const config: Config = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
-        // Codevertex brand colors
+        // Codevertex Africa Limited brand colors
         brand: {
-          dark: '#0f172a',   // slate-900 — always-dark sidebar/nav background
-          light: '#f8fafc',  // slate-50  — text on dark surfaces
-          pink: '#EC4899',
-          'pink-dark': '#DB2777',
+          dark: '#0c0910',   // near-black dark mode background
+          light: '#ffffff',  // white — light mode background
+          purple: '#9100B0', // primary brand purple/magenta
+          'purple-light': '#c040e0', // lighter purple for dark bg
+          grey: '#6E6873',   // secondary text / decorative
           sky: '#0EA5E9',
           'sky-dark': '#0284C7',
           teal: '#14B8A6',

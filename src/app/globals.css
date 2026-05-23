@@ -11,17 +11,17 @@ body {
 
 @layer base {
   :root {
-    /* Codevertex Theme - Matching ISP Billing Frontend */
-    --background: 48 100% 96%;
+    /* Codevertex Africa Limited Brand Theme */
+    --background: 0 0% 100%;
     --foreground: 222.2 47.4% 11.2%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 47.4% 11.2%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 47.4% 11.2%;
 
-    /* Primary - Hot Pink (Brand Color) */
-    --primary: 330 81% 60%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Brand Purple/Magenta #9100B0 */
+    --primary: 291 100% 35%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 16% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -33,11 +33,11 @@ body {
     --destructive-foreground: 0 0% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 330 81% 60%;
+    --ring: 291 100% 35%;
     --radius: 0.5rem;
 
     /* Chart Colors */
-    --chart-1: 330 81% 60%;
+    --chart-1: 291 100% 35%;
     --chart-2: 199 89% 48%;
     --chart-3: 173 58% 45%;
     --chart-4: 43 74% 66%;
@@ -56,42 +56,43 @@ body {
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    /* Dark mode background: near-black #0c0910 */
+    --background: 270 20% 5%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 270 20% 5%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 270 20% 5%;
     --popover-foreground: 210 40% 98%;
 
-    /* Primary - Sky Blue for dark mode (better visibility) */
-    --primary: 210 100% 66%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Primary - lighter purple for dark bg */
+    --primary: 291 100% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 270 15% 14%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 270 15% 14%;
     --muted-foreground: 215 20% 65%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 270 15% 14%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 85.7% 97.3%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 210 100% 66%;
+    --border: 270 15% 14%;
+    --input: 270 15% 14%;
+    --ring: 291 100% 60%;
 
     /* Chart Colors - Dark mode */
-    --chart-1: 210 100% 66%;
+    --chart-1: 291 100% 60%;
     --chart-2: 199 89% 58%;
     --chart-3: 173 58% 55%;
     --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-5: 43 74% 66%;
 
-    /* Sidebar — dark mode: deep navy surface */
-    --sidebar: 222.2 84% 4.9%;
+    /* Sidebar — dark mode: deep purple-black surface */
+    --sidebar: 270 20% 5%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-muted: 215 20% 65%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-hover: 217.2 32.6% 17.5%;
+    --sidebar-border: 270 15% 14%;
+    --sidebar-hover: 270 15% 14%;
     --sidebar-section: 215 20% 50%;
   }
 }

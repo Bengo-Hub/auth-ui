@@ -1075,8 +1075,8 @@ function ResourcesSection() {
           className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
         >
           <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
-              <Code2 className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-primary/10 flex items-center justify-center">
+              <Code2 className="h-6 w-6 text-primary dark:text-primary" />
             </div>
             <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
           </div>

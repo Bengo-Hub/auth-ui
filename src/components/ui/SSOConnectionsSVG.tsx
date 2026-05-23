@@ -175,7 +175,7 @@ export function SSOConnectionsSVG() {
       <motion.div
         animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.6, 0.3] }}
         transition={{ duration: 5, repeat: Infinity }}
-        className="absolute bottom-1/4 left-1/4 w-6 h-6 rounded-full bg-indigo-500/20 blur-sm"
+        className="absolute bottom-1/4 left-1/4 w-6 h-6 rounded-full bg-primary/20 blur-sm"
       />
     </div>
   );

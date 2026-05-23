@@ -41,7 +41,7 @@ const benefits = [
     icon: Rocket,
     title: 'Get Started Instantly',
     description: 'Create your account in seconds and access all services immediately',
-    color: 'from-pink-500 to-rose-500',
+    color: 'from-purple-600 to-fuchsia-600',
   },
   {
     icon: Shield,
@@ -53,7 +53,7 @@ const benefits = [
     icon: Gift,
     title: 'Free Forever Tier',
     description: 'Access essential features at no cost, upgrade when you need more',
-    color: 'from-violet-500 to-purple-500',
+    color: 'from-violet-600 to-purple-700',
   },
   {
     icon: Users,
@@ -172,7 +172,7 @@ function OAuthButtonGroup() {
 
 export default function SignupPage() {
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <div className="min-h-screen flex bg-background overflow-hidden">
       {/* Left Side - Visual Content */}
       <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-primary/5 via-sky-500/5 to-violet-500/5 dark:from-primary/10 dark:via-sky-500/5 dark:to-violet-500/10 border-r border-slate-200/50 dark:border-slate-800/50 items-center justify-center p-12">
         {/* Animated Background Elements */}
@@ -263,7 +263,7 @@ export default function SignupPage() {
               <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
             </div>
             <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.2em]">
-              <span className="bg-slate-50 dark:bg-slate-900 px-4 text-slate-400">
+              <span className="bg-background px-4 text-slate-400">
                 Setup Official Profile
               </span>
             </div>

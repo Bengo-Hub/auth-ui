@@ -4,17 +4,14 @@ import { PWAInstallPrompt } from "@/components/pwa/pwa-install-prompt";
 import { PWAUpdateBanner } from "@/components/pwa/pwa-update-banner";
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -34,7 +31,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#EC4899",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c0910" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -50,7 +50,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 min-h-screen flex flex-col`}
+        className={`${poppins.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
         <ThemeProvider
           attribute="class"

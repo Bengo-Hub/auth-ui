@@ -194,7 +194,7 @@ export default function AboutUsPage() {
           </div>
           <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white leading-[1.05] mb-8 max-w-4xl">
             Architecting Africa's{' '}
-            <span className="bg-gradient-to-br from-primary via-primary to-indigo-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-br from-primary via-primary to-fuchsia-600 bg-clip-text text-transparent">
               Digital Renaissance.
             </span>
           </h1>
@@ -544,7 +544,7 @@ export default function AboutUsPage() {
               </div>
             </div>
 
-            <div className="p-10 rounded-3xl bg-gradient-to-br from-primary/5 to-indigo-500/5 border border-primary/10">
+            <div className="p-10 rounded-3xl bg-gradient-to-br from-primary/5 to-fuchsia-500/5 border border-primary/10">
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
                 Developer & API Inquiries
               </h3>

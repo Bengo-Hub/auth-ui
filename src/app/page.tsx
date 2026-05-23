@@ -82,13 +82,13 @@ export default function LandingPage() {
   }, [activeCategory, services]);
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-950 min-h-screen selection:bg-primary/30 selection:text-primary-foreground font-sans">
+    <div className="bg-background min-h-screen selection:bg-primary/30 selection:text-primary-foreground font-sans">
       {/* Hero Section */}
       <section className="relative pt-24 lg:pt-32 pb-12 lg:pb-20 px-6 overflow-hidden">
         {/* Abstract Background Meshes */}
         <div className="absolute top-0 inset-0 w-full h-full overflow-hidden pointer-events-none opacity-40 dark:opacity-20 flex justify-center">
           <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-primary/20 rounded-full blur-[120px]" />
-          <div className="absolute top-[20%] left-[-10%] w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[100px]" />
+          <div className="absolute top-[20%] left-[-10%] w-[600px] h-[600px] bg-fuchsia-500/20 rounded-full blur-[100px]" />
         </div>
 
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 relative z-10 text-left">
@@ -109,7 +109,7 @@ export default function LandingPage() {
               className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.05] mb-8"
             >
               One Account. <br className="hidden sm:block" />
-              <span className="bg-gradient-to-br from-primary via-primary to-indigo-600 bg-clip-text text-transparent drop-shadow-sm">
+              <span className="bg-gradient-to-br from-primary via-primary to-fuchsia-600 bg-clip-text text-transparent drop-shadow-sm">
                 Endless Growth.
               </span>
             </motion.h1>
