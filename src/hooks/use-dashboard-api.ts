@@ -76,7 +76,7 @@ export function useTenants() {
 export function useCreateTenant() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { name: string; slug: string; use_case?: string; contact_email?: string }) => {
+    mutationFn: async (payload: { name: string; slug: string; use_case?: string; contact_email?: string; metadata?: Record<string, any> }) => {
       const response = await apiClient.post('/api/v1/admin/tenants', payload);
       return (response as { data?: Tenant }).data ?? response;
     },
@@ -89,7 +89,7 @@ export function useCreateTenant() {
 export function useUpdateTenant() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...payload }: { id: string; name: string; slug: string; use_case?: string; contact_email?: string }) => {
+    mutationFn: async ({ id, ...payload }: { id: string; name: string; slug: string; use_case?: string; contact_email?: string; metadata?: Record<string, any> }) => {
       const response = await apiClient.put(`/api/v1/admin/tenants/${id}`, payload);
       return (response as { data?: Tenant }).data ?? response;
     },

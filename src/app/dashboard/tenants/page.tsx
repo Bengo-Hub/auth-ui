@@ -47,6 +47,15 @@ function slugify(text: string): string {
     .substring(0, 50);
 }
 
+// SERVICE_IDS maps display labels to the service_urls key used in tenant metadata.
+const SERVICE_IDS = [
+  { id: 'truload', label: 'TruLoad (Weighbridge)' },
+  { id: 'ordering', label: 'Food Ordering' },
+  { id: 'pos', label: 'Point of Sale' },
+  { id: 'logistics', label: 'Logistics / Fleet' },
+  { id: 'inventory', label: 'Inventory' },
+];
+
 function CreateOrgDialog() {
   const { toast } = useToast();
   const createTenant = useCreateTenant();
@@ -55,6 +64,7 @@ function CreateOrgDialog() {
   const [slug, setSlug] = useState('');
   const [useCase, setUseCase] = useState('');
   const [contactEmail, setContactEmail] = useState('');
+  const [appUrl, setAppUrl] = useState('');
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,7 +79,10 @@ function CreateOrgDialog() {
     e.preventDefault();
     setError(null);
 
-    createTenant.mutate({ name, slug, use_case: useCase, contact_email: contactEmail }, {
+    const metadata: Record<string, any> = {};
+    if (appUrl) metadata['app_url'] = appUrl;
+
+    createTenant.mutate({ name, slug, use_case: useCase, contact_email: contactEmail, ...(Object.keys(metadata).length > 0 ? { metadata } : {}) }, {
       onSuccess: () => {
         toast({ title: 'Success', description: 'Organization created successfully.' });
         setOpen(false);
@@ -77,6 +90,7 @@ function CreateOrgDialog() {
         setSlug('');
         setUseCase('');
         setContactEmail('');
+        setAppUrl('');
       },
       onError: (err: any) => {
         setError(err.response?.data?.error || 'Failed to create organization');
@@ -128,6 +142,11 @@ function CreateOrgDialog() {
               <Label>Contact Email</Label>
               <Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="admin@acme.com" />
             </div>
+            <div className="space-y-2 col-span-2">
+              <Label>App URL</Label>
+              <Input value={appUrl} onChange={e => setAppUrl(e.target.value)} placeholder="https://app.yourdomain.com" />
+              <p className="text-[11px] text-muted-foreground">Default deployed app URL for email links (e.g. welcome, password reset)</p>
+            </div>
           </div>
           <Button type="submit" disabled={createTenant.isPending || !name || !slug} className="w-full h-12 rounded-xl text-white font-bold">
             {createTenant.isPending ? <Loader2 className="animate-spin" /> : 'Create Organization'}
@@ -145,10 +164,27 @@ function EditOrgDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: b
   const [slug, setSlug] = useState(tenant.slug);
   const [useCase, setUseCase] = useState(tenant.use_case || '');
   const [contactEmail, setContactEmail] = useState(tenant.contact_email || '');
+  const [appUrl, setAppUrl] = useState<string>(tenant.metadata?.app_url ?? '');
+  // Per-service URLs: each entry is { service_id, url }
+  const initServiceUrls = (): { id: string; url: string }[] => {
+    const svcMap: Record<string, string> = tenant.metadata?.service_urls ?? {};
+    return SERVICE_IDS.map(s => ({ id: s.id, url: svcMap[s.id] ?? '' }));
+  };
+  const [serviceUrls, setServiceUrls] = useState<{ id: string; url: string }[]>(initServiceUrls);
+
+  const handleServiceUrlChange = (serviceId: string, value: string) => {
+    setServiceUrls(prev => prev.map(s => s.id === serviceId ? { ...s, url: value } : s));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateTenant.mutate({ id: tenant.id, name, slug, use_case: useCase, contact_email: contactEmail }, {
+    const svcUrlsMap: Record<string, string> = {};
+    serviceUrls.forEach(({ id, url }) => { if (url) svcUrlsMap[id] = url; });
+    const metadata: Record<string, any> = {};
+    if (appUrl) metadata['app_url'] = appUrl;
+    if (Object.keys(svcUrlsMap).length > 0) metadata['service_urls'] = svcUrlsMap;
+
+    updateTenant.mutate({ id: tenant.id, name, slug, use_case: useCase, contact_email: contactEmail, ...(Object.keys(metadata).length > 0 ? { metadata } : {}) }, {
       onSuccess: () => {
         toast({ title: 'Updated', description: 'Organization updated successfully.' });
         onOpenChange(false);
@@ -158,7 +194,7 @@ function EditOrgDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: b
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg rounded-3xl">
+      <DialogContent className="sm:max-w-lg rounded-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Edit Organization</DialogTitle>
           <DialogDescription>Update organization details for {tenant.name}.</DialogDescription>
@@ -193,7 +229,35 @@ function EditOrgDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: b
               <Label>Contact Email</Label>
               <Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="admin@acme.com" />
             </div>
+            <div className="space-y-2 col-span-2">
+              <Label>App URL</Label>
+              <Input value={appUrl} onChange={e => setAppUrl(e.target.value)} placeholder="https://app.yourdomain.com" />
+              <p className="text-[11px] text-muted-foreground">Default deployed app URL for email links (welcome, password reset). Used when no per-service URL is set.</p>
+            </div>
           </div>
+
+          {/* Per-service URLs */}
+          <div className="space-y-3">
+            <div>
+              <Label className="text-sm font-bold">Per-Service App URLs</Label>
+              <p className="text-[11px] text-muted-foreground mt-1">Override the default App URL for specific services. Email links will use the matching service URL when available.</p>
+            </div>
+            {serviceUrls.map(({ id, url }) => {
+              const label = SERVICE_IDS.find(s => s.id === id)?.label ?? id;
+              return (
+                <div key={id} className="grid grid-cols-[140px_1fr] gap-2 items-center">
+                  <span className="text-xs font-semibold text-slate-500 truncate">{label}</span>
+                  <Input
+                    value={url}
+                    onChange={e => handleServiceUrlChange(id, e.target.value)}
+                    placeholder={`https://${id}.yourdomain.com`}
+                    className="text-sm"
+                  />
+                </div>
+              );
+            })}
+          </div>
+
           <Button type="submit" disabled={updateTenant.isPending} className="w-full h-12 rounded-xl text-white font-bold">
             {updateTenant.isPending ? <Loader2 className="animate-spin" /> : 'Save Changes'}
           </Button>
