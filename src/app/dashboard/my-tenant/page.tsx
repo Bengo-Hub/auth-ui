@@ -122,7 +122,7 @@ export default function MyTenantPage() {
 
       {activeTab === 'overview' && <TenantOverview tenant={tenant} user={user} />}
       {activeTab === 'branding' && <BrandingTab />}
-      {activeTab === 'team' && <TeamTab tenantId={tenant.id} />}
+      {activeTab === 'team' && <TeamTab tenantId={tenant.id} tenantSlug={tenant.slug} />}
       {activeTab === 'billing' && <BillingTab tenantSlug={tenant.slug} user={user} />}
       {activeTab === 'support' && <SupportTab tenant={tenant} />}
     </div>
@@ -202,7 +202,7 @@ const TEAM_ROLES = [
   'customer',            // B2C end-user / ordering customer / ISP subscriber
 ];
 
-function TeamTab({ tenantId }: { tenantId: string }) {
+function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug: string }) {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
   const LIMIT = 20;
@@ -232,13 +232,14 @@ function TeamTab({ tenantId }: { tenantId: string }) {
   useEffect(() => { resetPage(); }, [debouncedSearch, roleFilter, statusFilter, outletFilter, resetPage]);
 
   const { data: outletsData } = useQuery<TenantOutlet[]>({
-    queryKey: ['tenant-outlets', tenantId],
+    queryKey: ['tenant-outlets', tenantSlug],
     queryFn: async () => {
-      const res = await apiClient.get(`/api/v1/admin/tenants/${tenantId}/outlets`);
+      // Outlets are served at /api/v1/{slug}/outlets — requires the slug, not the UUID.
+      const res = await apiClient.get(`/api/v1/${tenantSlug}/outlets`);
       const raw = (res as { data?: unknown }).data ?? res;
       return Array.isArray(raw) ? raw as TenantOutlet[] : [];
     },
-    enabled: !!tenantId,
+    enabled: !!tenantSlug,
     staleTime: 5 * 60 * 1000,
   });
   const outlets = outletsData ?? [];
@@ -262,14 +263,16 @@ function TeamTab({ tenantId }: { tenantId: string }) {
     e.preventDefault();
     setIsInviting(true);
     try {
-      const payload: Record<string, string> = { email: inviteEmail, role: inviteRole };
+      // Backend accepts email (server-side user lookup) + roles as array.
+      const payload: Record<string, unknown> = { email: inviteEmail, roles: [inviteRole] };
       if (inviteOutletId) payload.outlet_id = inviteOutletId;
       await apiClient.post(`/api/v1/admin/tenants/${tenantId}/members`, payload);
       setInviteEmail('');
       refetch();
       toast({ title: 'Member invited' });
-    } catch {
-      toast({ title: 'Failed to invite member', variant: 'destructive' });
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast({ title: msg ?? 'Failed to invite member', variant: 'destructive' });
     } finally {
       setIsInviting(false);
     }
@@ -280,8 +283,11 @@ function TeamTab({ tenantId }: { tenantId: string }) {
     if (!outletTarget) return;
     setIsAssigningOutlet(true);
     try {
-      await apiClient.patch(`/api/v1/admin/tenants/${tenantId}/members/${outletTarget.user_id}`, {
-        outlet_id: outletAssignId || null,
+      // Router uses PUT (not PATCH). Include current roles so the backend doesn't wipe them.
+      // Empty string for outlet_id signals "clear assignment" to the backend.
+      await apiClient.put(`/api/v1/admin/tenants/${tenantId}/members/${outletTarget.user_id}`, {
+        roles: outletTarget.roles,
+        outlet_id: outletAssignId || '',
       });
       refetch();
       toast({ title: `Outlet assigned for ${outletTarget.name ?? outletTarget.email}` });

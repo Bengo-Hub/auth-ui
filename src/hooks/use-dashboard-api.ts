@@ -65,9 +65,11 @@ export function useTenants() {
   return useQuery({
     queryKey: tenantKeys.all(),
     queryFn: async () => {
-      const response = await apiClient.get<Tenant[]>('/api/v1/admin/tenants');
-      const data = (response as any).data ?? response;
-      return Array.isArray(data) ? (data as Tenant[]) : [];
+      const response = await apiClient.get('/api/v1/admin/tenants');
+      // API returns pagination wrapper: { data: Tenant[], total, limit, page, hasMore }
+      const body = (response as any).data;
+      const items = body?.data ?? body ?? [];
+      return Array.isArray(items) ? (items as Tenant[]) : [];
     },
     staleTime: STALE_MS,
   });
@@ -272,9 +274,11 @@ export function useOAuthClients() {
   return useQuery({
     queryKey: oauthClientKeys.all(),
     queryFn: async () => {
-      const response = await apiClient.get<OAuthClient[]>('/api/v1/admin/clients');
-      const data = (response as any).data ?? response;
-      return Array.isArray(data) ? (data as OAuthClient[]) : [];
+      const response = await apiClient.get('/api/v1/admin/clients');
+      // API returns pagination wrapper: { data: OAuthClient[], total, limit, page, hasMore }
+      const body = (response as any).data;
+      const items = body?.data ?? body ?? [];
+      return Array.isArray(items) ? (items as OAuthClient[]) : [];
     },
     staleTime: STALE_MS,
   });
@@ -362,8 +366,21 @@ export function useAdminUsers(params: { status?: string; tenant_id?: string; sea
   return useQuery({
     queryKey: userKeys.all(Object.fromEntries(q)),
     queryFn: async () => {
-      const response = await apiClient.get<UsersResponse>(`/api/v1/admin/users${qs ? '?' + qs : ''}`);
-      return ((response as unknown as { data?: UsersResponse }).data ?? response) as UsersResponse;
+      const response = await apiClient.get(`/api/v1/admin/users${qs ? '?' + qs : ''}`);
+      // API returns pagination wrapper: { data: PlatformUser[], total, limit, page, hasMore }
+      // Transform into UsersResponse shape that the users page expects.
+      const body = (response as any).data;
+      const total = body?.total ?? 0;
+      const lim = body?.limit ?? 50;
+      return {
+        users: (body?.data ?? []) as PlatformUser[],
+        pagination: {
+          total,
+          page: body?.page ?? 1,
+          limit: lim,
+          pages: lim > 0 ? Math.ceil(total / lim) : 1,
+        },
+      } as UsersResponse;
     },
     staleTime: STALE_MS,
   });
