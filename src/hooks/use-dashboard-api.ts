@@ -114,6 +114,22 @@ export function useDeleteTenant() {
   });
 }
 
+export function useProvisionTenantOAuthRedirects() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (tenantId: string) => {
+      const response = await apiClient.post(
+        `/api/v1/admin/tenants/${tenantId}/provision-oauth-redirects`,
+        {}
+      );
+      return (response as { data?: any }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: oauthClientKeys.all() });
+    },
+  });
+}
+
 // Payment gateways are owned by treasury-api/ui; auth-ui no longer exposes gateway CRUD.
 
 // ── Tenant Member Management ─────────────────────────────────────────────────

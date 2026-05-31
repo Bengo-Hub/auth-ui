@@ -13,8 +13,9 @@ import {
   MoreVertical,
   Trash2,
   Edit,
+  Link,
 } from 'lucide-react';
-import { useTenants, useCreateTenant, useUpdateTenant, useDeleteTenant, Tenant } from '@/hooks/use-dashboard-api';
+import { useTenants, useCreateTenant, useUpdateTenant, useDeleteTenant, useProvisionTenantOAuthRedirects, Tenant } from '@/hooks/use-dashboard-api';
 import { TenantMembersDialog } from '@/components/tenant/tenant-members-dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -270,6 +271,7 @@ function EditOrgDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: b
 export default function TenantsPage() {
   const { data: tenants, isLoading } = useTenants();
   const deleteTenant = useDeleteTenant();
+  const provisionRedirects = useProvisionTenantOAuthRedirects();
   const { toast } = useToast();
   const setActiveTenant = useAuthStore((state) => state.setActiveTenant);
   
@@ -292,6 +294,20 @@ export default function TenantsPage() {
         toast({ title: 'Deleted', description: 'Organization has been removed.' });
         setDeletingTenant(null);
       }
+    });
+  };
+
+  const handleProvisionRedirects = (tenant: Tenant) => {
+    provisionRedirects.mutate(tenant.id, {
+      onSuccess: () => {
+        toast({
+          title: 'OAuth Redirects Provisioned',
+          description: `Login redirect URIs for /${tenant.slug}/auth/callback registered on all OAuth clients.`,
+        });
+      },
+      onError: () => {
+        toast({ title: 'Provisioning failed', variant: 'destructive' });
+      },
     });
   };
 
@@ -362,9 +378,21 @@ export default function TenantsPage() {
                         <MoreVertical className="h-5 w-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 p-2 rounded-2xl border-slate-100 dark:border-slate-800 shadow-2xl">
+                    <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl border-slate-100 dark:border-slate-800 shadow-2xl">
                       <DropdownMenuItem onClick={() => setEditingTenant(tenant)} className="rounded-xl p-3 cursor-pointer">
                         <Edit className="h-4 w-4 mr-2" /> Edit Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleProvisionRedirects(tenant)}
+                        disabled={provisionRedirects.isPending}
+                        className="rounded-xl p-3 cursor-pointer"
+                      >
+                        {provisionRedirects.isPending ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Link className="h-4 w-4 mr-2" />
+                        )}
+                        Provision OAuth Redirects
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setDeletingTenant(tenant)} className="rounded-xl p-3 cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-900/20">
                         <Trash2 className="h-4 w-4 mr-2" /> Delete Organization
