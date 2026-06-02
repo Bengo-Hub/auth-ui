@@ -4,7 +4,17 @@ import { BrandingTab } from '@/components/settings/BrandingTab';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/hooks/useAuth';
-import { useTenantMembers, type MemberFilters, type TenantMember } from '@/hooks/use-dashboard-api';
+import {
+  useTenantMembers,
+  useServiceSubscriptions,
+  deriveActivePlan,
+  useAddTenantMember,
+  useUpdateTenantMember,
+  useRemoveTenantMember,
+  useSetTenantMemberStatus,
+  useSetMemberPin,
+  type TenantMember,
+} from '@/hooks/use-dashboard-api';
 import { useToast } from '@/hooks/use-toast';
 import apiClient from '@/lib/api-client';
 import { subscriptionApi, type Plan, type ServiceSubscriptionEntry, type ServiceChargePlan } from '@/lib/subscription-api';
@@ -13,8 +23,11 @@ import { motion } from 'framer-motion';
 import {
     AlertCircle,
     ArrowUpRight,
+    Ban,
     Building2,
     Check,
+    CheckCircle2,
+    Copy,
     CreditCard,
     ExternalLink,
     KeyRound,
@@ -131,13 +144,18 @@ export default function MyTenantPage() {
 
 // ── Overview ─────────────────────────────────────────────────────────────────
 
-function TenantOverview({ tenant, user }: { tenant: { id: string; name: string; slug: string }; user: ReturnType<typeof useAuth>['user'] }) {
+function TenantOverview({ tenant }: { tenant: { id: string; name: string; slug: string }; user: ReturnType<typeof useAuth>['user'] }) {
   const { data: membersResult } = useTenantMembers(tenant.id, true);
+  // Plan shown here uses the SAME live source as the Billing tab (pricing API),
+  // so Overview and Billing never contradict each other (#4).
+  const { data: subData } = useServiceSubscriptions(tenant.id);
+  const activePlan = deriveActivePlan(subData);
+  const planLabel = activePlan?.name ?? 'No active plan';
 
   const stats = [
     { label: 'Organization', value: tenant.name, icon: Building2, color: 'text-primary', bg: 'bg-primary/10' },
     { label: 'Members', value: String(membersResult?.total || '—'), icon: Users, color: 'text-blue-500', bg: 'bg-blue-50' },
-    { label: 'Plan', value: user?.subscription_plan ?? 'Free', icon: CreditCard, color: 'text-purple-500', bg: 'bg-purple-50' },
+    { label: 'Plan', value: planLabel, icon: CreditCard, color: 'text-purple-500', bg: 'bg-purple-50' },
   ];
 
   return (
@@ -172,7 +190,9 @@ function TenantOverview({ tenant, user }: { tenant: { id: string; name: string; 
           </div>
           <div>
             <dt className="text-slate-500 mb-0.5">Subscription</dt>
-            <dd className="font-bold text-slate-900 dark:text-white capitalize">{user?.subscription_plan ?? 'Free'} — {user?.subscription_status ?? 'active'}</dd>
+            <dd className="font-bold text-slate-900 dark:text-white">
+              {activePlan ? `${activePlan.name} — ${activePlan.status}` : 'No active plan'}
+            </dd>
           </div>
         </dl>
       </div>
@@ -212,15 +232,22 @@ function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug: strin
   const [statusFilter, setStatusFilter] = useState('');
   const [outletFilter, setOutletFilter] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
-  const [isInviting, setIsInviting] = useState(false);
+  const [invitePin, setInvitePin] = useState('');
   const [pinTarget, setPinTarget] = useState<TenantMember | null>(null);
   const [pin, setPin] = useState('');
   const [pinService, setPinService] = useState('pos');
-  const [isPinSaving, setIsPinSaving] = useState(false);
   const [outletTarget, setOutletTarget] = useState<TenantMember | null>(null);
   const [outletAssignId, setOutletAssignId] = useState('');
-  const [isAssigningOutlet, setIsAssigningOutlet] = useState(false);
+  // One-time temp-password reveal after a brand-new account is created.
+  const [tempPwInfo, setTempPwInfo] = useState<{ email: string; password: string } | null>(null);
+
+  const addMember = useAddTenantMember(tenantId);
+  const updateMember = useUpdateTenantMember(tenantId);
+  const removeMember = useRemoveTenantMember(tenantId);
+  const setMemberStatus = useSetTenantMemberStatus(tenantId);
+  const setMemberPin = useSetMemberPin(tenantId);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -244,7 +271,7 @@ function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug: strin
   });
   const outlets = outletsData ?? [];
 
-  const { data, isLoading, refetch } = useTenantMembers(tenantId, true, {
+  const { data, isLoading } = useTenantMembers(tenantId, true, {
     page,
     limit: LIMIT,
     search: debouncedSearch,
@@ -261,101 +288,124 @@ function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug: strin
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsInviting(true);
     try {
-      // Backend accepts email (server-side user lookup) + roles as array.
-      const payload: Record<string, unknown> = { email: inviteEmail, roles: [inviteRole] };
-      if (inviteOutletId) payload.outlet_id = inviteOutletId;
-      await apiClient.post(`/api/v1/admin/tenants/${tenantId}/members`, payload);
+      // Backend resolves the email to an existing user, or creates the account
+      // on the fly (#3) and returns a one-time temp_password.
+      const result = await addMember.mutateAsync({
+        email: inviteEmail,
+        roles: [inviteRole],
+        ...(inviteName ? { name: inviteName } : {}),
+        ...(inviteOutletId ? { outlet_id: inviteOutletId } : {}),
+        ...(invitePin.length === 4 ? { pin: invitePin, service: 'pos' } : {}),
+      });
+      if (result?.temp_password) {
+        setTempPwInfo({ email: inviteEmail, password: result.temp_password });
+      } else {
+        toast({ title: 'Member added' });
+      }
       setInviteEmail('');
-      refetch();
-      toast({ title: 'Member invited' });
+      setInviteName('');
+      setInvitePin('');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast({ title: msg ?? 'Failed to invite member', variant: 'destructive' });
-    } finally {
-      setIsInviting(false);
+      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
+        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast({ title: msg ?? 'Failed to add member', variant: 'destructive' });
     }
   };
 
   const handleAssignOutlet = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!outletTarget) return;
-    setIsAssigningOutlet(true);
     try {
-      // Router uses PUT (not PATCH). Include current roles so the backend doesn't wipe them.
-      // Empty string for outlet_id signals "clear assignment" to the backend.
-      await apiClient.put(`/api/v1/admin/tenants/${tenantId}/members/${outletTarget.user_id}`, {
+      // Include current roles so the backend doesn't wipe them.
+      // Empty string for outlet_id signals "clear assignment".
+      await updateMember.mutateAsync({
+        user_id: outletTarget.user_id,
         roles: outletTarget.roles,
         outlet_id: outletAssignId || '',
       });
-      refetch();
       toast({ title: `Outlet assigned for ${outletTarget.name ?? outletTarget.email}` });
       setOutletTarget(null);
       setOutletAssignId('');
     } catch {
       toast({ title: 'Failed to assign outlet', variant: 'destructive' });
-    } finally {
-      setIsAssigningOutlet(false);
     }
   };
 
   const handleRemove = async (userId: string) => {
     if (!confirm('Remove this member?')) return;
     try {
-      await apiClient.delete(`/api/v1/admin/tenants/${tenantId}/members/${userId}`);
-      refetch();
+      await removeMember.mutateAsync(userId);
       toast({ title: 'Member removed' });
     } catch {
       toast({ title: 'Failed to remove member', variant: 'destructive' });
     }
   };
 
+  const handleStatusChange = async (m: TenantMember, status: string) => {
+    try {
+      await setMemberStatus.mutateAsync({ userId: m.user_id, status, roles: m.roles });
+      toast({ title: `${m.name ?? m.email} ${status === 'active' ? 'activated' : status}` });
+    } catch {
+      toast({ title: 'Failed to update member status', variant: 'destructive' });
+    }
+  };
+
   const handleSetPin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pinTarget || pin.length !== 4) return;
-    setIsPinSaving(true);
     try {
-      await apiClient.post(`/api/v1/admin/tenants/${tenantId}/members/${pinTarget.user_id}/service-pin`, {
-        service: pinService,
-        pin,
-      });
+      await setMemberPin.mutateAsync({ userId: pinTarget.user_id, pin, service: pinService });
       toast({ title: `PIN set for ${pinTarget.name ?? pinTarget.email}` });
       setPinTarget(null);
       setPin('');
     } catch {
       toast({ title: 'Failed to set PIN', variant: 'destructive' });
-    } finally {
-      setIsPinSaving(false);
     }
   };
 
   return (
     <div className="space-y-8">
-      {/* Invite form */}
+      {/* Add member form */}
       <div className="p-8 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Plus className="h-5 w-5 text-primary" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Invite Member</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add Member</h2>
         </div>
+        <p className="text-xs text-slate-400 mb-6 ml-13">
+          Existing users are added directly. New emails get an account with a temporary password and a welcome email with the sign-in link.
+        </p>
         <form onSubmit={handleInvite} className="flex flex-col md:flex-row gap-4 flex-wrap">
-          <div className="flex-1 min-w-[200px] space-y-1">
+          <div className="flex-1 min-w-[180px] space-y-1">
             <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Email</Label>
             <Input required type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="colleague@company.com"
               className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
           </div>
-          <div className="w-44 space-y-1">
+          <div className="w-40 space-y-1">
+            <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Name (optional)</Label>
+            <Input value={inviteName} onChange={(e) => setInviteName(e.target.value)}
+              placeholder="Jane Doe"
+              className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+          </div>
+          <div className="w-40 space-y-1">
             <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Role</Label>
             <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}
               className="w-full h-12 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
               {TEAM_ROLES.map((r) => <option key={r} value={r} className="capitalize">{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
             </select>
           </div>
+          <div className="w-32 space-y-1">
+            <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">PIN (optional)</Label>
+            <Input type="text" inputMode="numeric" maxLength={4} pattern="[0-9]{4}"
+              value={invitePin} onChange={(e) => setInvitePin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="POS PIN"
+              className="h-12 rounded-2xl text-center tracking-widest border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono" />
+          </div>
           {outlets.length > 0 && (
-            <div className="w-48 space-y-1">
+            <div className="w-44 space-y-1">
               <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Outlet (optional)</Label>
               <select value={inviteOutletId} onChange={(e) => setInviteOutletId(e.target.value)}
                 className="w-full h-12 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
@@ -365,9 +415,9 @@ function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug: strin
             </div>
           )}
           <div className="flex items-end">
-            <Button type="submit" disabled={isInviting}
+            <Button type="submit" disabled={addMember.isPending}
               className="h-12 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
-              {isInviting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Invite'}
+              {addMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
             </Button>
           </div>
         </form>
@@ -449,6 +499,19 @@ function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug: strin
                       {r}
                     </span>
                   ))}
+                  {m.status === 'active' ? (
+                    <Button variant="outline" size="sm"
+                      className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5 border-amber-300 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                      onClick={() => handleStatusChange(m, 'suspended')}>
+                      <Ban className="h-3 w-3" /> Suspend
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm"
+                      className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5 border-emerald-300 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+                      onClick={() => handleStatusChange(m, 'active')}>
+                      <CheckCircle2 className="h-3 w-3" /> Activate
+                    </Button>
+                  )}
                   {outlets.length > 0 && (
                     <Button variant="outline" size="sm"
                       className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -501,9 +564,9 @@ function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug: strin
               <div className="flex gap-3 pt-2">
                 <Button type="button" variant="outline" className="flex-1 h-12 rounded-2xl"
                   onClick={() => { setOutletTarget(null); setOutletAssignId(''); }}>Cancel</Button>
-                <Button type="submit" disabled={isAssigningOutlet}
+                <Button type="submit" disabled={updateMember.isPending}
                   className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold">
-                  {isAssigningOutlet ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assign'}
+                  {updateMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assign'}
                 </Button>
               </div>
             </form>
@@ -544,12 +607,44 @@ function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug: strin
               <div className="flex gap-3 pt-2">
                 <Button type="button" variant="outline" className="flex-1 h-12 rounded-2xl"
                   onClick={() => { setPinTarget(null); setPin(''); }}>Cancel</Button>
-                <Button type="submit" disabled={isPinSaving || pin.length !== 4}
+                <Button type="submit" disabled={setMemberPin.isPending || pin.length !== 4}
                   className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold">
-                  {isPinSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save PIN'}
+                  {setMemberPin.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save PIN'}
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Temporary password reveal (shown once after a new account is created) */}
+      {tempPwInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl w-full max-w-sm p-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+                <KeyRound className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Account created</h3>
+                <p className="text-xs text-slate-400 mt-0.5">{tempPwInfo.email}</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+              A welcome email with the sign-in link was sent. Share this temporary password securely — it
+              won&apos;t be shown again. The user must change it on first sign-in.
+            </p>
+            <div className="flex items-center gap-2 mb-5">
+              <code className="flex-1 px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 font-mono text-sm text-slate-900 dark:text-white break-all">
+                {tempPwInfo.password}
+              </code>
+              <Button type="button" variant="outline" size="icon" className="h-11 w-11 rounded-2xl"
+                onClick={() => { navigator.clipboard?.writeText(tempPwInfo.password); toast({ title: 'Copied' }); }}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button type="button" className="w-full h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold"
+              onClick={() => setTempPwInfo(null)}>Done</Button>
           </div>
         </div>
       )}
@@ -563,12 +658,7 @@ function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType
   const tenantId = user?.tenant?.id ?? '';
   const [activeService, setActiveService] = useState(ALL_SERVICE_TAGS[0]);
 
-  const { data: serviceData, isLoading: serviceLoading } = useQuery({
-    queryKey: ['service-subscriptions', tenantId],
-    queryFn: () => subscriptionApi.getServiceSubscriptions(tenantId),
-    enabled: !!tenantId,
-    staleTime: 2 * 60 * 1000,
-  });
+  const { data: serviceData, isLoading: serviceLoading } = useServiceSubscriptions(tenantId);
 
   const { data: allPlans = [], isLoading: plansLoading } = useQuery({
     queryKey: ['plans-by-service', activeService],

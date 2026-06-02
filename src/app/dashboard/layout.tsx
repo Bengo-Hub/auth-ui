@@ -46,6 +46,16 @@ export default function DashboardLayout({
     }
   }, [user, pathname, router, isPlatformOwner, meLoading]);
 
+  // Admin-provisioned / reset accounts must set a new password before using the
+  // dashboard. Gate everything except the Security tab where they change it.
+  useEffect(() => {
+    if (meLoading || !user?.must_change_password) return;
+    const onSecurity = pathname === '/dashboard/profile' || pathname?.startsWith('/dashboard/profile');
+    if (!onSecurity) {
+      router.replace('/dashboard/profile?tab=security&force=1');
+    }
+  }, [user?.must_change_password, pathname, router, meLoading]);
+
   if (isLoading || meLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">

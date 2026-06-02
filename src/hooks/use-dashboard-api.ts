@@ -1,9 +1,37 @@
 'use client';
 
 import apiClient from '@/lib/api-client';
+import { subscriptionApi, type ServiceSubscriptionsResult } from '@/lib/subscription-api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 const STALE_MS = 5 * 60 * 1000;
+
+// ── Subscriptions (per-service, from the pricing API) ──────────────────────────
+// Shared by the Overview and Billing tabs so the "current plan" shown is always
+// the same source of truth (#4).
+export function useServiceSubscriptions(tenantId: string | undefined) {
+  return useQuery<ServiceSubscriptionsResult | null>({
+    queryKey: ['service-subscriptions', tenantId],
+    queryFn: () => (tenantId ? subscriptionApi.getServiceSubscriptions(tenantId) : Promise.resolve(null)),
+    enabled: !!tenantId,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+// Derive a single "current active plan" label from the per-service subscription
+// payload. Returns null when nothing is active.
+export function deriveActivePlan(data: ServiceSubscriptionsResult | null | undefined): { name: string; status: string } | null {
+  if (!data) return null;
+  const sub = data.subscription;
+  if (sub && (sub.status === 'ACTIVE' || sub.status === 'TRIAL')) {
+    return { name: sub.plan_name || sub.plan_code, status: sub.status };
+  }
+  const activeService = (data.services ?? []).find((s) => s.status === 'ACTIVE' || s.status === 'TRIAL');
+  if (activeService) {
+    return { name: activeService.plan_name || activeService.plan_code || 'Active', status: activeService.status };
+  }
+  return null;
+}
 
 // ── Sessions ─────────────────────────────────────────────────────────────────
 
@@ -166,9 +194,26 @@ export interface PaginatedMembers {
 }
 
 interface AddTenantMemberPayload {
-  user_id: string;
+  user_id?: string;
+  email?: string;
   roles: string[];
   outlet_id?: string;
+  // Direct-add fields (#3): when email is not an existing account, the backend
+  // creates it and returns a one-time temp_password.
+  name?: string;
+  phone?: string;
+  pin?: string;
+  service?: string;
+}
+
+export interface AddTenantMemberResult {
+  id: string;
+  user_id: string;
+  tenant_id: string;
+  roles: string[];
+  status: string;
+  outlet_id?: string;
+  temp_password?: string;
 }
 
 export const tenantMemberKeys = (tenantId: string) => ({
@@ -213,13 +258,13 @@ export function useTenantMembers(
 export function useAddTenantMember(tenantId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: AddTenantMemberPayload) => {
+    mutationFn: async (payload: AddTenantMemberPayload): Promise<AddTenantMemberResult> => {
       if (!tenantId) throw new Error('Tenant ID is required');
       const response = await apiClient.post(
         `/api/v1/admin/tenants/${tenantId}/members`,
         payload
       );
-      return (response as { data?: unknown }).data ?? response;
+      return ((response as { data?: unknown }).data ?? response) as AddTenantMemberResult;
     },
     onSuccess: () => {
       if (tenantId) {
@@ -229,10 +274,17 @@ export function useAddTenantMember(tenantId: string | undefined) {
   });
 }
 
+interface UpdateTenantMemberPayload {
+  user_id: string;
+  roles?: string[];
+  outlet_id?: string;
+  status?: string;
+}
+
 export function useUpdateTenantMember(tenantId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: AddTenantMemberPayload & { user_id: string }) => {
+    mutationFn: async (payload: UpdateTenantMemberPayload) => {
       if (!tenantId) throw new Error('Tenant ID is required');
       const { user_id, ...data } = payload;
       const response = await apiClient.put(
@@ -245,6 +297,41 @@ export function useUpdateTenantMember(tenantId: string | undefined) {
       if (tenantId) {
         queryClient.invalidateQueries({ queryKey: tenantMemberKeys(tenantId).all() });
       }
+    },
+  });
+}
+
+// Tenant-scoped member lifecycle: active | suspended | deactivated | inactive (#3).
+export function useSetTenantMemberStatus(tenantId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, status, roles }: { userId: string; status: string; roles: string[] }) => {
+      if (!tenantId) throw new Error('Tenant ID is required');
+      // Include current roles so the PUT doesn't wipe them.
+      const response = await apiClient.put(
+        `/api/v1/admin/tenants/${tenantId}/members/${userId}`,
+        { roles, status }
+      );
+      return (response as { data?: unknown }).data ?? response;
+    },
+    onSuccess: () => {
+      if (tenantId) {
+        queryClient.invalidateQueries({ queryKey: tenantMemberKeys(tenantId).all() });
+      }
+    },
+  });
+}
+
+// Sets a 4-digit service PIN for a member (POS/Inventory terminal login).
+export function useSetMemberPin(tenantId: string | undefined) {
+  return useMutation({
+    mutationFn: async ({ userId, pin, service }: { userId: string; pin: string; service: string }) => {
+      if (!tenantId) throw new Error('Tenant ID is required');
+      const response = await apiClient.post(
+        `/api/v1/admin/tenants/${tenantId}/members/${userId}/service-pin`,
+        { pin, service }
+      );
+      return (response as { data?: unknown }).data ?? response;
     },
   });
 }
@@ -448,6 +535,100 @@ export function useDeleteAdminUser() {
       await apiClient.delete(`/api/v1/admin/users/${id}`);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all() });
+    },
+  });
+}
+
+export interface CreateUserResult {
+  id: string;
+  email: string;
+  status: string;
+  temp_password?: string;
+}
+
+export function useCreateAdminUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { email: string; name?: string; phone?: string; password?: string; primary_tenant_id?: string }): Promise<CreateUserResult> => {
+      const response = await apiClient.post('/api/v1/admin/users', payload);
+      return ((response as { data?: CreateUserResult }).data ?? response) as CreateUserResult;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all() });
+    },
+  });
+}
+
+export function useAdminResetPassword() {
+  return useMutation({
+    mutationFn: async ({ id, new_password }: { id: string; new_password?: string }): Promise<{ temp_password?: string }> => {
+      const response = await apiClient.post(`/api/v1/admin/users/${id}/reset-password`, new_password ? { new_password } : {});
+      return ((response as { data?: { temp_password?: string } }).data ?? response) as { temp_password?: string };
+    },
+  });
+}
+
+export function useAdminSendResetEmail() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.post(`/api/v1/admin/users/${id}/send-password-reset`, {});
+      return (response as { data?: unknown }).data ?? response;
+    },
+  });
+}
+
+export function useAdminSetMfaEnforcement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, enforced }: { id: string; enforced: boolean }) => {
+      const response = await apiClient.post(`/api/v1/admin/users/${id}/mfa-enforcement`, { enforced });
+      return (response as { data?: unknown }).data ?? response;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(vars.id) });
+    },
+  });
+}
+
+// Add a user (by user_id) to a tenant with roles — used by platform-admin
+// membership editing. Reuses the tenant-members endpoint.
+export function useAddUserToTenant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ tenantId, userId, roles }: { tenantId: string; userId: string; roles: string[] }) => {
+      const response = await apiClient.post(`/api/v1/admin/tenants/${tenantId}/members`, { user_id: userId, roles });
+      return (response as { data?: unknown }).data ?? response;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(vars.userId) });
+      queryClient.invalidateQueries({ queryKey: userKeys.all() });
+    },
+  });
+}
+
+export function useSetUserTenantRoles() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ tenantId, userId, roles }: { tenantId: string; userId: string; roles: string[] }) => {
+      const response = await apiClient.put(`/api/v1/admin/tenants/${tenantId}/members/${userId}`, { roles });
+      return (response as { data?: unknown }).data ?? response;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(vars.userId) });
+    },
+  });
+}
+
+export function useRemoveUserFromTenant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ tenantId, userId }: { tenantId: string; userId: string }) => {
+      const response = await apiClient.delete(`/api/v1/admin/tenants/${tenantId}/members/${userId}`);
+      return (response as { data?: unknown }).data ?? response;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(vars.userId) });
       queryClient.invalidateQueries({ queryKey: userKeys.all() });
     },
   });

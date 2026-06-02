@@ -14,12 +14,26 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  UserPlus,
+  KeyRound,
+  Mail,
+  Copy,
+  Plus,
+  X,
 } from 'lucide-react';
 import {
   useAdminUsers,
   useAdminUserAction,
   useUpdateAdminUser,
   useDeleteAdminUser,
+  useCreateAdminUser,
+  useAdminResetPassword,
+  useAdminSendResetEmail,
+  useAdminSetMfaEnforcement,
+  useAddUserToTenant,
+  useSetUserTenantRoles,
+  useRemoveUserFromTenant,
+  useTenants,
   type PlatformUser,
 } from '@/hooks/use-dashboard-api';
 import { Button } from '@/components/ui/button';
@@ -58,6 +72,148 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+// Global SSO roles assignable per tenant membership.
+const SSO_ROLES = [
+  'admin', 'manager', 'staff', 'member', 'viewer', 'cashier', 'waiter',
+  'kitchen', 'bar', 'receptionist', 'rider', 'driver', 'delivery_coordinator',
+  'technician', 'customer',
+];
+
+function CreateUserDialog({ onClose }: { onClose: () => void }) {
+  const { toast } = useToast();
+  const create = useCreateAdminUser();
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [tempPw, setTempPw] = useState<string | null>(null);
+
+  const handleCreate = () => {
+    if (!email) { toast({ title: 'Email required', variant: 'destructive' }); return; }
+    create.mutate(
+      { email, name: name || undefined, phone: phone || undefined },
+      {
+        onSuccess: (res) => {
+          if (res?.temp_password) setTempPw(res.temp_password);
+          else { toast({ title: 'User created' }); onClose(); }
+        },
+        onError: (err: unknown) => {
+          const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+          toast({ title: msg ?? 'Failed to create user', variant: 'destructive' });
+        },
+      }
+    );
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create User</DialogTitle>
+          <DialogDescription>Creates an SSO account. A welcome email with the sign-in link is sent; the user must change the temporary password on first login.</DialogDescription>
+        </DialogHeader>
+        {tempPw ? (
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">Account created for <strong>{email}</strong>. Share this temporary password securely — it won&apos;t be shown again.</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 px-3 py-2 rounded-md bg-muted font-mono text-sm break-all">{tempPw}</code>
+              <Button variant="outline" size="icon" onClick={() => { navigator.clipboard?.writeText(tempPw); toast({ title: 'Copied' }); }}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <DialogFooter><Button onClick={onClose}>Done</Button></DialogFooter>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4 py-2">
+              <div>
+                <Label>Email</Label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" placeholder="user@company.com" />
+              </div>
+              <div>
+                <Label>Full Name (optional)</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1" placeholder="Jane Doe" />
+              </div>
+              <div>
+                <Label>Phone (optional)</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1" placeholder="+254 700 000 000" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+              <Button onClick={handleCreate} disabled={create.isPending}>
+                {create.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                Create
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MembershipsSection({ user }: { user: PlatformUser }) {
+  const { toast } = useToast();
+  const { data: tenants = [] } = useTenants();
+  const setRoles = useSetUserTenantRoles();
+  const addToTenant = useAddUserToTenant();
+  const removeFromTenant = useRemoveUserFromTenant();
+  const [addTenantId, setAddTenantId] = useState('');
+  const [addRole, setAddRole] = useState('member');
+
+  const tenantName = (id: string) => tenants.find((t) => t.id === id)?.name ?? id;
+  const memberships = user.memberships ?? [];
+  const availableTenants = tenants.filter((t) => !memberships.some((m) => m.tenant_id === t.id));
+
+  return (
+    <div className="space-y-3">
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Organization Memberships &amp; Roles</Label>
+      {memberships.length === 0 && <p className="text-sm text-muted-foreground">No memberships.</p>}
+      <div className="space-y-2">
+        {memberships.map((m) => (
+          <div key={m.tenant_id} className="flex items-center gap-2">
+            <span className="flex-1 text-sm truncate" title={m.tenant_id}>{tenantName(m.tenant_id)}</span>
+            <select
+              value={m.roles?.[0] ?? 'member'}
+              onChange={(e) => setRoles.mutate(
+                { tenantId: m.tenant_id, userId: user.id, roles: [e.target.value] },
+                { onSuccess: () => toast({ title: 'Role updated' }), onError: () => toast({ title: 'Failed to update role', variant: 'destructive' }) },
+              )}
+              className="h-8 rounded-md border border-input bg-background px-2 text-sm w-36"
+            >
+              {SSO_ROLES.map((r) => <option key={r} value={r} className="capitalize">{r}</option>)}
+            </select>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"
+              onClick={() => { if (confirm(`Remove from ${tenantName(m.tenant_id)}?`)) removeFromTenant.mutate({ tenantId: m.tenant_id, userId: user.id }, { onSuccess: () => toast({ title: 'Removed from organization' }) }); }}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      {availableTenants.length > 0 && (
+        <div className="flex items-center gap-2 pt-1">
+          <select value={addTenantId} onChange={(e) => setAddTenantId(e.target.value)}
+            className="h-8 rounded-md border border-input bg-background px-2 text-sm flex-1">
+            <option value="">Add to organization…</option>
+            {availableTenants.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+          <select value={addRole} onChange={(e) => setAddRole(e.target.value)}
+            className="h-8 rounded-md border border-input bg-background px-2 text-sm w-32">
+            {SSO_ROLES.map((r) => <option key={r} value={r} className="capitalize">{r}</option>)}
+          </select>
+          <Button size="sm" disabled={!addTenantId || addToTenant.isPending}
+            onClick={() => addToTenant.mutate(
+              { tenantId: addTenantId, userId: user.id, roles: [addRole] },
+              { onSuccess: () => { toast({ title: 'Added to organization' }); setAddTenantId(''); }, onError: () => toast({ title: 'Failed to add', variant: 'destructive' }) },
+            )}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EditUserDialog({
   user,
   onClose,
@@ -67,51 +223,107 @@ function EditUserDialog({
 }) {
   const { toast } = useToast();
   const update = useUpdateAdminUser();
+  const resetPw = useAdminResetPassword();
+  const sendReset = useAdminSendResetEmail();
+  const setMfa = useAdminSetMfaEnforcement();
   const [email, setEmail] = useState(user.email);
+  const [resetPwValue, setResetPwValue] = useState<string | null>(null);
 
   const handleSave = () => {
     if (!email || email === user.email) { onClose(); return; }
     update.mutate(
       { id: user.id, email },
       {
-        onSuccess: () => {
-          toast({ title: 'Updated', description: 'User email updated.' });
-          onClose();
-        },
+        onSuccess: () => { toast({ title: 'Updated', description: 'User email updated.' }); onClose(); },
         onError: () => toast({ title: 'Error', description: 'Failed to update user.', variant: 'destructive' }),
+      }
+    );
+  };
+
+  const handleResetPassword = () => {
+    resetPw.mutate(
+      { id: user.id },
+      {
+        onSuccess: (res) => {
+          if (res?.temp_password) setResetPwValue(res.temp_password);
+          toast({ title: 'Password reset', description: 'A temporary password was generated.' });
+        },
+        onError: () => toast({ title: 'Error', description: 'Failed to reset password.', variant: 'destructive' }),
       }
     );
   };
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
-          <DialogDescription>Update user details.</DialogDescription>
+          <DialogTitle>Manage User</DialogTitle>
+          <DialogDescription>{user.email}</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-2">
+        <div className="space-y-5 py-2">
           <div>
             <Label>Email</Label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-muted-foreground text-xs">User ID</Label>
-            <p className="font-mono text-xs text-muted-foreground mt-0.5">{user.id}</p>
-          </div>
-          {user.primary_tenant_id && (
-            <div>
-              <Label className="text-muted-foreground text-xs">Primary Tenant</Label>
-              <p className="font-mono text-xs text-muted-foreground mt-0.5">{user.primary_tenant_id}</p>
+            <div className="flex gap-2 mt-1">
+              <Input value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Button variant="outline" onClick={handleSave} disabled={update.isPending || email === user.email}>
+                {update.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}Save
+              </Button>
             </div>
-          )}
+          </div>
+
+          {/* Security actions */}
+          <div className="space-y-2 border-t pt-4">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Security</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={handleResetPassword} disabled={resetPw.isPending}>
+                {resetPw.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <KeyRound className="h-4 w-4 mr-1" />}
+                Reset Password
+              </Button>
+              <Button variant="outline" size="sm"
+                onClick={() => sendReset.mutate(user.id, { onSuccess: () => toast({ title: 'Reset email sent' }), onError: () => toast({ title: 'Failed to send email', variant: 'destructive' }) })}
+                disabled={sendReset.isPending}>
+                {sendReset.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+                Send Reset Email
+              </Button>
+              <Button variant="outline" size="sm"
+                onClick={() => setMfa.mutate({ id: user.id, enforced: true }, { onSuccess: () => toast({ title: '2FA enforced' }), onError: () => toast({ title: 'Failed', variant: 'destructive' }) })}
+                disabled={setMfa.isPending}>
+                <ShieldCheck className="h-4 w-4 mr-1" /> Enforce 2FA
+              </Button>
+              <Button variant="outline" size="sm"
+                onClick={() => setMfa.mutate({ id: user.id, enforced: false }, { onSuccess: () => toast({ title: '2FA enforcement removed' }) })}
+                disabled={setMfa.isPending}>
+                <ShieldOff className="h-4 w-4 mr-1" /> Unenforce 2FA
+              </Button>
+            </div>
+            {resetPwValue && (
+              <div className="flex items-center gap-2 mt-2">
+                <code className="flex-1 px-3 py-2 rounded-md bg-muted font-mono text-sm break-all">{resetPwValue}</code>
+                <Button variant="outline" size="icon" onClick={() => { navigator.clipboard?.writeText(resetPwValue); toast({ title: 'Copied' }); }}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Memberships & roles */}
+          <div className="border-t pt-4">
+            <MembershipsSection user={user} />
+          </div>
+
+          <div className="border-t pt-4 space-y-1">
+            <Label className="text-muted-foreground text-xs">User ID</Label>
+            <p className="font-mono text-xs text-muted-foreground">{user.id}</p>
+            {user.primary_tenant_id && (
+              <>
+                <Label className="text-muted-foreground text-xs">Primary Tenant</Label>
+                <p className="font-mono text-xs text-muted-foreground">{user.primary_tenant_id}</p>
+              </>
+            )}
+          </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave} disabled={update.isPending}>
-            {update.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-            Save
-          </Button>
+          <Button variant="outline" onClick={onClose}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -208,6 +420,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [creating, setCreating] = useState(false);
   const limit = 50;
 
   const { data, isLoading, refetch } = useAdminUsers({
@@ -231,10 +444,17 @@ export default function UsersPage() {
             Manage all platform users — edit, suspend, deactivate, or delete accounts.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+          </Button>
+          <Button size="sm" onClick={() => setCreating(true)}>
+            <UserPlus className="h-4 w-4 mr-1" /> Create User
+          </Button>
+        </div>
       </div>
+
+      {creating && <CreateUserDialog onClose={() => setCreating(false)} />}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">

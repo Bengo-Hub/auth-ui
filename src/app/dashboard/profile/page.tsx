@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PasskeysSection } from '@/components/settings/PasskeysSection';
 import { useRevokeSession, useSessions } from '@/hooks/use-dashboard-api';
+import { useUpdateProfile, useUpdateNotificationSettings, useChangePassword } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import apiClient from '@/lib/api-client';
@@ -95,8 +96,9 @@ function FieldCard({ children }: { children: React.ReactNode }) {
 }
 
 function ProfileTab() {
-  const { user, setUser } = useAuthStore();
+  const { user } = useAuthStore();
   const profile = (user as any)?.profile as Record<string, any> ?? {};
+  const updateProfile = useUpdateProfile();
 
   const [name, setName] = useState(profile.name ?? user?.name ?? '');
   const [phone, setPhone] = useState(profile.phone ?? '');
@@ -104,49 +106,35 @@ function ProfileTab() {
   const [country, setCountry] = useState(profile.country ?? '');
   const [timezone, setTimezone] = useState(profile.timezone ?? 'UTC');
   const [locale, setLocale] = useState(profile.locale ?? 'en');
-  const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
 
+  const isSaving = updateProfile.isPending;
+  const isSavingAvatar = updateProfile.isPending;
   const avatarSrc = profile.profile_picture_url as string | undefined;
 
   const handleSaveAvatar = async () => {
     if (!avatarUrl.trim()) return;
-    setIsSavingAvatar(true);
     try {
-      const response = await apiClient.patch('/api/v1/auth/me', { profile_picture_url: avatarUrl.trim() });
-      const updated = (response as any)?.data as Record<string, any> | undefined;
-      if (updated && user) {
-        setUser({ ...user, ...(updated as any), roles: (updated as any).roles ?? user.roles ?? [], permissions: (updated as any).permissions ?? user.permissions ?? [], tenants: (updated as any).tenants ?? user.tenants ?? [] });
-      }
+      await updateProfile.mutateAsync({ profile_picture_url: avatarUrl.trim() });
       setAvatarDialogOpen(false);
       setAvatarUrl('');
       setMessage({ type: 'success', text: 'Avatar updated!' });
     } catch {
       setMessage({ type: 'error', text: 'Failed to update avatar' });
-    } finally {
-      setIsSavingAvatar(false);
     }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
     setMessage(null);
     try {
-      const response = await apiClient.patch('/api/v1/auth/me', { name, phone, bio, country, timezone, locale });
-      const updated = (response as any)?.data as Record<string, any> | undefined;
-      if (updated && user) {
-        setUser({ ...user, ...(updated as any), roles: (updated as any).roles ?? user.roles ?? [], permissions: (updated as any).permissions ?? user.permissions ?? [], tenants: (updated as any).tenants ?? user.tenants ?? [] });
-      }
+      await updateProfile.mutateAsync({ name, phone, bio, country, timezone, locale });
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to update profile' });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -300,9 +288,11 @@ function ProfileTab() {
 }
 
 function NotificationsTab() {
-  const { user, setUser } = useAuthStore();
+  const { user } = useAuthStore();
   const profile = (user as any)?.profile as Record<string, any> ?? {};
   const notifSettings = (profile.notification_settings as Record<string, boolean>) ?? {};
+  const updateNotifications = useUpdateNotificationSettings();
+  const { toast } = useToast();
 
   const [settings, setSettings] = useState({
     email_marketing: notifSettings.email_marketing ?? true,
@@ -312,24 +302,19 @@ function NotificationsTab() {
     push_notifications: notifSettings.push_notifications ?? false,
     whatsapp_updates: notifSettings.whatsapp_updates ?? false,
   });
-  const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const isSaving = updateNotifications.isPending;
 
   const toggle = (key: keyof typeof settings) => setSettings((s) => ({ ...s, [key]: !s[key] }));
 
   const handleSave = async () => {
-    setIsSaving(true);
     setSaved(false);
     try {
-      const response = await apiClient.patch('/api/v1/auth/me', { notification_settings: settings });
-      const updated = (response as any)?.data as Record<string, any> | undefined;
-      if (updated && user) {
-        setUser({ ...user, ...(updated as any), roles: (updated as any).roles ?? user.roles ?? [], permissions: (updated as any).permissions ?? user.permissions ?? [], tenants: (updated as any).tenants ?? user.tenants ?? [] });
-      }
+      await updateNotifications.mutateAsync(settings);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } finally {
-      setIsSaving(false);
+    } catch {
+      toast({ title: 'Failed to save preferences', variant: 'destructive' });
     }
   };
 
@@ -425,23 +410,23 @@ function SecurityTab() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [changingPassword, setChangingPassword] = useState(false);
   const { data: sessions = [], isLoading: sessionsLoading, refetch: fetchSessions } = useSessions();
   const revokeMutation = useRevokeSession();
+  const changePassword = useChangePassword();
+  const changingPassword = changePassword.isPending;
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword || !newPassword || !confirmPassword) { toast({ title: 'Error', description: 'All fields are required.', variant: 'destructive' }); return; }
     if (newPassword !== confirmPassword) { toast({ title: 'Error', description: 'New passwords do not match.', variant: 'destructive' }); return; }
     if (newPassword.length < 12) { toast({ title: 'Error', description: 'Password must be at least 12 characters.', variant: 'destructive' }); return; }
-    setChangingPassword(true);
     try {
-      await apiClient.post('/api/v1/auth/me/change-password', { current_password: currentPassword, new_password: newPassword });
+      await changePassword.mutateAsync({ currentPassword, newPassword });
       toast({ title: 'Password updated', description: 'Your password has been changed successfully.' });
       setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to change password.', variant: 'destructive' });
-    } finally { setChangingPassword(false); }
+      toast({ title: 'Error', description: err?.response?.data?.error || err?.message || 'Failed to change password.', variant: 'destructive' });
+    }
   };
 
   const revokeSession = async (sessionId: string) => {
@@ -592,7 +577,9 @@ function SecurityTab() {
 
 export default function ProfilePage() {
   const searchParams = useSearchParams();
-  const defaultTab = searchParams.get('tab') === 'security' ? 'security' : searchParams.get('tab') === 'notifications' ? 'notifications' : 'profile';
+  const { user } = useAuth();
+  const mustChange = !!user?.must_change_password;
+  const defaultTab = mustChange || searchParams.get('tab') === 'security' ? 'security' : searchParams.get('tab') === 'notifications' ? 'notifications' : 'profile';
 
   return (
     <div className="space-y-8">
@@ -600,6 +587,13 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-1">My Account</h1>
         <p className="text-slate-500 dark:text-slate-400">Manage your profile, security settings, and notification preferences.</p>
       </header>
+
+      {mustChange && (
+        <div className="flex items-center gap-2 p-4 rounded-xl text-sm font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          For your security, please set a new password before continuing.
+        </div>
+      )}
 
       <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="h-14 inline-flex w-auto bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-[1.25rem] border border-slate-200/50 dark:border-slate-800 shadow-sm gap-1 mb-6">

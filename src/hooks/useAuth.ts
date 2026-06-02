@@ -18,6 +18,11 @@ export interface User {
     id: string;
     name: string;
     slug: string;
+    // Subscription fields are returned nested under `tenant` by /api/v1/auth/me
+    // (NOT at the top level). The Billing/Overview tabs read live plan data from
+    // the pricing API; these are the denormalized auth-api cache values.
+    subscription_plan?: string;
+    subscription_status?: string;
   };
   // /api/v1/auth/me currently returns `tenant` (singular primary). `tenants` is
   // reserved for the future multi-tenant membership list endpoint; treat both
@@ -28,10 +33,15 @@ export interface User {
     slug: string;
     roles: string[];
   }>;
+  /** @deprecated never populated at the top level — read user.tenant.subscription_plan or the Billing tab instead. */
   subscription_plan?: string;
+  /** @deprecated see subscription_plan. */
   subscription_status?: string;
   is_platform_owner?: boolean;
   mfa_enabled?: boolean;
+  // Set when an admin-provisioned/reset account must pick a new password before
+  // using the dashboard. Cleared once the password is changed.
+  must_change_password?: boolean;
   profile?: Record<string, any>;
 }
 
