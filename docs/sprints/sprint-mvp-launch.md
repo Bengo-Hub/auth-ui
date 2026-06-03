@@ -180,7 +180,7 @@
 ### Launch Day (March 17)
 
 - [ ] Deploy final image via ArgoCD
-- [ ] Verify login page loads at `https://auth.codevertexitsolutions.com`
+- [ ] Verify login page loads at `https://accounts.codevertexitsolutions.com`
 - [ ] Test login with tenant admin account
 - [ ] Test OIDC redirect from ordering-frontend
 - [ ] Verify platform admin section accessible to `admin@codevertexitsolutions.com`

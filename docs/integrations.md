@@ -9,7 +9,7 @@
 | Item | Value |
 |------|-------|
 | Local | `http://localhost:4101/api/v1` |
-| Production | `https://authapi.codevertexitsolutions.com/api/v1` |
+| Production | `https://sso.codevertexitsolutions.com/api/v1` |
 | Env var | `NEXT_PUBLIC_API_URL` |
 | Protocol | REST (JSON) |
 | Auth | Bearer JWT in `Authorization` header + `bb_session` httpOnly cookie |
@@ -42,7 +42,7 @@ Auth-ui serves as the SSO login page for all BengoBox services. Each service red
 ### OIDC Redirect Flow
 
 ```
-Service frontend -> auth.codevertexitsolutions.com/login
+Service frontend -> accounts.codevertexitsolutions.com/login
   ?client_id=<service-client-id>
   &redirect_uri=<service-callback-url>
   &scope=openid email profile
@@ -56,7 +56,7 @@ Service frontend -> auth.codevertexitsolutions.com/login
 
 | Service | Client ID | Redirect URI |
 |---------|-----------|-------------|
-| Auth UI | `auth-ui` | `https://auth.codevertexitsolutions.com/auth/callback` |
+| Auth UI | `auth-ui` | `https://accounts.codevertexitsolutions.com/auth/callback` |
 | Ordering App | `ordering-app` | `https://ordersapp.codevertexitsolutions.com/callback` |
 | POS | `pos-app` | `https://pos.codevertexitsolutions.com/callback` |
 | Notifications UI | `notifications-ui` | `https://notifications.codevertexitsolutions.com/[orgSlug]/auth/callback` |
@@ -91,10 +91,10 @@ Used by auth-api for NATS event publishing. Auth-ui does not interact with this 
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | Auth API base URL | `https://authapi.codevertexitsolutions.com/api/v1` |
-| `NEXT_PUBLIC_AUTH_URL` | Auth API root | `https://authapi.codevertexitsolutions.com` |
+| `NEXT_PUBLIC_API_URL` | Auth API base URL | `https://sso.codevertexitsolutions.com/api/v1` |
+| `NEXT_PUBLIC_AUTH_URL` | Auth API root | `https://sso.codevertexitsolutions.com` |
 | `NEXT_PUBLIC_CLIENT_ID` | OAuth client ID for auth-ui | `auth-ui` |
-| `NEXT_PUBLIC_REDIRECT_URI` | OIDC callback URL | `https://auth.codevertexitsolutions.com/auth/callback` |
+| `NEXT_PUBLIC_REDIRECT_URI` | OIDC callback URL | `https://accounts.codevertexitsolutions.com/auth/callback` |
 | `NEXT_PUBLIC_BRAND_NAME` | Platform brand name | `BengoBox` |
 | `NEXT_PUBLIC_BRAND_LOGO_URL` | Brand logo path | `/logo.jpg` |
 | `NEXT_PUBLIC_BRAND_PRIMARY_COLOR` | Brand primary color | `#ea8022` |
@@ -119,9 +119,9 @@ Auth-ui does not hold provider credentials; all OAuth flows are proxied through 
 
 ## Cross-Origin Considerations
 
-Auth-ui at `auth.codevertexitsolutions.com` communicates with auth-api at `authapi.codevertexitsolutions.com`. CORS must allow:
+Auth-ui at `accounts.codevertexitsolutions.com` communicates with auth-api at `sso.codevertexitsolutions.com`. CORS must allow:
 
-- Origin: `https://auth.codevertexitsolutions.com`
+- Origin: `https://accounts.codevertexitsolutions.com`
 - Methods: `GET, POST, PUT, DELETE, OPTIONS`
 - Headers: `Content-Type, Authorization`
 - Credentials: `true` (for `bb_session` cookie)
