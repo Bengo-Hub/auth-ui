@@ -430,6 +430,18 @@ export function BrandingTab() {
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                  Slogan / Tagline
+                </Label>
+                <Input
+                  value={tenantData?.metadata?.tagline || ''}
+                  onChange={(e) => updateMetadata('tagline', e.target.value)}
+                  placeholder="e.g. Tangible Solutions for Businesses"
+                  className="rounded-xl h-12 bg-slate-50 dark:bg-slate-800 border-none font-bold"
+                />
+                <p className="text-[11px] text-slate-400">Shown under your business name on invoices, receipts and quotations.</p>
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">
                   Industry / Use Cases
                 </Label>
                 <div className="flex flex-wrap gap-2">
