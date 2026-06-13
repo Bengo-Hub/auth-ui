@@ -212,9 +212,11 @@ const TEAM_ROLES = [
   'viewer',              // Read-only access for auditors/observers
   'cashier',             // POS cashier / treasury cashier
   'waiter',              // POS hospitality waiter
+  'barista',             // POS hospitality café barista (order + till + drink prep)
   'kitchen',             // POS kitchen display
   'bar',                 // POS bar display
   'receptionist',        // POS hotel receptionist
+  'accountant',          // Finance/back-office: inventory, purchases & treasury (plan-gated)
   'rider',               // Logistics motorcycle delivery rider
   'driver',              // Logistics fleet/cargo driver
   'delivery_coordinator',// Ordering/logistics dispatch coordinator

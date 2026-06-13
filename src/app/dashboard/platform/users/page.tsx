@@ -75,8 +75,8 @@ function StatusBadge({ status }: { status: string }) {
 // Global SSO roles assignable per tenant membership.
 const SSO_ROLES = [
   'admin', 'manager', 'staff', 'member', 'viewer', 'cashier', 'waiter',
-  'kitchen', 'bar', 'receptionist', 'rider', 'driver', 'delivery_coordinator',
-  'technician', 'customer',
+  'barista', 'kitchen', 'bar', 'receptionist', 'accountant', 'rider', 'driver',
+  'delivery_coordinator', 'technician', 'customer',
 ];
 
 function CreateUserDialog({ onClose }: { onClose: () => void }) {
