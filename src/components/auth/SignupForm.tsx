@@ -59,6 +59,7 @@ const USE_CASES = [
   { value: 'warehousing', label: 'Warehousing' },
   { value: 'logistics', label: 'Logistics / Fleet Management' },
   { value: 'weighbridge', label: 'Weighbridge / Commercial Weighing' },
+  { value: 'isp', label: 'ISP / Telecom (Internet Service Provider)' },
   { value: 'services', label: 'Services / Professional' },
   { value: 'pharmacy', label: 'Pharmacy / Health' },
   { value: 'other', label: 'Other' },
@@ -135,6 +136,13 @@ export function SignupForm() {
   const [distribId, setDistribId] = useState(''); // FLP distributor ID (used as slug for FBO tenants)
   const [phoneNumber, setPhoneNumber] = useState(''); // Required for FBO
   const isFBO = useCases.includes('fbo');
+
+  // ISP / Telecom provider fields (shown when the 'isp' use-case is selected)
+  const [ispProviderName, setIspProviderName] = useState('');   // ISP provider/brand name
+  const [ispLicenceNumber, setIspLicenceNumber] = useState(''); // Licence/registration number (optional)
+  const [ispWhatsapp, setIspWhatsapp] = useState('');           // Primary WhatsApp phone (required)
+  const [ispCoverageArea, setIspCoverageArea] = useState('');   // Service coverage area (optional)
+  const isISP = useCases.includes('isp');
 
   // Toggle a use case in the multi-select list
   const toggleUseCase = (value: string) => {
@@ -253,6 +261,8 @@ export function SignupForm() {
       if (!newOrgName.trim()) { setError('Organisation name is required'); return false; }
       if (isFBO && !distribId.trim()) { setError('FLP Distributor ID is required for FBO registration'); return false; }
       if (isFBO && !phoneNumber.trim()) { setError('Phone number is required for FBO registration (WhatsApp contact)'); return false; }
+      if (isISP && !ispProviderName.trim()) { setError('ISP provider name is required'); return false; }
+      if (isISP && !ispWhatsapp.trim()) { setError('Primary WhatsApp phone is required for ISP registration'); return false; }
       if (!newOrgSlug.trim()) { setError('Organisation slug is required'); return false; }
     }
     return true;
@@ -322,6 +332,15 @@ export function SignupForm() {
         hq_branch_name: hqBranchName,
         metadata: {
           org_size: orgSize,
+          // ISP / Telecom provider details (only when the 'isp' use-case is selected)
+          ...(isISP
+            ? {
+                isp_provider_name: ispProviderName,
+                isp_licence_number: ispLicenceNumber || undefined,
+                isp_whatsapp: ispWhatsapp,
+                isp_coverage_area: ispCoverageArea || undefined,
+              }
+            : {}),
         },
       };
     }
@@ -438,6 +457,15 @@ export function SignupForm() {
           isFBO={isFBO}
           phoneNumber={phoneNumber}
           setPhoneNumber={setPhoneNumber}
+          isISP={isISP}
+          ispProviderName={ispProviderName}
+          setIspProviderName={setIspProviderName}
+          ispLicenceNumber={ispLicenceNumber}
+          setIspLicenceNumber={setIspLicenceNumber}
+          ispWhatsapp={ispWhatsapp}
+          setIspWhatsapp={setIspWhatsapp}
+          ispCoverageArea={ispCoverageArea}
+          setIspCoverageArea={setIspCoverageArea}
         />
       )}
 
@@ -647,6 +675,8 @@ function Step1({
   newOrgSlug, setNewOrgSlug, orgSize, setOrgSize, useCases, toggleUseCase,
   hqBranchName, setHqBranchName, distribId, setDistribId, isFBO,
   phoneNumber, setPhoneNumber,
+  isISP, ispProviderName, setIspProviderName, ispLicenceNumber, setIspLicenceNumber,
+  ispWhatsapp, setIspWhatsapp, ispCoverageArea, setIspCoverageArea,
 }: any) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -709,6 +739,42 @@ function Step1({
                   <Input placeholder="e.g. 0743793901 or 254743793901" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9+\s-]/g, ''))} className="pl-10 h-11 rounded-xl" />
                 </div>
                 <p className="text-[10px] text-slate-500">Your WhatsApp number for customer enquiries. Supports KE, UG, TZ, RW, BI, ET country codes.</p>
+              </div>
+            </>
+          )}
+          {isISP && (
+            <>
+              <div className="space-y-2">
+                <Label>ISP Provider Name <span className="text-rose-500">*</span></Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                  <Input placeholder="e.g. SwiftNet Fibre" value={ispProviderName} onChange={(e: any) => setIspProviderName(e.target.value)} className="pl-10 h-11 rounded-xl" />
+                </div>
+                <p className="text-[10px] text-slate-500">Your internet service provider / telecom brand name</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Licence / Registration Number <span className="text-xs text-slate-400 font-normal">(optional)</span></Label>
+                <div className="relative">
+                  <Shield className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                  <Input placeholder="e.g. CA/LIC/ISP/0123" value={ispLicenceNumber} onChange={(e: any) => setIspLicenceNumber(e.target.value)} className="pl-10 h-11 rounded-xl" />
+                </div>
+                <p className="text-[10px] text-slate-500">Regulatory licence or business registration number, if available</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Primary WhatsApp Phone <span className="text-rose-500">*</span></Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-slate-400 text-xs">📱</span>
+                  <Input placeholder="e.g. 0743793901 or 254743793901" value={ispWhatsapp} onChange={(e: any) => setIspWhatsapp(e.target.value.replace(/[^0-9+\s-]/g, ''))} className="pl-10 h-11 rounded-xl" />
+                </div>
+                <p className="text-[10px] text-slate-500">Your primary WhatsApp number for subscriber support and billing notices.</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Service Coverage Area <span className="text-xs text-slate-400 font-normal">(optional)</span></Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                  <Input placeholder="e.g. Nairobi CBD, Westlands, Kiambu" value={ispCoverageArea} onChange={(e: any) => setIspCoverageArea(e.target.value)} className="pl-10 h-11 rounded-xl" />
+                </div>
+                <p className="text-[10px] text-slate-500">The towns, estates, or regions your network serves</p>
               </div>
             </>
           )}
