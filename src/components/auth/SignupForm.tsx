@@ -60,6 +60,7 @@ const USE_CASES = [
   { value: 'logistics', label: 'Logistics / Fleet Management' },
   { value: 'weighbridge', label: 'Weighbridge / Commercial Weighing' },
   { value: 'isp', label: 'ISP / Telecom (Internet Service Provider)' },
+  { value: 'hotspot', label: 'Hotspot Business (WiFi vouchers)' },
   { value: 'services', label: 'Services / Professional' },
   { value: 'pharmacy', label: 'Pharmacy / Health' },
   { value: 'other', label: 'Other' },
@@ -142,7 +143,10 @@ export function SignupForm() {
   const [ispLicenceNumber, setIspLicenceNumber] = useState(''); // Licence/registration number (optional)
   const [ispWhatsapp, setIspWhatsapp] = useState('');           // Primary WhatsApp phone (required)
   const [ispCoverageArea, setIspCoverageArea] = useState('');   // Service coverage area (optional)
-  const isISP = useCases.includes('isp');
+  // Both ISP and Hotspot are isp-billing onboarded — they capture the same ISP
+  // provider fields and must be tagged so isp-billing's consumer mirrors the org.
+  const isHotspot = useCases.includes('hotspot');
+  const isISP = useCases.includes('isp') || isHotspot;
 
   // Toggle a use case in the multi-select list
   const toggleUseCase = (value: string) => {
@@ -325,16 +329,26 @@ export function SignupForm() {
 
     // If creating a new org, pass org metadata
     if (orgAction === 'create_new') {
+      // Tag the tenant's PRIMARY use_case explicitly for ISP/Hotspot onboarding.
+      // auth-api derives tenant.use_case from new_org.use_case (preferred) and only
+      // falls back to use_cases[0] when it is empty — relying on array ordering is
+      // fragile (a non-ISP toggle selected first would mis-tag the tenant and the
+      // isp-billing consumer, which keys off use_case == "isp", would ignore it).
+      // The isp-billing consumer accepts "isp" but not "hotspot", so both onboard
+      // as use_case "isp"; the hotspot distinction is preserved in metadata.
+      const primaryUseCase = isISP ? 'isp' : (useCases[0] || undefined);
       payload.new_org = {
         name: newOrgName,
         slug: newOrgSlug,
+        use_case: primaryUseCase,
         use_cases: useCases,
         hq_branch_name: hqBranchName,
         metadata: {
           org_size: orgSize,
-          // ISP / Telecom provider details (only when the 'isp' use-case is selected)
+          // ISP / Telecom provider details (shown for the 'isp' or 'hotspot' use-case)
           ...(isISP
             ? {
+                isp_business_type: isHotspot ? 'hotspot' : 'isp',
                 isp_provider_name: ispProviderName,
                 isp_licence_number: ispLicenceNumber || undefined,
                 isp_whatsapp: ispWhatsapp,
@@ -458,6 +472,7 @@ export function SignupForm() {
           phoneNumber={phoneNumber}
           setPhoneNumber={setPhoneNumber}
           isISP={isISP}
+          isHotspot={isHotspot}
           ispProviderName={ispProviderName}
           setIspProviderName={setIspProviderName}
           ispLicenceNumber={ispLicenceNumber}
@@ -675,7 +690,7 @@ function Step1({
   newOrgSlug, setNewOrgSlug, orgSize, setOrgSize, useCases, toggleUseCase,
   hqBranchName, setHqBranchName, distribId, setDistribId, isFBO,
   phoneNumber, setPhoneNumber,
-  isISP, ispProviderName, setIspProviderName, ispLicenceNumber, setIspLicenceNumber,
+  isISP, isHotspot, ispProviderName, setIspProviderName, ispLicenceNumber, setIspLicenceNumber,
   ispWhatsapp, setIspWhatsapp, ispCoverageArea, setIspCoverageArea,
 }: any) {
   return (
@@ -745,12 +760,12 @@ function Step1({
           {isISP && (
             <>
               <div className="space-y-2">
-                <Label>ISP Provider Name <span className="text-rose-500">*</span></Label>
+                <Label>{isHotspot ? 'Hotspot Business Name' : 'ISP Provider Name'} <span className="text-rose-500">*</span></Label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                  <Input placeholder="e.g. SwiftNet Fibre" value={ispProviderName} onChange={(e: any) => setIspProviderName(e.target.value)} className="pl-10 h-11 rounded-xl" />
+                  <Input placeholder={isHotspot ? 'e.g. SpotConnect WiFi' : 'e.g. SwiftNet Fibre'} value={ispProviderName} onChange={(e: any) => setIspProviderName(e.target.value)} className="pl-10 h-11 rounded-xl" />
                 </div>
-                <p className="text-[10px] text-slate-500">Your internet service provider / telecom brand name</p>
+                <p className="text-[10px] text-slate-500">{isHotspot ? 'Your hotspot / WiFi business brand name' : 'Your internet service provider / telecom brand name'}</p>
               </div>
               <div className="space-y-2">
                 <Label>Licence / Registration Number <span className="text-xs text-slate-400 font-normal">(optional)</span></Label>
