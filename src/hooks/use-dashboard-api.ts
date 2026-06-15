@@ -633,3 +633,232 @@ export function useRemoveUserFromTenant() {
     },
   });
 }
+
+// ── RBAC: permissions catalogue ───────────────────────────────────────────────
+
+export interface PermissionItem {
+  id: number;
+  code: string;
+  resource: string;
+  action: string;
+  service: string;
+  module: string;
+}
+export interface PermissionModule {
+  module: string;
+  permissions: PermissionItem[];
+}
+export interface PermissionGroup {
+  service: string;
+  modules: PermissionModule[];
+}
+
+export const permissionKeys = { all: () => ['admin', 'permissions'] as const };
+
+export function usePermissionsCatalogue() {
+  return useQuery({
+    queryKey: permissionKeys.all(),
+    queryFn: async () => {
+      const response = await apiClient.get('/api/v1/admin/permissions');
+      const body = (response as any).data;
+      return (body?.groups ?? []) as PermissionGroup[];
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+// ── RBAC: roles ────────────────────────────────────────────────────────────────
+
+export interface Role {
+  role_code: string;
+  name: string;
+  description?: string;
+  is_system: boolean;
+  is_wildcard: boolean;
+  scope?: string;
+  permission_count: number;
+  member_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RoleDetail {
+  role: Role;
+  permission_codes: string[];
+}
+
+export const roleKeys = {
+  all: () => ['admin', 'roles'] as const,
+  detail: (code: string) => ['admin', 'roles', code] as const,
+};
+
+export function useRoles() {
+  return useQuery({
+    queryKey: roleKeys.all(),
+    queryFn: async () => {
+      const response = await apiClient.get('/api/v1/admin/roles');
+      const body = (response as any).data;
+      return (body?.roles ?? []) as Role[];
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+export function useRole(code: string | undefined) {
+  return useQuery({
+    queryKey: roleKeys.detail(code ?? ''),
+    queryFn: async () => {
+      const response = await apiClient.get(`/api/v1/admin/roles/${code}`);
+      return (response as any).data as RoleDetail;
+    },
+    enabled: !!code,
+    staleTime: STALE_MS,
+  });
+}
+
+export function useCreateRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { role_code: string; name: string; description?: string; scope?: string }) => {
+      const response = await apiClient.post('/api/v1/admin/roles', payload);
+      return (response as any).data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: roleKeys.all() }),
+  });
+}
+
+export function useUpdateRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ code, ...payload }: { code: string; name?: string; description?: string; scope?: string }) => {
+      const response = await apiClient.put(`/api/v1/admin/roles/${code}`, payload);
+      return (response as any).data;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: roleKeys.all() });
+      queryClient.invalidateQueries({ queryKey: roleKeys.detail(vars.code) });
+    },
+  });
+}
+
+export function useDeleteRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (code: string) => {
+      const response = await apiClient.delete(`/api/v1/admin/roles/${code}`);
+      return (response as any).data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: roleKeys.all() }),
+  });
+}
+
+export function useSetRolePermissions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ code, permissionCodes }: { code: string; permissionCodes: string[] }) => {
+      const response = await apiClient.put(`/api/v1/admin/roles/${code}/permissions`, {
+        permission_codes: permissionCodes,
+      });
+      return (response as any).data;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: roleKeys.all() });
+      queryClient.invalidateQueries({ queryKey: roleKeys.detail(vars.code) });
+    },
+  });
+}
+
+// ── Security: audit logs ────────────────────────────────────────────────────────
+
+export interface AuditLogItem {
+  id: string;
+  tenant_id?: string;
+  user_id?: string;
+  action: string;
+  resource_type?: string;
+  resource_id?: string;
+  ip_address?: string;
+  user_agent?: string;
+  context?: Record<string, any>;
+  occurred_at: string;
+}
+
+export interface AuditLogFilters {
+  page?: number;
+  limit?: number;
+  entity_type?: string;
+  action?: string;
+  actor?: string;
+  from?: string;
+  to?: string;
+}
+
+export const auditKeys = {
+  all: () => ['admin', 'audit-logs'] as const,
+  list: (f: AuditLogFilters) => ['admin', 'audit-logs', f] as const,
+};
+
+export function useAuditLogs(filters: AuditLogFilters = {}) {
+  return useQuery({
+    queryKey: auditKeys.list(filters),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters.page) params.set('page', String(filters.page));
+      if (filters.limit) params.set('limit', String(filters.limit));
+      if (filters.entity_type) params.set('entity_type', filters.entity_type);
+      if (filters.action) params.set('action', filters.action);
+      if (filters.actor) params.set('actor', filters.actor);
+      if (filters.from) params.set('from', filters.from);
+      if (filters.to) params.set('to', filters.to);
+      const qs = params.toString();
+      const response = await apiClient.get(`/api/v1/admin/audit-logs${qs ? `?${qs}` : ''}`);
+      const body = (response as any).data;
+      return {
+        data: (body?.data ?? []) as AuditLogItem[],
+        total: (body?.total ?? 0) as number,
+        page: (body?.page ?? 1) as number,
+        limit: (body?.limit ?? 50) as number,
+        hasMore: (body?.hasMore ?? false) as boolean,
+      };
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+// ── Security: password policy ─────────────────────────────────────────────────
+
+export interface PasswordPolicy {
+  min_length: number;
+  require_upper: boolean;
+  require_lower: boolean;
+  require_digit: boolean;
+  require_symbol: boolean;
+  expiry_days: number;
+  reuse_block_count: number;
+}
+
+export const passwordPolicyKeys = { all: () => ['admin', 'password-policy'] as const };
+
+export function usePasswordPolicy() {
+  return useQuery({
+    queryKey: passwordPolicyKeys.all(),
+    queryFn: async () => {
+      const response = await apiClient.get('/api/v1/admin/password-policy');
+      const body = (response as any).data;
+      return (body?.policy ?? null) as PasswordPolicy | null;
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+export function useUpdatePasswordPolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: PasswordPolicy) => {
+      const response = await apiClient.put('/api/v1/admin/password-policy', payload);
+      const body = (response as any).data;
+      return (body?.policy ?? payload) as PasswordPolicy;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: passwordPolicyKeys.all() }),
+  });
+}
