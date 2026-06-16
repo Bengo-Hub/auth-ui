@@ -24,7 +24,7 @@ import {
     Zap
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,8 +37,10 @@ interface TenantResult {
 }
 
 
-const STEPS = ['Account', 'Organisation'] as const;
-type Step = 0 | 1;
+// Fixed step indices: 0 = Account, 1 = Verify Email, 2 = Organisation.
+// OAuth signups carry a provider-verified email and skip step 1; joining an
+// existing org skips step 2. StepBar derives the visible labels per flow.
+type Step = 0 | 1 | 2;
 
 const ORG_SIZES = [
   { value: '1-5', label: '1–5 people', icon: '👤' },
@@ -122,6 +124,10 @@ export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Step 1 — Email verification (email/password signups only)
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [codeSending, setCodeSending] = useState(false);
 
   // Step 2 — Organisation
   const [orgAction, setOrgAction] = useState<'join_existing' | 'create_new'>('join_existing');
@@ -272,26 +278,68 @@ export function SignupForm() {
     return true;
   };
 
-  const nextStep = () => {
+  // Send a verification code to the entered email. Returns true on success.
+  const sendEmailCode = async (): Promise<boolean> => {
     setError(null);
-    if (step === 0 && !validateStep0()) return;
-    // When tenant context is known, skip Step 2 and submit directly from Step 0
-    if (step === 0 && hasTenantContext && tenantAutoResolved && selectedTenant) {
+    setCodeSending(true);
+    try {
+      await apiClient.post('/api/v1/auth/email/send-code', {
+        email,
+        tenant_slug: defaultTenant || undefined,
+      });
+      return true;
+    } catch (err: any) {
+      const code = err.response?.data?.code;
+      if (code === 'email_exists') {
+        setError('An account with this email already exists. Please sign in instead.');
+      } else {
+        setError(err.response?.data?.message || err.response?.data?.error || 'Failed to send verification code. Please try again.');
+      }
+      return false;
+    } finally {
+      setCodeSending(false);
+    }
+  };
+
+  // Confirm the verification code. Throws on failure (handled by the verify step).
+  const verifyEmailCode = async (code: string): Promise<void> => {
+    await apiClient.post('/api/v1/auth/email/verify-code', { email, code });
+  };
+
+  // Called by the verify step once the OTP is confirmed.
+  const handleEmailVerified = () => {
+    setEmailVerified(true);
+    // Joining an existing org (tenant context) has no org step — submit now.
+    if (hasTenantContext) { handleSubmit(); return; }
+    setStep(2);
+  };
+
+  const nextStep = async () => {
+    setError(null);
+    if (step === 0) {
+      if (!validateStep0()) return;
+      if (isOAuthFlow) {
+        // Provider-verified email — skip the verification step.
+        if (hasTenantContext && tenantAutoResolved && selectedTenant) { handleSubmit(); return; }
+        setStep(2);
+        return;
+      }
+      // Email/password: require email verification before continuing.
+      const sent = await sendEmailCode();
+      if (sent) setStep(1);
+      return;
+    }
+    if (step === 2) {
+      if (!validateStep1()) return;
       handleSubmit();
       return;
     }
-    if (step === 1 && !validateStep1()) { return; }
-    if (step === 1) {
-      // Step 1 is the final step — submit directly
-      handleSubmit();
-      return;
-    }
-    setStep((s) => Math.min(s + 1, 1) as Step);
   };
 
   const prevStep = () => {
     setError(null);
-    setStep((s) => Math.max(s - 1, 0) as Step);
+    if (step === 2) { setStep(isOAuthFlow ? 0 : 1); return; }
+    if (step === 1) { setStep(0); return; }
   };
 
   // ── Submit ──────────────────────────────────────────────────────────────────
@@ -400,8 +448,8 @@ export function SignupForm() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
-      {/* Hide step bar when tenant context is known (single-step registration) */}
-      {!hasTenantContext && <StepBar step={step} />}
+      {/* Step bar adapts: OAuth skips "Verify Email"; joining an org skips "Organisation". */}
+      <StepBar step={step} isOAuthFlow={isOAuthFlow} hasTenantContext={hasTenantContext} />
 
       {error && (
         <div className="flex items-start gap-2 p-4 text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl">
@@ -444,9 +492,18 @@ export function SignupForm() {
           setTermsAccepted={setTermsAccepted}
         />
       )}
-      {/* Subscription plan step removed — all tenants auto-assigned STARTER with free trial */}
-      {/* Step 2 only visible when no tenant context */}
-      {step === 1 && !hasTenantContext && (
+      {/* Step 1 — email verification (email/password signups only) */}
+      {step === 1 && !isOAuthFlow && (
+        <StepVerifyEmail
+          email={email}
+          codeSending={codeSending}
+          verifyEmailCode={verifyEmailCode}
+          resend={sendEmailCode}
+          onVerified={handleEmailVerified}
+        />
+      )}
+      {/* Step 2 — organisation. Subscription plan step removed (auto-assigned trial). */}
+      {step === 2 && !hasTenantContext && (
         <Step1
           orgAction={orgAction}
           setOrgAction={setOrgAction}
@@ -484,34 +541,39 @@ export function SignupForm() {
         />
       )}
 
-      <div className="flex gap-3 pt-2">
-        {step > 0 && !hasTenantContext && (
-          <Button type="button" onClick={prevStep} variant="outline"
-            className="flex-[0_0_auto] h-12 px-6 rounded-xl border-slate-200 dark:border-slate-700">
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-        )}
+      {/* The verify step (1) owns its own action buttons. */}
+      {step !== 1 && (
+        <div className="flex gap-3 pt-2">
+          {step === 2 && (
+            <Button type="button" onClick={prevStep} variant="outline"
+              className="flex-[0_0_auto] h-12 px-6 rounded-xl border-slate-200 dark:border-slate-700">
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+          )}
 
-        {step === 0 && !hasTenantContext ? (
-          <Button type="button" onClick={nextStep}
-            className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 transition-all">
-            Continue <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            onClick={nextStep}
-            disabled={isLoading || (hasTenantContext && !tenantAutoResolved)}
-            className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-              <><CheckCircle2 className="w-4 h-4 mr-2" /> Create Account</>
-            )}
-          </Button>
-        )}
-      </div>
+          {step === 0 && !(isOAuthFlow && hasTenantContext) ? (
+            <Button type="button" onClick={nextStep} disabled={codeSending}
+              className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              {codeSending ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                <>Continue <ChevronRight className="w-4 h-4 ml-1" /></>
+              )}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={nextStep}
+              disabled={isLoading || (hasTenantContext && !tenantAutoResolved)}
+              className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                <><CheckCircle2 className="w-4 h-4 mr-2" /> Create Account</>
+              )}
+            </Button>
+          )}
+        </div>
+      )}
 
-      {step === 1 && !hasTenantContext && (
+      {step === 2 && !hasTenantContext && (
         <p className="text-xs text-center text-slate-400 dark:text-slate-500">
           All accounts start with a free STARTER plan.
         </p>
@@ -522,28 +584,175 @@ export function SignupForm() {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function StepBar({ step }: { step: Step }) {
+function StepBar({ step, isOAuthFlow, hasTenantContext }: { step: Step; isOAuthFlow: boolean; hasTenantContext: boolean }) {
+  // Build the visible steps for this flow. OAuth has a provider-verified email so
+  // "Verify Email" is dropped; joining an existing org drops "Organisation".
+  const steps: string[] = ['Account'];
+  if (!isOAuthFlow) steps.push('Verify Email');
+  if (!hasTenantContext) steps.push('Organisation');
+  if (steps.length <= 1) return null; // single-step flow — no bar needed
+
+  // Map the fixed step index (0 Account / 1 Verify / 2 Org) to the visible index.
+  let current = 0;
+  if (step === 1) current = isOAuthFlow ? 0 : 1;
+  else if (step === 2) current = steps.length - 1;
+
   return (
     <div className="flex items-center gap-2 mb-8">
-      {STEPS.map((s, i) => (
+      {steps.map((s, i) => (
         <div key={s} className="flex-1 flex items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-            i <= step 
-              ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+            i <= current
+              ? 'bg-primary text-white shadow-lg shadow-primary/20'
               : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
           }`}>
             {i + 1}
           </div>
           <span className={`text-xs font-semibold hidden sm:block ${
-            i <= step ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+            i <= current ? 'text-slate-900 dark:text-white' : 'text-slate-400'
           }`}>
             {s}
           </span>
-          {i < STEPS.length - 1 && (
+          {i < steps.length - 1 && (
             <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800 mx-2" />
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+function StepVerifyEmail({
+  email, codeSending, verifyEmailCode, resend, onVerified,
+}: {
+  email: string;
+  codeSending: boolean;
+  verifyEmailCode: (code: string) => Promise<void>;
+  resend: () => Promise<boolean>;
+  onVerified: () => void;
+}) {
+  const [digits, setDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [resentAt, setResentAt] = useState<number | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+  const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
+
+  const code = digits.join('');
+
+  // Resend cooldown countdown.
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  useEffect(() => { inputsRef.current[0]?.focus(); }, []);
+
+  const submit = useCallback(async (full: string) => {
+    setVerifying(true);
+    setError(null);
+    try {
+      await verifyEmailCode(full);
+      onVerified();
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.response?.data?.error || 'The code is incorrect or has expired.');
+      setDigits(['', '', '', '', '', '']);
+      inputsRef.current[0]?.focus();
+    } finally {
+      setVerifying(false);
+    }
+  }, [verifyEmailCode, onVerified]);
+
+  const setDigit = (i: number, val: string) => {
+    const clean = val.replace(/\D/g, '');
+    if (clean.length > 1) {
+      // Paste of a full code
+      const next = clean.slice(0, 6).split('');
+      const padded = [...next, ...Array(6 - next.length).fill('')];
+      setDigits(padded);
+      if (next.length === 6) submit(next.join(''));
+      else inputsRef.current[Math.min(next.length, 5)]?.focus();
+      return;
+    }
+    setDigits((prev) => {
+      const copy = [...prev];
+      copy[i] = clean;
+      const joined = copy.join('');
+      if (clean && i < 5) inputsRef.current[i + 1]?.focus();
+      if (joined.length === 6 && !joined.includes('')) submit(joined);
+      return copy;
+    });
+  };
+
+  const onKeyDown = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !digits[i] && i > 0) inputsRef.current[i - 1]?.focus();
+  };
+
+  const handleResend = async () => {
+    const ok = await resend();
+    if (ok) { setResentAt(Date.now()); setCooldown(45); setError(null); }
+  };
+
+  return (
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="text-center space-y-1">
+        <div className="w-12 h-12 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
+          <Mail className="w-6 h-6 text-primary" />
+        </div>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Verify your email</h3>
+        <p className="text-sm text-slate-500">
+          We sent a 6-digit code to <span className="font-semibold text-slate-700 dark:text-slate-300">{email}</span>.
+        </p>
+      </div>
+
+      <div className="flex justify-center gap-2 sm:gap-3">
+        {digits.map((d, i) => (
+          <input
+            key={i}
+            ref={(el) => { inputsRef.current[i] = el; }}
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            value={d}
+            onChange={(e) => setDigit(i, e.target.value)}
+            onKeyDown={(e) => onKeyDown(i, e)}
+            disabled={verifying}
+            className="w-11 h-14 sm:w-12 text-center text-xl font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-60"
+          />
+        ))}
+      </div>
+
+      {error && (
+        <div className="flex items-start gap-2 p-3 text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+      {resentAt && !error && (
+        <p className="text-xs text-center text-emerald-600 dark:text-emerald-400">A new code has been sent.</p>
+      )}
+
+      <Button
+        type="button"
+        onClick={() => submit(code)}
+        disabled={verifying || code.length !== 6}
+        className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {verifying ? <Loader2 className="w-5 h-5 animate-spin" /> : (<><CheckCircle2 className="w-4 h-4 mr-2" /> Verify &amp; Continue</>)}
+      </Button>
+
+      <div className="text-center text-sm">
+        <span className="text-slate-500">Didn&apos;t get it? </span>
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={codeSending || cooldown > 0}
+          className="font-bold text-primary hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
+        >
+          {cooldown > 0 ? `Resend in ${cooldown}s` : codeSending ? 'Sending…' : 'Resend code'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -737,8 +946,33 @@ function Step1({
               <Input placeholder="Acme Inc." value={newOrgName} onChange={(e) => setNewOrgName(e.target.value)} className="pl-10 h-11 rounded-xl" />
             </div>
           </div>
+          <div className="space-y-2">
+            <Label>Organisation Size</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {ORG_SIZES.map((size) => (
+                <button key={size.value} type="button" onClick={() => setOrgSize(size.value)} className={`flex items-center gap-2 p-3 rounded-xl border text-sm transition-all ${orgSize === size.value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'}`}>
+                  <span>{size.icon}</span> {size.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Use Cases selector — placed ABOVE the conditional industry fields it
+              reveals, so users always see the extra fields appear directly below. */}
+          <div className="space-y-2">
+            <Label>Use Cases <span className="text-xs text-slate-400 font-normal">(select all that apply)</span></Label>
+            <div className="grid grid-cols-2 gap-2 max-h-44 sm:max-h-56 overflow-y-auto">
+              {USE_CASES.map((uc) => (
+                <button key={uc.value} type="button" onClick={() => toggleUseCase(uc.value)} className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs transition-all text-left ${useCases.includes(uc.value) ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'}`}>
+                  {useCases.includes(uc.value) ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0" />}
+                  {uc.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Conditional industry fields — render directly below the Use Cases
+              selector that triggers them. */}
           {isFBO && (
-            <>
+            <div className="space-y-4 p-3 rounded-xl border border-primary/30 bg-primary/[0.03] animate-in fade-in slide-in-from-top-1 duration-200">
               <div className="space-y-2">
                 <Label>FLP Distributor ID <span className="text-rose-500">*</span></Label>
                 <div className="relative">
@@ -755,10 +989,10 @@ function Step1({
                 </div>
                 <p className="text-[10px] text-slate-500">Your WhatsApp number for customer enquiries. Supports KE, UG, TZ, RW, BI, ET country codes.</p>
               </div>
-            </>
+            </div>
           )}
           {isISP && (
-            <>
+            <div className="space-y-4 p-3 rounded-xl border border-primary/30 bg-primary/[0.03] animate-in fade-in slide-in-from-top-1 duration-200">
               <div className="space-y-2">
                 <Label>{isHotspot ? 'Hotspot Business Name' : 'ISP Provider Name'} <span className="text-rose-500">*</span></Label>
                 <div className="relative">
@@ -791,7 +1025,7 @@ function Step1({
                 </div>
                 <p className="text-[10px] text-slate-500">The towns, estates, or regions your network serves</p>
               </div>
-            </>
+            </div>
           )}
           <div className="space-y-2">
             <Label>URL Slug</Label>
@@ -808,27 +1042,6 @@ function Step1({
               <Input placeholder="Main/HQ" value={hqBranchName} onChange={(e) => setHqBranchName(e.target.value)} className="pl-10 h-11 rounded-xl" />
             </div>
             <p className="text-[10px] text-slate-500">The name of your primary location (e.g. Main/HQ, Downtown, etc.)</p>
-          </div>
-          <div className="space-y-2">
-            <Label>Organisation Size</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {ORG_SIZES.map((size) => (
-                <button key={size.value} type="button" onClick={() => setOrgSize(size.value)} className={`flex items-center gap-2 p-3 rounded-xl border text-sm transition-all ${orgSize === size.value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'}`}>
-                  <span>{size.icon}</span> {size.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Use Cases <span className="text-xs text-slate-400 font-normal">(select all that apply)</span></Label>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-              {USE_CASES.map((uc) => (
-                <button key={uc.value} type="button" onClick={() => toggleUseCase(uc.value)} className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs transition-all text-left ${useCases.includes(uc.value) ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'}`}>
-                  {useCases.includes(uc.value) ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0" />}
-                  {uc.label}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       )}
