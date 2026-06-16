@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Database,
   Download,
@@ -9,11 +9,34 @@ import {
   RefreshCw,
   AlertTriangle,
   Clock,
+  Save,
+  CalendarClock,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+
+interface BackupSettings {
+  auto_enabled: boolean;
+  schedule_hour: number;
+  retention_days: number;
+}
+
+const DEFAULT_BACKUP_SETTINGS: BackupSettings = {
+  auto_enabled: false,
+  schedule_hour: 2,
+  retention_days: 4,
+};
+
+function formatHourLabel(hour: number): string {
+  const period = hour < 12 ? 'AM' : 'PM';
+  const display = hour % 12 === 0 ? 12 : hour % 12;
+  return `${display}:00 ${period}`;
+}
 
 interface BackupEntry {
   filename: string;
@@ -60,6 +83,140 @@ function isRecentBackupMissing(backups: BackupEntry[]): boolean {
   if (backups.length === 0) return false;
   const newest = Math.max(...backups.map((b) => b.created_at));
   return (Date.now() / 1000 - newest) > TWENTY_FIVE_HOURS_SECS;
+}
+
+function AutoBackupCard() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  // Default OFF before data loads.
+  const [form, setForm] = useState<BackupSettings>(DEFAULT_BACKUP_SETTINGS);
+  const [dirty, setDirty] = useState(false);
+
+  const { data: settings, isLoading } = useQuery<BackupSettings>({
+    queryKey: ['platform-backup-settings'],
+    queryFn: async () => {
+      const response = await apiClient.get<BackupSettings>('/api/v1/admin/backups/settings');
+      return (response as any)?.data ?? response;
+    },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+  // Seed the form from server data once loaded (and whenever it refetches while clean).
+  useEffect(() => {
+    if (settings && !dirty) {
+      setForm({
+        auto_enabled: !!settings.auto_enabled,
+        schedule_hour: Number.isFinite(settings.schedule_hour) ? settings.schedule_hour : 2,
+        retention_days: Number.isFinite(settings.retention_days) ? settings.retention_days : 4,
+      });
+    }
+  }, [settings, dirty]);
+
+  const mutation = useMutation({
+    mutationFn: async (payload: BackupSettings) => {
+      const response = await apiClient.put<BackupSettings>('/api/v1/admin/backups/settings', payload);
+      return (response as any)?.data ?? response;
+    },
+    onSuccess: () => {
+      setDirty(false);
+      queryClient.invalidateQueries({ queryKey: ['platform-backup-settings'] });
+      toast({ title: 'Saved', description: 'Automatic backup settings updated.' });
+    },
+    onError: () => {
+      toast({
+        title: 'Save failed',
+        description: 'Could not update automatic backup settings. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const update = (patch: Partial<BackupSettings>) => {
+    setForm((prev) => ({ ...prev, ...patch }));
+    setDirty(true);
+  };
+
+  const enabled = form.auto_enabled;
+
+  return (
+    <div className="rounded-lg border">
+      <div className="px-4 py-3 border-b bg-muted/30 flex items-center gap-2">
+        <CalendarClock className="h-4 w-4" />
+        <h2 className="font-semibold text-sm">Automatic platform backups</h2>
+      </div>
+
+      <div className="p-4 space-y-5">
+        <p className="text-sm text-muted-foreground">
+          When enabled, auth-api runs a daily platform-wide <code className="text-xs bg-muted px-1 py-0.5 rounded">pg_dumpall</code>{' '}
+          disaster-recovery backup of the entire cluster. This is OFF by default and must be activated here.
+        </p>
+
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium">Enable automatic backups</p>
+            <p className="text-xs text-muted-foreground">Runs once daily at the scheduled hour.</p>
+          </div>
+          <Switch
+            checked={enabled}
+            disabled={isLoading || mutation.isPending}
+            onCheckedChange={(checked) => update({ auto_enabled: checked })}
+            aria-label="Enable automatic platform backups"
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium" htmlFor="backup-hour">
+              Backup hour (service-local)
+            </label>
+            <select
+              id="backup-hour"
+              value={form.schedule_hour}
+              disabled={!enabled || isLoading || mutation.isPending}
+              onChange={(e) => update({ schedule_hour: parseInt(e.target.value, 10) })}
+              className="flex h-11 w-full rounded-xl border border-border bg-card px-4 text-sm text-foreground shadow-sm transition-all duration-150 focus-visible:border-brand-emphasis focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-emphasis focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {Array.from({ length: 24 }, (_, h) => (
+                <option key={h} value={h}>
+                  {formatHourLabel(h)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium" htmlFor="retention-days">
+              Retention (days)
+            </label>
+            <Input
+              id="retention-days"
+              type="number"
+              min={1}
+              value={form.retention_days}
+              disabled={!enabled || isLoading || mutation.isPending}
+              onChange={(e) => update({ retention_days: parseInt(e.target.value, 10) || 1 })}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            disabled={!dirty || isLoading || mutation.isPending}
+            onClick={() => mutation.mutate(form)}
+          >
+            {mutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            <span className="ml-2">Save</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function BackupsPage() {
@@ -173,6 +330,9 @@ export default function BackupsPage() {
           </p>
         </div>
       </div>
+
+      {/* Automatic platform backup activation (opt-in, default OFF) */}
+      <AutoBackupCard />
 
       {/* No-recent-backup alert — fires when the newest backup is >25h old */}
       {!isLoading && !error && backups.length > 0 && isRecentBackupMissing(backups) && (
