@@ -18,6 +18,7 @@ import {
     Loader2,
     Lock,
     Mail,
+    Receipt,
     Search,
     Shield,
     User,
@@ -153,6 +154,11 @@ export function SignupForm() {
   // provider fields and must be tagged so isp-billing's consumer mirrors the org.
   const isHotspot = useCases.includes('hotspot');
   const isISP = useCases.includes('isp') || isHotspot;
+
+  // Tax / KRA compliance (Zoho Books-style — only meaningful for create_new orgs).
+  const [taxPin, setTaxPin] = useState('');
+  const [vatRegistered, setVatRegistered] = useState(false);
+  const [vatRegisteredOn, setVatRegisteredOn] = useState('');
 
   // Toggle a use case in the multi-select list
   const toggleUseCase = (value: string) => {
@@ -391,6 +397,10 @@ export function SignupForm() {
         use_case: primaryUseCase,
         use_cases: useCases,
         hq_branch_name: hqBranchName,
+        // Tax / KRA details (synced to treasury for the invoice issuer block).
+        tax_pin: taxPin.trim() || undefined,
+        vat_registered: vatRegistered,
+        vat_registered_on: vatRegistered && vatRegisteredOn ? vatRegisteredOn : undefined,
         metadata: {
           org_size: orgSize,
           // ISP / Telecom provider details (shown for the 'isp' or 'hotspot' use-case)
@@ -538,6 +548,12 @@ export function SignupForm() {
           setIspWhatsapp={setIspWhatsapp}
           ispCoverageArea={ispCoverageArea}
           setIspCoverageArea={setIspCoverageArea}
+          taxPin={taxPin}
+          setTaxPin={setTaxPin}
+          vatRegistered={vatRegistered}
+          setVatRegistered={setVatRegistered}
+          vatRegisteredOn={vatRegisteredOn}
+          setVatRegisteredOn={setVatRegisteredOn}
         />
       )}
 
@@ -901,6 +917,7 @@ function Step1({
   phoneNumber, setPhoneNumber,
   isISP, isHotspot, ispProviderName, setIspProviderName, ispLicenceNumber, setIspLicenceNumber,
   ispWhatsapp, setIspWhatsapp, ispCoverageArea, setIspCoverageArea,
+  taxPin, setTaxPin, vatRegistered, setVatRegistered, vatRegisteredOn, setVatRegisteredOn,
 }: any) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -1042,6 +1059,54 @@ function Step1({
               <Input placeholder="Main/HQ" value={hqBranchName} onChange={(e) => setHqBranchName(e.target.value)} className="pl-10 h-11 rounded-xl" />
             </div>
             <p className="text-[10px] text-slate-500">The name of your primary location (e.g. Main/HQ, Downtown, etc.)</p>
+          </div>
+
+          {/* Tax & Compliance — KRA PIN + VAT registration (Zoho Books-style). */}
+          <div className="space-y-4 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/30">
+            <div className="flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-primary" />
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Tax &amp; Compliance</p>
+              <span className="text-[10px] font-medium text-slate-400">Optional</span>
+            </div>
+            <div className="space-y-2">
+              <Label>KRA PIN</Label>
+              <div className="relative">
+                <Input
+                  placeholder="e.g. P051234567X"
+                  value={taxPin}
+                  onChange={(e) => setTaxPin(e.target.value.toUpperCase())}
+                  className="h-11 rounded-xl font-mono"
+                />
+              </div>
+              <p className="text-[10px] text-slate-500">Used as your tax identifier on invoices and receipts. You can add this later.</p>
+            </div>
+            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+              <div>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Registered for VAT?</p>
+                <p className="text-[10px] text-slate-500">Enable if your business is VAT-registered with KRA.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVatRegistered(!vatRegistered)}
+                className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${vatRegistered ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'}`}
+                aria-pressed={vatRegistered}
+                aria-label="Registered for VAT"
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${vatRegistered ? 'translate-x-5' : ''}`} />
+              </button>
+            </div>
+            {vatRegistered && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                <Label>VAT Registered On</Label>
+                <Input
+                  type="date"
+                  value={vatRegisteredOn}
+                  onChange={(e) => setVatRegisteredOn(e.target.value)}
+                  className="h-11 rounded-xl"
+                />
+                <p className="text-[10px] text-slate-500">The date your business was registered for VAT.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
