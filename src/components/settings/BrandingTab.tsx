@@ -39,6 +39,7 @@ const USE_CASES = [
   { value: 'weighbridge', label: 'Weighbridge / Commercial Weighing' },
   { value: 'services', label: 'Services / Professional' },
   { value: 'pharmacy', label: 'Pharmacy / Health' },
+  { value: 'library', label: 'Library / Resource Center' },
   { value: 'other', label: 'Other' },
 ];
 

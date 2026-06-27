@@ -73,22 +73,12 @@ const SUBSCRIPTIONS_BASE = 'https://pricing.codevertexitsolutions.com';
 type Tab = 'overview' | 'branding' | 'team' | 'billing' | 'support';
 
 export default function MyTenantPage() {
-  const { user, isPlatformOwner } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
 
-  // Platform owners have their own management pages; redirect them
-  if (isPlatformOwner) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 gap-6 text-center">
-        <Building2 className="h-12 w-12 text-slate-300" />
-        <p className="text-slate-500 font-medium">
-          Platform admins manage organizations from the{' '}
-          <a href="/dashboard/tenants" className="text-primary underline">Organizations</a> section.
-        </p>
-      </div>
-    );
-  }
-
+  // The platform owner (codevertex) is itself a real business tenant. It manages
+  // its OWN organization here exactly like any tenant; cross-tenant administration
+  // of OTHER tenants lives separately under the platform "Organizations" section.
   const tenant = user?.tenant;
 
   if (!tenant) {

@@ -66,6 +66,7 @@ const USE_CASES = [
   { value: 'hotspot', label: 'Hotspot Business (WiFi vouchers)' },
   { value: 'services', label: 'Services / Professional' },
   { value: 'pharmacy', label: 'Pharmacy / Health' },
+  { value: 'library', label: 'Library / Resource Center' },
   { value: 'other', label: 'Other' },
 ];
 
