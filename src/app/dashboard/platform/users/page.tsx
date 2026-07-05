@@ -20,6 +20,7 @@ import {
   Copy,
   Plus,
   X,
+  Building2,
 } from 'lucide-react';
 import {
   useAdminUsers,
@@ -33,6 +34,7 @@ import {
   useAddUserToTenant,
   useSetUserTenantRoles,
   useRemoveUserFromTenant,
+  useAdminSetUserServicePin,
   useTenants,
   type PlatformUser,
 } from '@/hooks/use-dashboard-api';
@@ -330,11 +332,118 @@ function EditUserDialog({
   );
 }
 
-function UserRow({ user }: { user: PlatformUser }) {
+// Services that support a 4-digit terminal PIN. Kept in sync with the tenant
+// "Set PIN" dialog on the my-tenant page.
+const PIN_SERVICES = [
+  { value: 'pos', label: 'POS' },
+  { value: 'inventory', label: 'Inventory' },
+];
+
+// Platform-admin PIN dialog. Reuses the tenant "Set Service PIN" flow, but adds
+// an organization picker because a platform user may belong to several orgs and
+// a PIN is scoped to one tenant + service.
+function SetPinDialog({ user, onClose }: { user: PlatformUser; onClose: () => void }) {
+  const { toast } = useToast();
+  const { data: tenants = [] } = useTenants();
+  const setPinMutation = useAdminSetUserServicePin();
+  const memberships = user.memberships ?? [];
+  const [tenantId, setTenantId] = useState(memberships[0]?.tenant_id ?? '');
+  const [service, setService] = useState('pos');
+  const [pin, setPin] = useState('');
+
+  const tenantName = (id: string) => tenants.find((t) => t.id === id)?.name ?? id;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tenantId || pin.length !== 4) return;
+    setPinMutation.mutate(
+      { tenantId, userId: user.id, pin, service },
+      {
+        onSuccess: () => {
+          toast({ title: 'PIN set', description: `${service.toUpperCase()} PIN set for ${user.email} in ${tenantName(tenantId)}.` });
+          onClose();
+        },
+        onError: (err: unknown) => {
+          const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+          toast({ title: msg ?? 'Failed to set PIN', variant: 'destructive' });
+        },
+      },
+    );
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> Set Service PIN</DialogTitle>
+          <DialogDescription>{user.email}</DialogDescription>
+        </DialogHeader>
+        {memberships.length === 0 ? (
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              A service PIN is scoped to an organization. Add this user to an organization first (via <strong>Edit → Organization Memberships</strong>), then set their PIN.
+            </p>
+            <DialogFooter><Button onClick={onClose}>Close</Button></DialogFooter>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 py-2">
+            <div>
+              <Label>Organization</Label>
+              <select
+                value={tenantId}
+                onChange={(e) => setTenantId(e.target.value)}
+                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {memberships.map((m) => (
+                  <option key={m.tenant_id} value={m.tenant_id}>{tenantName(m.tenant_id)}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Service</Label>
+              <select
+                value={service}
+                onChange={(e) => setService(e.target.value)}
+                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {PIN_SERVICES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <Label>4-Digit PIN</Label>
+              <Input
+                required
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                pattern="[0-9]{4}"
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder="••••"
+                className="mt-1 text-center text-2xl tracking-widest font-mono"
+              />
+              <p className="text-xs text-muted-foreground mt-1">The user will use this PIN to log in on the terminal.</p>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+              <Button type="submit" disabled={setPinMutation.isPending || pin.length !== 4 || !tenantId}>
+                {setPinMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                Save PIN
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function UserRow({ user, tenantName }: { user: PlatformUser; tenantName: (id: string) => string }) {
   const { toast } = useToast();
   const action = useAdminUserAction();
   const deleteUser = useDeleteAdminUser();
   const [editing, setEditing] = useState(false);
+  const [settingPin, setSettingPin] = useState(false);
 
   const doAction = (act: 'suspend' | 'deactivate' | 'activate') => {
     action.mutate(
@@ -357,6 +466,7 @@ function UserRow({ user }: { user: PlatformUser }) {
   return (
     <>
       {editing && <EditUserDialog user={user} onClose={() => setEditing(false)} />}
+      {settingPin && <SetPinDialog user={user} onClose={() => setSettingPin(false)} />}
       <tr className="border-b last:border-0 hover:bg-muted/30 transition-colors">
         <td className="px-4 py-3">
           <div className="font-medium text-sm">{user.email}</div>
@@ -366,7 +476,7 @@ function UserRow({ user }: { user: PlatformUser }) {
           <StatusBadge status={user.status} />
         </td>
         <td className="px-4 py-3 text-sm text-muted-foreground">
-          {user.primary_tenant_id || '—'}
+          {user.primary_tenant_id ? tenantName(user.primary_tenant_id) : '—'}
         </td>
         <td className="px-4 py-3 text-sm text-muted-foreground">
           {user.memberships?.length ?? 0} org{(user.memberships?.length ?? 0) !== 1 ? 's' : ''}
@@ -387,6 +497,9 @@ function UserRow({ user }: { user: PlatformUser }) {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setEditing(true)}>
                 <Edit className="h-4 w-4 mr-2" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSettingPin(true)}>
+                <KeyRound className="h-4 w-4 mr-2" /> Set PIN
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {user.status !== 'active' && (
@@ -419,19 +532,31 @@ function UserRow({ user }: { user: PlatformUser }) {
 export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [tenantId, setTenantId] = useState('');
+  const [role, setRole] = useState('');
   const [page, setPage] = useState(1);
   const [creating, setCreating] = useState(false);
   const limit = 50;
 
+  const { data: tenants = [] } = useTenants();
+  const tenantName = (id: string) => tenants.find((t) => t.id === id)?.name ?? id;
+
   const { data, isLoading, refetch } = useAdminUsers({
     search: search || undefined,
     status: status || undefined,
+    tenant_id: tenantId || undefined,
+    role: role || undefined,
     page,
     limit,
   });
 
   const users = data?.users ?? [];
   const pagination = data?.pagination;
+  const hasFilters = !!(search || status || tenantId || role);
+
+  const clearFilters = () => {
+    setSearch(''); setStatus(''); setTenantId(''); setRole(''); setPage(1);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -461,12 +586,31 @@ export default function UsersPage() {
         <div className="relative flex-1 min-w-[220px] max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by email…"
+            placeholder="Search by name or email…"
             className="pl-8"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
+        <div className="relative min-w-[200px]">
+          <Building2 className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <select
+            value={tenantId || 'all'}
+            onChange={(e) => { setTenantId(e.target.value === 'all' ? '' : e.target.value); setPage(1); }}
+            className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 py-1 text-sm"
+          >
+            <option value="all">All organizations</option>
+            {tenants.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </div>
+        <select
+          value={role || 'all'}
+          onChange={(e) => { setRole(e.target.value === 'all' ? '' : e.target.value); setPage(1); }}
+          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm w-40 capitalize"
+        >
+          <option value="all">All roles</option>
+          {SSO_ROLES.map((r) => <option key={r} value={r} className="capitalize">{r}</option>)}
+        </select>
         <select
           value={status || 'all'}
           onChange={(e) => { setStatus(e.target.value === 'all' ? '' : e.target.value); setPage(1); }}
@@ -478,6 +622,11 @@ export default function UsersPage() {
           <option value="deactivated">Deactivated</option>
           <option value="deleted">Deleted</option>
         </select>
+        {hasFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            <X className="h-4 w-4 mr-1" /> Clear
+          </Button>
+        )}
         {pagination && (
           <span className="text-sm text-muted-foreground ml-auto">
             {pagination.total} user{pagination.total !== 1 ? 's' : ''}
@@ -510,7 +659,7 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {users.map((u) => (
-                <UserRow key={u.id} user={u} />
+                <UserRow key={u.id} user={u} tenantName={tenantName} />
               ))}
             </tbody>
           </table>

@@ -457,10 +457,11 @@ export const userKeys = {
   detail: (id: string) => ['admin', 'users', id] as const,
 };
 
-export function useAdminUsers(params: { status?: string; tenant_id?: string; search?: string; page?: number; limit?: number } = {}) {
+export function useAdminUsers(params: { status?: string; tenant_id?: string; role?: string; search?: string; page?: number; limit?: number } = {}) {
   const q = new URLSearchParams();
   if (params.status) q.set('status', params.status);
   if (params.tenant_id) q.set('tenant_id', params.tenant_id);
+  if (params.role) q.set('role', params.role);
   if (params.search) q.set('search', params.search);
   if (params.page) q.set('page', String(params.page));
   if (params.limit) q.set('limit', String(params.limit));
@@ -630,6 +631,22 @@ export function useRemoveUserFromTenant() {
     onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: userKeys.detail(vars.userId) });
       queryClient.invalidateQueries({ queryKey: userKeys.all() });
+    },
+  });
+}
+
+// Platform-admin variant of useSetMemberPin: the target tenant is chosen per
+// call (a platform user may belong to several orgs), reusing the same
+// tenant-scoped service-pin endpoint. Platform owners bypass the tenant-admin
+// check server-side, so this works across any tenant the user is a member of.
+export function useAdminSetUserServicePin() {
+  return useMutation({
+    mutationFn: async ({ tenantId, userId, pin, service }: { tenantId: string; userId: string; pin: string; service: string }) => {
+      const response = await apiClient.post(
+        `/api/v1/admin/tenants/${tenantId}/members/${userId}/service-pin`,
+        { pin, service }
+      );
+      return (response as { data?: unknown }).data ?? response;
     },
   });
 }
