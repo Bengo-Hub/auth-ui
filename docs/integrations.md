@@ -35,9 +35,9 @@
 
 ---
 
-## SSO with BengoBox Services
+## SSO with Codevertex Services
 
-Auth-ui serves as the SSO login page for all BengoBox services. Each service redirects to auth-ui for authentication.
+Auth-ui serves as the SSO login page for all Codevertex services. Each service redirects to auth-ui for authentication.
 
 ### OIDC Redirect Flow
 
@@ -95,7 +95,7 @@ Used by auth-api for NATS event publishing. Auth-ui does not interact with this 
 | `NEXT_PUBLIC_AUTH_URL` | Auth API root | `https://sso.codevertexitsolutions.com` |
 | `NEXT_PUBLIC_CLIENT_ID` | OAuth client ID for auth-ui | `auth-ui` |
 | `NEXT_PUBLIC_REDIRECT_URI` | OIDC callback URL | `https://accounts.codevertexitsolutions.com/auth/callback` |
-| `NEXT_PUBLIC_BRAND_NAME` | Platform brand name | `BengoBox` |
+| `NEXT_PUBLIC_BRAND_NAME` | Platform brand name | `Codevertex` |
 | `NEXT_PUBLIC_BRAND_LOGO_URL` | Brand logo path | `/logo.jpg` |
 | `NEXT_PUBLIC_BRAND_PRIMARY_COLOR` | Brand primary color | `#ea8022` |
 

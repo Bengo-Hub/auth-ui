@@ -3,7 +3,7 @@
 **Status**: ✅ Completed (January 2026)
 
 ## Objectives
-- Implement the public landing page showcasing the BengoBox ecosystem.
+- Implement the public landing page showcasing the Codevertex ecosystem.
 - Create a "Hub" experience for authenticated users to switch between services.
 
 ## Tasks

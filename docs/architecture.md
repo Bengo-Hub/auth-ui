@@ -56,7 +56,7 @@ src/app/
 ## Authentication Flow
 
 ```
-User visits BengoBox service (e.g., ordersapp.codevertexitsolutions.com)
+User visits Codevertex service (e.g., ordersapp.codevertexitsolutions.com)
   |
   v
 Service redirects to auth.codevertexitsolutions.com/login

@@ -9,7 +9,7 @@
 
 ## Implementation Summary
 
-BengoBox Auth UI is the **central Single Sign-On (SSO) portal** serving as the unified identity provider for all BengoBox services. It integrates with the Auth API backend (Go) using OpenID Connect (OIDC) flow and JWT-based stateless authentication.
+Codevertex Auth UI is the **central Single Sign-On (SSO) portal** serving as the unified identity provider for all Codevertex services. It integrates with the Auth API backend (Go) using OpenID Connect (OIDC) flow and JWT-based stateless authentication.
 
 ### Current Sprint Status
 
@@ -32,7 +32,7 @@ BengoBox Auth UI is the **central Single Sign-On (SSO) portal** serving as the u
 ┌──────────────────────────────────────────────────────────────┐
 │                      Browser / Client                         │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │         BengoBox Services (Ordering, Logistics, etc)   │  │
+│  │         Codevertex Services (Ordering, Logistics, etc)   │  │
 │  │  1. User clicks "Sign In"                              │  │
 │  │  2. Redirects to Auth UI with client_id & redirect_uri │  │
 │  └────────────────────────────────────────────────────────┘  │
@@ -366,7 +366,7 @@ Max Age: 3600 seconds
 
 ### Using shared-auth-client (Go)
 
-For Go services integrating BengoBox auth:
+For Go services integrating Codevertex auth:
 
 **Installation**:
 ```go
@@ -586,12 +586,12 @@ image: ghcr.io/bengo-hub/auth-ui:v1.2.3
 
 - **Auth API Backend**: [Auth Service Docs](../../auth-api/)
 - **Shared Auth Client**: [shared/auth-client](https://github.com/Bengo-Hub/shared-auth-client)
-- **BengoBox Architecture**: [Microservice Architecture](../../../docs/microservice-architecture.md)
+- **Codevertex Architecture**: [Microservice Architecture](../../../docs/microservice-architecture.md)
 - **RBAC Implementation**: [RBAC Guide](../../../docs/RBAC_IMPLEMENTATION_GUIDE.md)
 - **Data Ownership**: [Cross-Service Data Ownership](../../../docs/CROSS-SERVICE-DATA-OWNERSHIP.md)
 
 ---
 
-**Maintained by**: BengoBox Core Team  
+**Maintained by**: Codevertex Core Team  
 **Last Updated**: January 2026  
 **Next Review**: March 2026

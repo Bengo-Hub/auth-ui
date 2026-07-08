@@ -1,4 +1,4 @@
-# BengoBox Auth UI - Developer Guide
+# Codevertex Auth UI - Developer Guide
 
 **Last Updated**: January 2026  
 **Version**: 1.0
@@ -17,9 +17,9 @@
 
 ## Overview
 
-BengoBox Auth UI is the central identity and access management portal serving as the Single Sign-On (SSO) hub for all BengoBox services. It provides:
+Codevertex Auth UI is the central identity and access management portal serving as the Single Sign-On (SSO) hub for all Codevertex services. It provides:
 
-- **Unified Authentication**: One account for all BengoBox services
+- **Unified Authentication**: One account for all Codevertex services
 - **OIDC/OAuth2 Support**: Standard protocols for secure SSO
 - **Service Directory**: Discover and launch integrated services
 - **Account Management**: Profile, MFA, and security settings
@@ -44,7 +44,7 @@ BengoBox Auth UI is the central identity and access management portal serving as
 
 ```
 ┌─────────────────┐
-│   BengoBox      │
+│   Codevertex      │
 │   Services      │  (Ordering, Logistics, etc.)
 └────────┬────────┘
          │
@@ -210,7 +210,7 @@ Login Page
 ```
 1. Unauthenticated User visits https://accounts.codevertexitsolutions.com/
 2. Landing page displays:
-   ├─ BengoBox introduction
+   ├─ Codevertex introduction
    ├─ Service cards (Ordering, Logistics, Finance, etc.)
    │  └─ "Launch Service" for authenticated users
    │  └─ "Sign In to Access" for unauthenticated users
@@ -255,7 +255,7 @@ NEXT_PUBLIC_CLIENT_ID=auth-ui
 NEXT_PUBLIC_REDIRECT_URI=http://localhost:3000/auth/callback
 
 # Branding
-NEXT_PUBLIC_BRAND_NAME=BengoBox
+NEXT_PUBLIC_BRAND_NAME=Codevertex
 NEXT_PUBLIC_BRAND_LOGO_URL=/logo.jpg
 NEXT_PUBLIC_BRAND_PRIMARY_COLOR=#ea8022
 ```
@@ -422,7 +422,7 @@ GET /api/v1/users/me/permissions
 
 ### Authentication SDK (Go)
 
-For backend services integrating with BengoBox auth:
+For backend services integrating with Codevertex auth:
 
 **Repository**: https://github.com/Bengo-Hub/shared-auth-client
 
@@ -479,7 +479,7 @@ const { token, refresh_token } = response.data;
   redirect_uri=https://yourapp.com/callback&
   state=your-state-param&
   scope=openid%20email%20profile">
-  Sign In with BengoBox
+  Sign In with Codevertex
 </a>
 ```
 
@@ -637,10 +637,10 @@ When reporting bugs:
 - [Auth API Documentation](../../docs/API-INTEGRATION-GUIDE.md)
 - [RBAC Implementation Guide](../../docs/RBAC_IMPLEMENTATION_GUIDE.md)
 - [Shared Auth Client](https://github.com/Bengo-Hub/shared-auth-client)
-- [BengoBox Architecture](../../../docs/microservice-architecture.md)
+- [Codevertex Architecture](../../../docs/microservice-architecture.md)
 - [Cross-Service Data Ownership](../../../docs/CROSS-SERVICE-DATA-OWNERSHIP.md)
 
 ---
 
-**Maintained by**: BengoBox Core Team  
+**Maintained by**: Codevertex Core Team  
 **Last Updated**: January 2026

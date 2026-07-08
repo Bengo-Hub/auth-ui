@@ -105,7 +105,7 @@ Platform (super_admin only) — redirects only
 
 ### Top Bar
 
-- BengoBox logo + "Auth" label
+- Codevertex logo + "Auth" label
 - Current user avatar + name dropdown
   - View profile
   - Sign out

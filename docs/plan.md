@@ -8,7 +8,7 @@
 
 ## Purpose
 
-Auth-ui is the central Single Sign-On (SSO) portal for all BengoBox services. It serves as:
+Auth-ui is the central Single Sign-On (SSO) portal for all Codevertex services. It serves as:
 
 1. **Login/Registration gateway** -- users authenticate here and are redirected back to the requesting service
 2. **Account management portal** -- profile editing, security settings, MFA, session management
@@ -37,7 +37,7 @@ Auth-ui is the central Single Sign-On (SSO) portal for all BengoBox services. It
 ### Must Have (P0)
 
 - Login/signup flow working E2E with auth-api
-- OIDC redirect flow working for all BengoBox service frontends
+- OIDC redirect flow working for all Codevertex service frontends
 - MFA setup and verification (TOTP)
 - Token refresh and session management
 - Platform admin section (roles) gated by `super_admin` (gateways → treasury-ui; notifications → notifications-ui)
@@ -48,7 +48,7 @@ Auth-ui is the central Single Sign-On (SSO) portal for all BengoBox services. It
 
 - Social login (Google, GitHub, Microsoft)
 - Password reset flow
-- Service directory (launch links to other BengoBox services)
+- Service directory (launch links to other Codevertex services)
 - Basic SEO (meta tags, structured data)
 - Performance optimisation (code splitting, image optimisation)
 

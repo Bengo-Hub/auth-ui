@@ -1,15 +1,15 @@
-# BengoBox Auth UI
+# Codevertex Auth UI
 
-The central identity and access management portal for the BengoBox ecosystem.
+The central identity and access management portal for the Codevertex ecosystem.
 
 ## Overview
 
-BengoBox Auth UI is a Next.js 15 application that serves as the Single Sign-On (SSO) hub for all BengoBox services. It provides a unified interface for authentication, user profile management, and developer tools.
+Codevertex Auth UI is a Next.js 15 application that serves as the Single Sign-On (SSO) hub for all Codevertex services. It provides a unified interface for authentication, user profile management, and developer tools.
 
 ## Features
 
-- **Unified Login/Signup**: One account for all BengoBox services.
-- **Service Directory**: Discover and launch BengoBox applications.
+- **Unified Login/Signup**: One account for all Codevertex services.
+- **Service Directory**: Discover and launch Codevertex applications.
 - **Account Security**: MFA, password management, and session tracking.
 - **Developer Portal**: Manage OAuth clients and API keys.
 

@@ -3,7 +3,7 @@
 **Status**: COMPLETED ✅
 
 ## Objectives
-Establish the modern frontend architecture for the BengoBox Auth UI, ensuring it is mobile-first, PWA-ready, and uses the latest industry standards.
+Establish the modern frontend architecture for the Codevertex Auth UI, ensuring it is mobile-first, PWA-ready, and uses the latest industry standards.
 
 ## Tasks
 
@@ -20,7 +20,7 @@ Establish the modern frontend architecture for the BengoBox Auth UI, ensuring it
 - [x] Update Root Layout with providers and PWA metadata (`src/app/layout.tsx`).
 
 ### 3. Layout & Navigation
-- [x] Create a responsive `Navbar` with BengoBox Identity.
+- [x] Create a responsive `Navbar` with Codevertex Identity.
 - [x] Implement a `Footer` with legal and social links.
 
 ## Technical Decisions
@@ -32,4 +32,4 @@ Establish the modern frontend architecture for the BengoBox Auth UI, ensuring it
 ## Definition of Done
 - Modern tech stack is fully operational.
 - PWA manifest is valid and install prompt triggers.
-- Project structure follows BengoBox standards.
+- Project structure follows Codevertex standards.

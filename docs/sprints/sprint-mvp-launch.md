@@ -14,13 +14,13 @@
 
 **Duration**: March 6 -- March 17, 2026 (10 working days)
 **Status**: In Progress
-**Goal**: Ship a production-ready SSO portal at `auth.codevertexitsolutions.com` supporting all BengoBox service logins, tenant admin, and platform admin for the `urban-loft` tenant.
+**Goal**: Ship a production-ready SSO portal at `auth.codevertexitsolutions.com` supporting all Codevertex service logins, tenant admin, and platform admin for the `urban-loft` tenant.
 
 ---
 
 ## Hard Deadline Constraints
 
-- **March 17**: All BengoBox services go live; auth-ui must be the SSO entry point
+- **March 17**: All Codevertex services go live; auth-ui must be the SSO entry point
 - **Tenant**: `urban-loft` only (The Urban Loft Cafe)
 - **Users**: Platform admin (`admin@codevertexitsolutions.com`), tenant admin (`admin@theurbanloftcafe.com`)
 - **Scope**: Login/signup, OIDC redirect, dashboard, tenant admin, platform admin. Advanced features are post-MVP.

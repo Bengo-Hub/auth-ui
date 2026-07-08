@@ -3,7 +3,7 @@
 **Status**: Not Started ⏳
 
 ## Objectives
-- Enable self-service for developers to integrate with the BengoBox ecosystem.
+- Enable self-service for developers to integrate with the Codevertex ecosystem.
 - Enforce fine-grained RBAC across the UI.
 
 ## Tasks

@@ -2,12 +2,12 @@
 
 ## Executive Summary
 
-**System Purpose**: The central identity and access management portal for the BengoBox ecosystem. It provides a unified, secure, and branded experience for users to sign in, sign up, and manage their accounts across all BengoBox services.
+**System Purpose**: The central identity and access management portal for the Codevertex ecosystem. It provides a unified, secure, and branded experience for users to sign in, sign up, and manage their accounts across all Codevertex services.
 
 **Public URL**: `https://accounts.codevertexitsolutions.com`
 
 **Key Capabilities**:
-- **Single Sign-On (SSO)**: Centralized login and signup for all BengoBox microservices.
+- **Single Sign-On (SSO)**: Centralized login and signup for all Codevertex microservices.
 - **Service Directory**: A landing page showcasing all integrated services (Ordering, Logistics, Cafe, etc.).
 - **Account Management**: User profile updates, password changes, and MFA configuration.
 - **Tenant Management**: For admins to manage their organizations, users, and roles.
@@ -19,8 +19,8 @@
 
 ## Branding & Identity
 
-**Visual Identity**: Aligned with the BengoBox ecosystem (Premium, Modern, Secure).
-- **Primary Color**: BengoBox Orange (`#ea8022`).
+**Visual Identity**: Aligned with the Codevertex ecosystem (Premium, Modern, Secure).
+- **Primary Color**: Codevertex Orange (`#ea8022`).
 - **Typography**: Geist Sans & Mono.
 - **Experience**: Fast, accessible, and mobile-first.
 
@@ -77,7 +77,7 @@
 - [x] Integration with `auth-api` OIDC endpoints.
 
 ### Sprint 3: Service Directory & Landing Page (COMPLETED)
-- [x] Detailed landing page showing all BengoBox services.
+- [x] Detailed landing page showing all Codevertex services.
 - [x] Top navigation with Sign In/Sign Up buttons.
 - [x] Service cards with "Launch" or "Login to Access" logic.
 - [x] Mobile-first responsive design for all screens.
