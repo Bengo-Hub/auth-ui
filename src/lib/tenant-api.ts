@@ -21,6 +21,9 @@ export interface PublicTenant {
   name: string;
   slug: string;
   status: string;
+  /** IANA timezone for day/shift/report boundaries (default Africa/Nairobi). */
+  timezone?: string;
+  country?: string;
   metadata?: Record<string, unknown>;
 }
 
