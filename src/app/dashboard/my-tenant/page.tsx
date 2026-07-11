@@ -73,7 +73,7 @@ const SUBSCRIPTIONS_BASE = 'https://pricing.codevertexitsolutions.com';
 type Tab = 'overview' | 'branding' | 'team' | 'billing' | 'support';
 
 export default function MyTenantPage() {
-  const { user } = useAuth();
+  const { user, isTenantAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
 
   // The platform owner (codevertex) is itself a real business tenant. It manages
@@ -86,6 +86,22 @@ export default function MyTenantPage() {
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
         <AlertCircle className="h-12 w-12 text-slate-300" />
         <p className="text-slate-500 font-medium">You are not part of any organization yet.</p>
+      </div>
+    );
+  }
+
+  // Organization administration is tenant-admin only. The nav already hides this for
+  // other roles; guard the route itself so it cannot be reached by direct URL.
+  if (!isTenantAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+        <AlertCircle className="h-12 w-12 text-slate-300" />
+        <p className="text-slate-500 font-medium">
+          Only an organization admin can manage {tenant.name}.
+        </p>
+        <p className="text-sm text-slate-400">
+          You can still manage your own details under Account → Profile.
+        </p>
       </div>
     );
   }

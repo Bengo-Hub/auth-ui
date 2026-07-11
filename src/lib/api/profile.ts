@@ -47,3 +47,21 @@ export async function changePassword(currentPassword: string, newPassword: strin
     new_password: newPassword,
   });
 }
+
+/**
+ * POST /api/v1/auth/me/email/send-code — emails a 6-digit code to the address the user
+ * wants to prove. This may be a NEW address: SSO accounts provisioned with a placeholder
+ * (e.g. <id>@unknown.local) use this to supply a real one.
+ */
+export async function sendMyEmailCode(email: string): Promise<void> {
+  await apiClient.post('/api/v1/auth/me/email/send-code', { email });
+}
+
+/**
+ * POST /api/v1/auth/me/email/verify-code — confirms the code. On success the address is
+ * marked verified and, when it differs from the one on file, REPLACES it (auth-api emits
+ * auth.user.updated so every service re-mirrors the new email).
+ */
+export async function verifyMyEmailCode(email: string, code: string): Promise<void> {
+  await apiClient.post('/api/v1/auth/me/email/verify-code', { email, code });
+}

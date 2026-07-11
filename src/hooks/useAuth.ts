@@ -105,6 +105,12 @@ export function useAuth(enabled = true) {
   // this flag, not individual roles.
   const isPlatformOwner = !!user?.is_platform_owner;
 
+  // Tenant-admin gate. "My Organization" manages the whole tenant (members, billing,
+  // branding), so only a tenant admin/owner/superuser may see it. Every other tenant
+  // role (cashier, waiter, stock_clerk, ...) gets the Account/Profile section only.
+  const TENANT_ADMIN_ROLES = ['admin', 'owner', 'superuser', 'super_admin', 'tenant_admin'];
+  const isTenantAdmin = !!user?.roles?.some((r) => TENANT_ADMIN_ROLES.includes(r));
+
   return {
     user,
     isLoading,
@@ -113,6 +119,7 @@ export function useAuth(enabled = true) {
     hasRole,
     hasPermission,
     isPlatformOwner,
+    isTenantAdmin,
     isAuthenticated: !!user && !query.isError,
     refetch: query.refetch,
   };

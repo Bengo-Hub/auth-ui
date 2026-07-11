@@ -4,6 +4,7 @@ import { DashboardBottomNav } from '@/components/layout/DashboardBottomNav';
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 import { DashboardTopNav } from '@/components/layout/DashboardTopNav';
 import { VeraWidget } from '@/components/vera/VeraWidget';
+import { VerifyEmailPrompt } from '@/components/auth/VerifyEmailPrompt';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/auth-store';
 import { usePathname, useRouter } from 'next/navigation';
@@ -73,6 +74,9 @@ export default function DashboardLayout({
       <DashboardSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardTopNav />
+        {/* Graduated email-verification prompt. Non-blocking: notification-bearing roles
+            escalate (warning → forced wait), everyone else just sees a standing reminder. */}
+        <VerifyEmailPrompt />
         <main className="flex-1 overflow-y-auto p-6 lg:p-12 pb-20 md:pb-12">
           <div className="max-w-6xl mx-auto">
             {children}

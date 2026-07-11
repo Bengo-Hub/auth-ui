@@ -171,7 +171,7 @@ export function DashboardSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const logout = useLogout();
   const { tenant } = useTenant();
-  const { isPlatformOwner } = useAuth();
+  const { isPlatformOwner, isTenantAdmin } = useAuth();
 
   const accountGroup: NavGroup = {
     label: 'Account',
@@ -179,8 +179,11 @@ export function DashboardSidebar() {
     items: ACCOUNT_ITEMS,
   };
 
+  // "My Organization" administers the whole tenant, so it is limited to tenant
+  // admins/owners/superusers. All other tenant roles see only the Account section
+  // (profile, security) — which every SSO user can manage for themselves.
   const orgGroup: NavGroup | null =
-    !isPlatformOwner && !!tenant
+    !isPlatformOwner && !!tenant && isTenantAdmin
       ? {
           label: 'Organization',
           icon: Store,

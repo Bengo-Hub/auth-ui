@@ -3,8 +3,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   changePassword,
+  sendMyEmailCode,
   updateNotificationSettings,
   updateProfile,
+  verifyMyEmailCode,
   type NotificationSettings,
   type ProfileUpdate,
 } from '@/lib/api/profile';
@@ -43,6 +45,25 @@ export function useUpdateNotificationSettings() {
     mutationFn: (settings: NotificationSettings) => updateNotificationSettings(settings),
     onSuccess: (data) => apply(data),
   });
+}
+
+/**
+ * Email verification for the signed-in user. Verifying an address that differs from the
+ * one on file REPLACES it — this is how accounts created with a placeholder email get a
+ * real, proven one. Invalidates ['me'] so the banner/stage clears immediately.
+ */
+export function useVerifyMyEmail() {
+  const queryClient = useQueryClient();
+  const sendCode = useMutation({
+    mutationFn: (email: string) => sendMyEmailCode(email),
+  });
+  const verifyCode = useMutation({
+    mutationFn: ({ email, code }: { email: string; code: string }) => verifyMyEmailCode(email, code),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+  });
+  return { sendCode, verifyCode };
 }
 
 export function useChangePassword() {

@@ -65,7 +65,7 @@ export function DashboardTopNav() {
   const user = useAuthStore((state) => state.user);
   const logout = useLogout();
   const { getServiceTitle } = useTenant();
-  const { isPlatformOwner } = useAuth();
+  const { isPlatformOwner, isTenantAdmin } = useAuth();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -112,7 +112,12 @@ export function DashboardTopNav() {
 
             {/* Nav links */}
             <nav className="flex-1 px-4 py-4 space-y-1">
-              {MOBILE_NAV_ITEMS.filter((item) => !('tenantOnly' in item && item.tenantOnly && isPlatformOwner)).map((item) => {
+              {/* "My Organization" is tenant-admin only — hidden from the platform owner
+                  (who has the Platform section) and from non-admin tenant roles, who get
+                  the Account/Profile section instead. */}
+              {MOBILE_NAV_ITEMS.filter((item) =>
+                !('tenantOnly' in item && item.tenantOnly && (isPlatformOwner || !isTenantAdmin)),
+              ).map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
