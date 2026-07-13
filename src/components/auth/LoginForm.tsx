@@ -1,13 +1,13 @@
 'use client';
 
+import { PasskeySetupNudge, wasDismissedRecently } from '@/components/auth/PasskeySetupNudge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useBiometric } from '@/hooks/use-biometric';
 import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl, isValidReturnUrl } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
-import { useBiometric } from '@/hooks/use-biometric';
-import { PasskeySetupNudge, wasDismissedRecently } from '@/components/auth/PasskeySetupNudge';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, ArrowLeft, ArrowRight, Building2, Chrome, Cpu, Eye, EyeOff, Github, Loader2, Lock, Mail, ShieldCheck, X } from 'lucide-react';
 import Link from 'next/link';
@@ -47,8 +47,8 @@ export function LoginForm() {
   const tenantSlug = searchParams.get('tenant') ?? '';
 
   // Demo credentials for easy testing (view-only access)
-  const [email, setEmail] = useState('demo@bengobox.dev');
-  const [password, setPassword] = useState('DemoUser2024!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
