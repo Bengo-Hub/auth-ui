@@ -1,24 +1,20 @@
 'use client';
 
 import { PasskeySetupNudge, wasDismissedRecently } from '@/components/auth/PasskeySetupNudge';
+import { WrongOrganisationDialog, type TenantSuggestion } from '@/components/auth/WrongOrganisationDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useBiometric } from '@/hooks/use-biometric';
 import apiClient from '@/lib/api-client';
+import { rewriteTenantInUrl } from '@/lib/tenant-url';
 import { getSafeReturnUrl, isValidReturnUrl } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, ArrowLeft, ArrowRight, Building2, Chrome, Cpu, Eye, EyeOff, Github, Loader2, Lock, Mail, ShieldCheck, X } from 'lucide-react';
+import { ArrowLeft, Chrome, Cpu, Eye, EyeOff, Github, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRef, useState } from 'react';
-
-interface TenantSuggestion {
-  id: string;
-  name: string;
-  slug: string;
-}
 
 export function LoginForm() {
   const router = useRouter();
@@ -90,11 +86,17 @@ export function LoginForm() {
   const [mfaError, setMfaError] = useState<string | null>(null);
   const totpInputRef = useRef<HTMLInputElement>(null);
 
-  // Tenant mismatch state
+  // Tenant mismatch state. When the user picks one of their organisations from
+  // the dialog we keep the credentials they already typed and resubmit the login
+  // against the chosen slug — never restart the flow.
   const [mismatch, setMismatch] = useState<{
     requestedTenant: string;
     userTenants: TenantSuggestion[];
   } | null>(null);
+  // Organisation chosen from the mismatch dialog; overrides the URL tenant for
+  // login AND for rewriting the return_to / redirect_uri slugs after success.
+  const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
+  const [switchingSlug, setSwitchingSlug] = useState<string | null>(null);
 
   // Terms acceptance interstitial state (for existing users without accepted terms)
   const [termsRequired, setTermsRequired] = useState(false);
@@ -109,35 +111,37 @@ export function LoginForm() {
   const [passkeyNudgeToken, setPasskeyNudgeToken] = useState('');
 
   const switchToTenant = (slug: string) => {
-    // Rebuild the current URL with the new tenant slug and reload
-    const url = new URL(window.location.href);
-    url.searchParams.set('tenant', slug);
-
-    // Also update the return_to URL's tenant if it's an SSO authorize flow
-    const currentReturnTo = url.searchParams.get('return_to');
-    if (currentReturnTo) {
-      try {
-        const returnUrl = new URL(currentReturnTo);
-        // No need to modify return_to — the service will use the session's tenant
-      } catch {
-        // return_to is not a URL, ignore
-      }
+    // Keep the credentials the user already typed and resubmit against the
+    // chosen organisation. Reflect the slug in the address bar (no reload) so a
+    // manual refresh keeps the corrected context.
+    setSelectedTenant(slug);
+    setSwitchingSlug(slug);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tenant', slug);
+      window.history.replaceState(null, '', url.toString());
+    } catch {
+      // Address-bar cosmetics only — never block the login on this.
     }
-
-    window.location.href = url.toString();
+    doLogin(undefined, slug).finally(() => setSwitchingSlug(null));
   };
 
-  const doLogin = async (otpCode?: string) => {
+  const doLogin = async (otpCode?: string, tenantOverride?: string) => {
     setIsLoading(true);
     setError(null);
     setMfaError(null);
     setMismatch(null);
 
+    // The organisation we are actually signing in to: an explicit override (just
+    // picked from the mismatch dialog) > a previously picked org (MFA resubmit) >
+    // the tenant from the URL.
+    const effectiveTenant = tenantOverride ?? selectedTenant ?? tenantSlug;
+
     try {
       const payload: Record<string, string> = {
         email,
         password,
-        tenant_slug: tenantSlug,
+        tenant_slug: effectiveTenant,
       };
       if (otpCode) payload.totp_code = otpCode;
 
@@ -172,18 +176,25 @@ export function LoginForm() {
       }
 
       // Build the redirect action we'll execute after login (or after terms acceptance).
+      // When the user switched organisation mid-login, every slug baked into the
+      // original flow (tenant param, redirect_uri path, return paths) must be
+      // rewritten — otherwise the authorize hop re-targets the WRONG tenant and
+      // dies with access_denied at the service callback.
+      const switched = effectiveTenant && tenantSlug && effectiveTenant !== tenantSlug;
+      const rewrite = (u: string) => (switched ? rewriteTenantInUrl(u, effectiveTenant, tenantSlug) : u);
       const executeRedirect = () => {
         if (returnTo && returnTo.startsWith('http') && isValidReturnUrl(returnTo)) {
-          window.location.href = returnTo;
+          window.location.href = rewrite(returnTo);
           return;
         }
         if (clientId && redirectUri) {
           const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
           const authorizeUrl = new URL('/api/v1/authorize', ssoBase.replace(/\/$/, ''));
           authorizeUrl.searchParams.set('client_id', clientId);
-          authorizeUrl.searchParams.set('redirect_uri', redirectUri);
+          authorizeUrl.searchParams.set('redirect_uri', rewrite(redirectUri));
           if (stateParam) authorizeUrl.searchParams.set('state', stateParam);
           if (scope) authorizeUrl.searchParams.set('scope', scope);
+          if (effectiveTenant) authorizeUrl.searchParams.set('tenant', effectiveTenant);
           window.location.href = authorizeUrl.toString();
           return;
         }
@@ -223,7 +234,7 @@ export function LoginForm() {
 
       if (code === 'tenant_mismatch' && details?.user_tenants?.length > 0) {
         setMismatch({
-          requestedTenant: details.requested_tenant || tenantSlug,
+          requestedTenant: details.requested_tenant || effectiveTenant,
           userTenants: details.user_tenants,
         });
       } else if (code === 'invalid_totp') {
@@ -416,64 +427,16 @@ export function LoginForm() {
 
   return (
     <>
-      {/* Tenant mismatch modal */}
+      {/* Tenant mismatch dialog — keeps typed credentials and resubmits against the picked org */}
       {mismatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMismatch(null)} />
-          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95">
-            <button
-              onClick={() => setMismatch(null)}
-              className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                  Wrong Organisation
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Your account does not belong to{' '}
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">
-                    {mismatch.requestedTenant}
-                  </span>.
-                  Switch to one of your organisations below.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {mismatch.userTenants.map((tenant) => (
-                <button
-                  key={tenant.id}
-                  onClick={() => switchToTenant(tenant.slug)}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 transition-all group text-left"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Building2 className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                      {tenant.name}
-                    </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
-                      {tenant.slug}
-                    </p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
-                </button>
-              ))}
-            </div>
-
-            <p className="text-xs text-center text-slate-400 dark:text-slate-500">
-              Selecting an organisation will reload the page with the correct context.
-            </p>
-          </div>
-        </div>
+        <WrongOrganisationDialog
+          requestedTenant={mismatch.requestedTenant}
+          tenants={mismatch.userTenants}
+          onSelect={switchToTenant}
+          onClose={() => setMismatch(null)}
+          busySlug={switchingSlug}
+          hint="We'll sign you in to the organisation you select — no need to re-enter your credentials."
+        />
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">

@@ -38,6 +38,7 @@ const PUBLIC_ROUTES = [
   '/pricing',         // Pricing page
   '/equity-holder',   // Equity portal — token-authenticated, no session cookie
   '/p',              // Short-link redirects
+  '/select-organisation', // SSO org picker — handles its own 401 (keeps return_to + tenant)
 ];
 
 // Check if current path is a public route
