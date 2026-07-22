@@ -198,7 +198,7 @@ export function LoginForm() {
           window.location.href = authorizeUrl.toString();
           return;
         }
-        router.push(getSafeReturnUrl(returnTo));
+        router.push(getSafeReturnUrl(returnTo, '/dashboard'));
       };
 
       // If user has not accepted terms, show interstitial before redirecting.
