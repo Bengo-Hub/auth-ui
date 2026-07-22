@@ -56,6 +56,17 @@ interface TenantOutlet {
   address?: string | null;
   is_hq?: boolean;
   status?: string;
+  metadata?: Record<string, unknown> | null;
+}
+
+/** Reads the branch's own contact phone/email out of its free-form metadata (the
+ *  `contact_phones: [{label, value}]` convention pos-api's receipt printer already reads). */
+function branchContact(o: Pick<TenantOutlet, 'metadata'>) {
+  const meta = o.metadata ?? {};
+  const phones = Array.isArray(meta.contact_phones) ? meta.contact_phones as { label?: string; value?: string }[] : [];
+  const phone = phones.find((p) => p?.value)?.value ?? '';
+  const email = typeof meta.contact_email === 'string' ? meta.contact_email : '';
+  return { phone, email };
 }
 
 // Outlets are served by auth-api at /api/v1/tenants/{slug}/outlets. Centralize the
@@ -237,7 +248,10 @@ function TenantOverview({ tenant }: { tenant: { id: string; name: string; slug: 
 
 // ── Branches / Outlets ───────────────────────────────────────────────────────
 
-const emptyBranchForm = { code: '', name: '', use_case: 'retail', address: '', is_hq: false, status: 'active' };
+const emptyBranchForm = {
+  code: '', name: '', use_case: 'retail', address: '', is_hq: false, status: 'active',
+  contact_phone: '', contact_email: '',
+};
 type BranchForm = typeof emptyBranchForm;
 
 function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
@@ -271,6 +285,7 @@ function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
 
   const openEdit = (o: TenantOutlet) => {
     setEditing(o);
+    const { phone, email } = branchContact(o);
     setForm({
       code: o.code ?? '',
       name: o.name ?? '',
@@ -278,6 +293,8 @@ function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
       address: o.address ?? '',
       is_hq: !!o.is_hq,
       status: o.status ?? 'active',
+      contact_phone: phone,
+      contact_email: email,
     });
     setFormOpen(true);
   };
@@ -295,6 +312,13 @@ function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
     }
     setSaving(true);
     try {
+      // Merge into whatever metadata this branch already has (never authored via this form,
+      // e.g. set by a script) so saving contact details doesn't clobber unrelated keys.
+      const metadata = {
+        ...(editing?.metadata ?? {}),
+        contact_phones: form.contact_phone.trim() ? [{ label: 'Branch', value: form.contact_phone.trim() }] : [],
+        contact_email: form.contact_email.trim() || undefined,
+      };
       if (editing) {
         // Backend UpdateOutlet ignores code (immutable) — send the editable fields only.
         await apiClient.put(`${outletsPath(tenantSlug)}/${editing.id}`, {
@@ -303,6 +327,7 @@ function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
           address: form.address.trim(),
           status: form.status,
           is_hq: form.is_hq,
+          metadata,
         });
         toast({ title: `Branch "${form.name}" updated` });
       } else {
@@ -312,6 +337,7 @@ function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
           use_case: form.use_case,
           address: form.address.trim(),
           is_hq: form.is_hq,
+          metadata,
         });
         toast({ title: `Branch "${form.name}" created` });
       }
@@ -470,6 +496,21 @@ function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
                 <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
                   placeholder="Waiyaki Way, Nairobi"
                   className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Contact Phone (optional)</Label>
+                  <Input type="tel" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
+                    placeholder="0712 345 678"
+                    className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+                  <p className="text-[11px] text-slate-400">Shown on this branch&apos;s receipts. Falls back to the tenant&apos;s general contact if left blank.</p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Contact Email (optional)</Label>
+                  <Input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
+                    placeholder="branch@example.com"
+                    className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+                </div>
               </div>
               {editing && (
                 <div className="space-y-1">
