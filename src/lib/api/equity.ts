@@ -6,7 +6,7 @@
  */
 
 const TREASURY_API =
-  process.env.NEXT_PUBLIC_TREASURY_API_URL || 'https://booksapi.codevertexitsolutions.com';
+  process.env.NEXT_PUBLIC_TREASURY_API_URL || 'https://booksapi.codevertexafrica.com';
 
 export interface EquityPayout {
   id: string;

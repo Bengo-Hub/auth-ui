@@ -8,7 +8,7 @@ import { useEffect } from 'react';
  * This page redirects platform admins to the treasury-ui gateways experience.
  */
 export default function GatewaysRedirectPage() {
-  const booksUrl = PRODUCTION_DOMAINS.books || 'https://books.codevertexitsolutions.com';
+  const booksUrl = PRODUCTION_DOMAINS.books || 'https://books.codevertexafrica.com';
   useEffect(() => {
     window.location.href = booksUrl;
   }, [booksUrl]);

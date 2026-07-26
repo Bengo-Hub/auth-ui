@@ -8,14 +8,14 @@
 
 ## Overview
 
-E2E tests validate the SSO login flow on `accounts.codevertexitsolutions.com`: login page load, form submission with seeded users, redirect after login, and authenticated navbar/profile visibility.
+E2E tests validate the SSO login flow on `accounts.codevertexafrica.com`: login page load, form submission with seeded users, redirect after login, and authenticated navbar/profile visibility.
 
 ## Preconditions
 
-- **Target:** `https://accounts.codevertexitsolutions.com` (override via `BASE_URL`)
+- **Target:** `https://accounts.codevertexafrica.com` (override via `BASE_URL`)
 - **Seeded users:** From auth-api seed (`auth-api/cmd/seed/main.go`):
   - Demo: `demo@bengobox.dev` / `DemoUser2024!`
-  - Platform admin: `admin@codevertexitsolutions.com` / `ChangeMe123!` (or env)
+  - Platform admin: `admin@codevertexafrica.com` / `ChangeMe123!` (or env)
   - Tenant admin: `admin@theurbanloftcafe.com` / `TenantAdmin2024!`
 - **OAuth clients:** Auth-ui client registered with redirect URIs for accounts and sso domains
 
@@ -61,7 +61,7 @@ E2E tests validate the SSO login flow on `accounts.codevertexitsolutions.com`: l
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `BASE_URL` | Auth-ui base URL | `https://accounts.codevertexitsolutions.com` |
+| `BASE_URL` | Auth-ui base URL | `https://accounts.codevertexafrica.com` |
 | `E2E_LOGIN_EMAIL` | Login email | `demo@bengobox.dev` |
 | `E2E_LOGIN_PASSWORD` | Login password | `DemoUser2024!` |
 
@@ -88,8 +88,8 @@ After running `pnpm test:e2e`:
 
 Manual run against production:
 
-- **Login page load:** Pass. URL `https://accounts.codevertexitsolutions.com/login`. Heading "Welcome back" / "Sign in to your enterprise account"; Email and Password fields; Sign In button; social (Google, GitHub, Microsoft).
-- **Demo login flow:** Pass. Submit `demo@bengobox.dev` / `DemoUser2024!` → redirect to `https://accounts.codevertexitsolutions.com/` (home). Network: `GET https://sso.codevertexitsolutions.com/api/v1/auth/me` → 200.
+- **Login page load:** Pass. URL `https://accounts.codevertexafrica.com/login`. Heading "Welcome back" / "Sign in to your enterprise account"; Email and Password fields; Sign In button; social (Google, GitHub, Microsoft).
+- **Demo login flow:** Pass. Submit `demo@bengobox.dev` / `DemoUser2024!` → redirect to `https://accounts.codevertexafrica.com/` (home). Network: `GET https://sso.codevertexafrica.com/api/v1/auth/me` → 200.
 - **Console:** No errors; only CursorBrowser dialog-override warning.
 
 **Note:** Post-login redirect goes to `/` (home), not `/dashboard`. Tests assert "redirect away from login" and presence of header/nav.

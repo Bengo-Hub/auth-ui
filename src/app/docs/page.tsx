@@ -24,7 +24,7 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 
-const PRODUCTION_API_URL = 'https://sso.codevertexitsolutions.com';
+const PRODUCTION_API_URL = 'https://sso.codevertexafrica.com';
 
 function CodeBlock({ code, language = 'bash', title }: { code: string; language?: string; title?: string }) {
   const [copied, setCopied] = useState(false);

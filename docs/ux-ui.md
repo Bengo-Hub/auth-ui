@@ -2,7 +2,7 @@
 
 **Last Updated**: March 6, 2026
 
-This document defines the user-facing flows, page layouts, and interaction patterns for `auth.codevertexitsolutions.com`.
+This document defines the user-facing flows, page layouts, and interaction patterns for `auth.codevertexafrica.com`.
 
 ---
 

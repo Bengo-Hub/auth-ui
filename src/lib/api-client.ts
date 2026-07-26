@@ -3,7 +3,7 @@ import axios from 'axios';
 // Always use production SSO API URL
 // The auth-ui is a centralized SSO portal that should always talk to the production auth-api
 // For local development testing, set NEXT_PUBLIC_API_URL=http://localhost:4101
-const PRODUCTION_SSO_API = 'https://sso.codevertexitsolutions.com';
+const PRODUCTION_SSO_API = 'https://sso.codevertexafrica.com';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || PRODUCTION_SSO_API,

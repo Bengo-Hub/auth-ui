@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const PLATFORM_ADMIN_EMAIL = process.env.E2E_PLATFORM_ADMIN_EMAIL || 'admin@codevertexitsolutions.com';
+const PLATFORM_ADMIN_EMAIL = process.env.E2E_PLATFORM_ADMIN_EMAIL || 'admin@codevertexafrica.com';
 const PLATFORM_ADMIN_PASSWORD = process.env.E2E_PLATFORM_ADMIN_PASSWORD || 'ChangeMe123!';
 const TENANT_ADMIN_EMAIL = process.env.E2E_TENANT_ADMIN_EMAIL || 'admin@theurbanloftcafe.com';
 const TENANT_ADMIN_PASSWORD = process.env.E2E_TENANT_ADMIN_PASSWORD || 'TenantAdmin2024!';

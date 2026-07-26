@@ -47,7 +47,7 @@ export interface OAuthProviderDef {
 }
 
 const PROD_REDIRECT = (provider: string) =>
-  `https://sso.codevertexitsolutions.com/api/v1/auth/oauth/${provider}/callback`;
+  `https://sso.codevertexafrica.com/api/v1/auth/oauth/${provider}/callback`;
 
 export const oauthProviders: OAuthProviderDef[] = [
   {

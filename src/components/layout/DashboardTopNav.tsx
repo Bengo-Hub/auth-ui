@@ -58,7 +58,7 @@ const MOBILE_PLATFORM_ITEMS = [
   { title: 'Apps & Keys', href: '/dashboard/platform/apps', icon: Cpu },
   { title: 'Users', href: '/dashboard/platform/users', icon: Users },
   { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
-  { title: 'Membership Tiers', href: 'https://pricing.codevertexitsolutions.com/codevertex/platform/plans', icon: ExternalLink, newTab: true },
+  { title: 'Membership Tiers', href: 'https://pricing.codevertexafrica.com/codevertex/platform/plans', icon: ExternalLink, newTab: true },
 ];
 
 export function DashboardTopNav() {

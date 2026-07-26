@@ -20,7 +20,7 @@ export function PWAInstallPrompt() {
   return (
     <PwaInstallPrompt
       appName="Codevertex Account"
-      logoUrl="https://codevertexitsolutions.com/icon.svg"
+      logoUrl="https://codevertexafrica.com/icon.svg"
       tagline="Install for a faster, full-screen experience with offline access."
       dismissKey={DISMISS_KEY}
       onInstalled={requestPermissions}

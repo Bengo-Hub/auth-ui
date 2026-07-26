@@ -205,13 +205,13 @@ export default function AboutUsPage() {
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
-              href="mailto:info@codevertexitsolutions.com"
+              href="mailto:info@codevertexafrica.com"
               className="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-primary text-white font-bold text-sm hover:-translate-y-0.5 transition-all shadow-[0_8px_30px_rgba(var(--primary),0.3)]"
             >
               <Mail className="w-4 h-4" /> Contact Us
             </Link>
             <Link
-              href="https://codevertexitsolutions.com"
+              href="https://codevertexafrica.com"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 h-12 px-6 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-sm hover:border-primary/40 transition-all"
@@ -346,12 +346,12 @@ export default function AboutUsPage() {
                 <strong className="text-slate-900 dark:text-white">MarketFlow</strong> is our AI-powered
                 marketing automation SaaS platform hosted at{' '}
                 <a
-                  href="https://marketflow.codevertexitsolutions.com"
+                  href="https://marketflow.codevertexafrica.com"
                   className="text-primary underline"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  marketflow.codevertexitsolutions.com
+                  marketflow.codevertexafrica.com
                 </a>
                 . It is designed to empower African SMEs and direct-selling entrepreneurs. We utilize the
                 Google Ads API exclusively on behalf of our tenants — small-business owners who explicitly
@@ -406,7 +406,7 @@ export default function AboutUsPage() {
                 <p className="text-sm text-slate-500 leading-relaxed">
                   MarketFlow's entire authentication and authorization chain is built on industry-standard
                   OAuth 2.0 and OpenID Connect, hosted at{' '}
-                  <span className="font-mono text-xs text-primary">accounts.codevertexitsolutions.com</span>.
+                  <span className="font-mono text-xs text-primary">accounts.codevertexafrica.com</span>.
                   No user ever shares passwords with our platform.
                 </p>
               </div>
@@ -496,17 +496,17 @@ export default function AboutUsPage() {
                   <div>
                     <p className="font-bold text-slate-900 dark:text-white mb-1">Corporate Email</p>
                     <a
-                      href="mailto:info@codevertexitsolutions.com"
+                      href="mailto:info@codevertexafrica.com"
                       className="text-primary text-sm hover:underline"
                     >
-                      info@codevertexitsolutions.com
+                      info@codevertexafrica.com
                     </a>
                     <br />
                     <a
-                      href="mailto:support@codevertexitsolutions.com"
+                      href="mailto:support@codevertexafrica.com"
                       className="text-slate-500 text-sm hover:underline"
                     >
-                      support@codevertexitsolutions.com
+                      support@codevertexafrica.com
                     </a>
                   </div>
                 </div>
@@ -532,12 +532,12 @@ export default function AboutUsPage() {
                   <div>
                     <p className="font-bold text-slate-900 dark:text-white mb-1">Website</p>
                     <a
-                      href="https://codevertexitsolutions.com"
+                      href="https://codevertexafrica.com"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary text-sm hover:underline"
                     >
-                      codevertexitsolutions.com
+                      codevertexafrica.com
                     </a>
                   </div>
                 </div>
@@ -558,10 +558,10 @@ export default function AboutUsPage() {
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Developer Contact</p>
                     <a
-                      href="mailto:developers@codevertexitsolutions.com"
+                      href="mailto:developers@codevertexafrica.com"
                       className="text-sm font-bold text-slate-900 dark:text-white hover:text-primary transition-colors"
                     >
-                      developers@codevertexitsolutions.com
+                      developers@codevertexafrica.com
                     </a>
                   </div>
                 </div>
@@ -570,10 +570,10 @@ export default function AboutUsPage() {
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Legal & Compliance</p>
                     <a
-                      href="mailto:legal@codevertexitsolutions.com"
+                      href="mailto:legal@codevertexafrica.com"
                       className="text-sm font-bold text-slate-900 dark:text-white hover:text-primary transition-colors"
                     >
-                      legal@codevertexitsolutions.com
+                      legal@codevertexafrica.com
                     </a>
                   </div>
                 </div>
@@ -582,12 +582,12 @@ export default function AboutUsPage() {
                   <div>
                     <p className="text-xs text-slate-500 font-medium">SSO / Identity Platform</p>
                     <a
-                      href="https://accounts.codevertexitsolutions.com"
+                      href="https://accounts.codevertexafrica.com"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm font-bold text-slate-900 dark:text-white hover:text-primary transition-colors"
                     >
-                      accounts.codevertexitsolutions.com
+                      accounts.codevertexafrica.com
                     </a>
                   </div>
                 </div>

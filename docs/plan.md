@@ -1,7 +1,7 @@
 # auth-ui -- Project Plan
 
 **Service**: auth-ui (Next.js 15)
-**Deployed**: auth.codevertexitsolutions.com
+**Deployed**: auth.codevertexafrica.com
 **Status**: Sprint 6 in progress, MVP launch targeted March 17, 2026
 
 ---
@@ -42,7 +42,7 @@ Auth-ui is the central Single Sign-On (SSO) portal for all Codevertex services. 
 - Token refresh and session management
 - Platform admin section (roles) gated by `super_admin` (gateways → treasury-ui; notifications → notifications-ui)
 - Tenant admin section (users, API keys, settings) gated by `admin`
-- Production deployment at `auth.codevertexitsolutions.com`
+- Production deployment at `auth.codevertexafrica.com`
 
 ### Should Have (P1)
 
@@ -87,7 +87,7 @@ Auth-ui is the central Single Sign-On (SSO) portal for all Codevertex services. 
 ## DevOps reference (structure only — do not change in this task)
 
 - **auth-api**: `build.sh`, `.github/workflows/deploy.yml`, `Dockerfile` in repo; Helm chart values at `devops-k8s/apps/auth-api/values.yaml` (image, env, Redis AUTH_REDIS_*, DB, replicas, ingress).
-- **auth-ui**: `build.sh`, `.github/workflows/deploy.yml`, `Dockerfile` in repo; Helm values at `devops-k8s/apps/auth-ui/values.yaml` (image, env, NEXT_PUBLIC_*, ingress accounts.codevertexitsolutions.com).
+- **auth-ui**: `build.sh`, `.github/workflows/deploy.yml`, `Dockerfile` in repo; Helm values at `devops-k8s/apps/auth-ui/values.yaml` (image, env, NEXT_PUBLIC_*, ingress accounts.codevertexafrica.com).
 
 ---
 

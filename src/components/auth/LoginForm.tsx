@@ -66,7 +66,7 @@ export function LoginForm() {
       if (returnTo && returnTo.startsWith('http') && isValidReturnUrl(returnTo)) {
         window.location.href = returnTo;
       } else if (clientId && redirectUri) {
-        const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+        const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com';
         const authorizeUrl = new URL('/api/v1/authorize', ssoBase.replace(/\/$/, ''));
         authorizeUrl.searchParams.set('client_id', clientId);
         authorizeUrl.searchParams.set('redirect_uri', redirectUri);
@@ -188,7 +188,7 @@ export function LoginForm() {
           return;
         }
         if (clientId && redirectUri) {
-          const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+          const ssoBase = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com';
           const authorizeUrl = new URL('/api/v1/authorize', ssoBase.replace(/\/$/, ''));
           authorizeUrl.searchParams.set('client_id', clientId);
           authorizeUrl.searchParams.set('redirect_uri', rewrite(redirectUri));

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 // auth-ui is the SSO portal — it talks directly to the auth-api base URL
-const SSO_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+const SSO_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com';
 
 export type BiometricState = 'idle' | 'registering' | 'authenticating' | 'success' | 'error' | 'unsupported';
 

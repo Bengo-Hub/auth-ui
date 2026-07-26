@@ -9,7 +9,7 @@
 - [ ] SEO optimization and meta tags for all pages.
 - [ ] Performance tuning (caching, image optimization).
 - [ ] Security audit and penetration testing.
-- [ ] Final deployment to `https://accounts.codevertexitsolutions.com`.
+- [ ] Final deployment to `https://accounts.codevertexafrica.com`.
 - [ ] Monitoring and alerting setup.
 
 ## Definition of Done

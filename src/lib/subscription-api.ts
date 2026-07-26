@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const SUBSCRIPTION_API_BASE = 'https://pricingapi.codevertexitsolutions.com/api/v1';
+const SUBSCRIPTION_API_BASE = 'https://pricingapi.codevertexafrica.com/api/v1';
 
 export interface ServiceSubscriptionEntry {
   service_tag: string;

@@ -32,7 +32,7 @@ export default function PricingPage() {
 
   const plans = allPlans.filter((p) => p.billing_cycle === billingCycle);
   
-  const SUBSCRIPTIONS_BASE_URL = 'https://pricing.codevertexitsolutions.com';
+  const SUBSCRIPTIONS_BASE_URL = 'https://pricing.codevertexafrica.com';
   
   const getPlanHref = (plan: Plan) => {
     const returnTo = `${SUBSCRIPTIONS_BASE_URL}/plans?plan=${plan.plan_code.toLowerCase()}`;
@@ -187,7 +187,7 @@ export default function PricingPage() {
             </div>
             <div className="relative z-10 flex flex-col gap-4 w-full md:w-auto">
               <Button size="lg" className="h-16 px-10 rounded-2xl bg-white text-slate-900 hover:bg-slate-100 font-black text-lg" asChild>
-                <Link href="mailto:enterprise@codevertexitsolutions.com">Request a Demo</Link>
+                <Link href="mailto:enterprise@codevertexafrica.com">Request a Demo</Link>
               </Button>
             </div>
             <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[140px] -mr-48 -mt-48" />

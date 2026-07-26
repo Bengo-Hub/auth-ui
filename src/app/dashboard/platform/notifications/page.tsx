@@ -9,14 +9,14 @@ import { useEffect } from 'react';
  */
 export default function NotificationsRedirectPage() {
   useEffect(() => {
-    window.location.href = PRODUCTION_DOMAINS.notifications || 'https://notifications.codevertexitsolutions.com';
+    window.location.href = PRODUCTION_DOMAINS.notifications || 'https://notifications.codevertexafrica.com';
   }, []);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 p-6">
       <p className="text-slate-600 dark:text-slate-400">Redirecting to Notifications service…</p>
       <a
-        href={PRODUCTION_DOMAINS.notifications || 'https://notifications.codevertexitsolutions.com'}
+        href={PRODUCTION_DOMAINS.notifications || 'https://notifications.codevertexafrica.com'}
         className="text-primary font-medium underline"
       >
         Open Codevertex Notifications

@@ -322,7 +322,7 @@ oauth_clients:
 {
   "sub": "user-uuid",
   "aud": "urn:bengobox:services",
-  "iss": "https://sso.codevertexitsolutions.com",
+  "iss": "https://sso.codevertexafrica.com",
   "exp": 1704067200,
   "iat": 1704063600,
   "tenant_id": "tenant-uuid",
@@ -351,8 +351,8 @@ Content-Security-Policy: ...             # Restrict resource loading
 ### CORS Configuration
 
 ```
-Allowed Origins: https://sso.codevertexitsolutions.com, 
-                 https://*.codevertexitsolutions.com
+Allowed Origins: https://sso.codevertexafrica.com, 
+                 https://*.codevertexafrica.com
 Allowed Methods: GET, POST, PUT, DELETE, OPTIONS
 Allowed Headers: Content-Type, Authorization
 Exposed Headers: X-Total-Count, X-Pagination-Token
@@ -385,8 +385,8 @@ import (
 func main() {
   // Initialize JWT validator with Auth API JWKS endpoint
   config := authclient.DefaultConfig(
-    "https://sso.codevertexitsolutions.com/api/v1/.well-known/jwks.json",
-    "https://sso.codevertexitsolutions.com",
+    "https://sso.codevertexafrica.com/api/v1/.well-known/jwks.json",
+    "https://sso.codevertexafrica.com",
   )
   validator := authclient.NewValidator(config)
 
@@ -514,13 +514,13 @@ Warning:
 - SQLite or local PostgreSQL
 - Hot module reloading
 
-**Staging** (`staging.codevertexitsolutions.com`):
+**Staging** (`staging.codevertexafrica.com`):
 - Kubernetes cluster
 - Real PostgreSQL & Redis
 - UAT integration testing
 - Performance benchmarking
 
-**Production** (`accounts.codevertexitsolutions.com`):
+**Production** (`accounts.codevertexafrica.com`):
 - Multi-region Kubernetes deployment
 - Managed PostgreSQL (RDS/Cloud SQL)
 - Redis cluster (HA)

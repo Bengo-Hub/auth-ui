@@ -6,7 +6,7 @@ import apiClient from '@/lib/api-client';
 import { CheckCircle, Fingerprint, Loader2, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-const SSO_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+const SSO_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com';
 
 interface Credential {
   id: string;

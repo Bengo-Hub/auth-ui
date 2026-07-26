@@ -208,7 +208,7 @@ Login Page
 ### 3. Service Directory Flow
 
 ```
-1. Unauthenticated User visits https://accounts.codevertexitsolutions.com/
+1. Unauthenticated User visits https://accounts.codevertexafrica.com/
 2. Landing page displays:
    ├─ Codevertex introduction
    ├─ Service cards (Ordering, Logistics, Finance, etc.)
@@ -439,8 +439,8 @@ import authclient "github.com/Bengo-Hub/shared-auth-client"
 
 // Initialize validator
 config := authclient.DefaultConfig(
-  "https://sso.codevertexitsolutions.com/api/v1/.well-known/jwks.json",
-  "https://sso.codevertexitsolutions.com",
+  "https://sso.codevertexafrica.com/api/v1/.well-known/jwks.json",
+  "https://sso.codevertexafrica.com",
 )
 
 validator := authclient.NewValidator(config)
@@ -458,7 +458,7 @@ Currently, the Auth UI directly uses standard HTTP clients (Axios). For integrat
 import axios from 'axios';
 
 const authClient = axios.create({
-  baseURL: 'https://sso.codevertexitsolutions.com/api/v1',
+  baseURL: 'https://sso.codevertexafrica.com/api/v1',
   withCredentials: true,
 });
 
@@ -474,7 +474,7 @@ const { token, refresh_token } = response.data;
 **Method 2: Redirect-based OIDC (Recommended for Web Apps)**
 ```html
 <!-- Redirect to Auth UI login -->
-<a href="https://sso.codevertexitsolutions.com/auth/login?
+<a href="https://sso.codevertexafrica.com/auth/login?
   client_id=your-app&
   redirect_uri=https://yourapp.com/callback&
   state=your-state-param&

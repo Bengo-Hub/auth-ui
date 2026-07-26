@@ -3,8 +3,8 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useRef } from 'react';
 
-const VERA_WIDGET_URL = 'https://marketflow.codevertexitsolutions.com/widget/chat.js';
-const VERA_API_URL = 'https://marketflowai.codevertexitsolutions.com';
+const VERA_WIDGET_URL = 'https://marketflow.codevertexafrica.com/widget/chat.js';
+const VERA_API_URL = 'https://marketflowai.codevertexafrica.com';
 const PLATFORM_TENANT_SLUG = 'codevertex';
 // OTP endpoint used by Vera before creating a support ticket
 const OTP_SEND_ENDPOINT = '/api/v1/auth/otp/send';

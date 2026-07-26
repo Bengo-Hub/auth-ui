@@ -1,6 +1,6 @@
 // Always use production SSO URL for API calls
 // Local development should also connect to production auth-api for consistent behavior
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com';
 
 export async function apiRequest<T>(
   endpoint: string,

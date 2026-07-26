@@ -62,7 +62,7 @@ const PLATFORM_ADMIN_ITEMS: NavItem[] = [
   { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
   {
     title: 'Membership Tiers',
-    href: 'https://pricing.codevertexitsolutions.com/codevertex/platform/plans',
+    href: 'https://pricing.codevertexafrica.com/codevertex/platform/plans',
     icon: ExternalLink,
     newTab: true,
   },

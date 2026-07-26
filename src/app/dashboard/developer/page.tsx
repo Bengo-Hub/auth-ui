@@ -1047,7 +1047,7 @@ function ResourcesSection() {
         </motion.a>
 
         <motion.a
-          href="https://sso.codevertexitsolutions.com/v1/docs/"
+          href="https://sso.codevertexafrica.com/v1/docs/"
           target="_blank"
           rel="noopener noreferrer"
           initial={{ opacity: 0, y: 20 }}

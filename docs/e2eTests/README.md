@@ -1,6 +1,6 @@
 # Auth-UI E2E Tests
 
-Playwright E2E tests for SSO (accounts.codevertexitsolutions.com). Target: production base URL by default.
+Playwright E2E tests for SSO (accounts.codevertexafrica.com). Target: production base URL by default.
 
 Tests are written to **fail when behaviour is wrong**. When a test fails: audit the codebase for the failing workflow, fix the issue (in app or test as appropriate), then re-run. Do not relax assertions to force passes. After fixes are deployed, run the suite again to confirm.
 
@@ -30,7 +30,7 @@ View report: `npx playwright show-report playwright-report`
 ## Manual run results (March 2026)
 
 - **Login page:** Loads at `/login`; form has Email, Password, Sign In; social buttons (Google, GitHub, Microsoft). Heading: "Welcome back" / "Sign in to your enterprise account."
-- **Demo login:** `demo@bengobox.dev` / `DemoUser2024!` → redirects to `/` (home). After redirect, navbar must show **Dashboard** (authenticated) not "Log In" / "Start Free". This requires: (1) auth-api sets session cookie with `Domain=.codevertexitsolutions.com` so auth-ui (accounts) can send it when calling sso for `/me`; (2) useAuth runs `/me` on every client page (including `/`) to hydrate from session; (3) useAuth does not call logout() on /me error when the store already has a user (from login response), so a brief /me race does not clear the navbar state.
+- **Demo login:** `demo@bengobox.dev` / `DemoUser2024!` → redirects to `/` (home). After redirect, navbar must show **Dashboard** (authenticated) not "Log In" / "Start Free". This requires: (1) auth-api sets session cookie with `Domain=.codevertexafrica.com` so auth-ui (accounts) can send it when calling sso for `/me`; (2) useAuth runs `/me` on every client page (including `/`) to hydrate from session; (3) useAuth does not call logout() on /me error when the store already has a user (from login response), so a brief /me race does not clear the navbar state.
 - **Dashboard:** Direct navigation to `/dashboard` when unauthenticated redirects to `/login?return_to=/dashboard`.
 
 See [sso-login-flow-e2e.md](./sso-login-flow-e2e.md) and [sso-rbac-and-permissions-e2e.md](./sso-rbac-and-permissions-e2e.md) for scenarios and status.

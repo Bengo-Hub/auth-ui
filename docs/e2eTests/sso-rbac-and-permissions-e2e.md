@@ -13,7 +13,7 @@ E2E tests validate role-based access at the auth-ui (SSO) level: platform admin 
 ## Preconditions
 
 - Same as [sso-login-flow-e2e.md](./sso-login-flow-e2e.md)
-- **Platform admin:** `admin@codevertexitsolutions.com` / `ChangeMe123!` (or `E2E_PLATFORM_ADMIN_EMAIL` / `E2E_PLATFORM_ADMIN_PASSWORD`)
+- **Platform admin:** `admin@codevertexafrica.com` / `ChangeMe123!` (or `E2E_PLATFORM_ADMIN_EMAIL` / `E2E_PLATFORM_ADMIN_PASSWORD`)
 - **Tenant admin:** `admin@theurbanloftcafe.com` / `TenantAdmin2024!` (or `E2E_TENANT_ADMIN_EMAIL` / `E2E_TENANT_ADMIN_PASSWORD`)
 
 ## Test File
@@ -54,7 +54,7 @@ E2E tests validate role-based access at the auth-ui (SSO) level: platform admin 
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `E2E_PLATFORM_ADMIN_EMAIL` | Platform admin email | `admin@codevertexitsolutions.com` |
+| `E2E_PLATFORM_ADMIN_EMAIL` | Platform admin email | `admin@codevertexafrica.com` |
 | `E2E_PLATFORM_ADMIN_PASSWORD` | Platform admin password | `ChangeMe123!` |
 | `E2E_TENANT_ADMIN_EMAIL` | Tenant admin email | `admin@theurbanloftcafe.com` |
 | `E2E_TENANT_ADMIN_PASSWORD` | Tenant admin password | `TenantAdmin2024!` |

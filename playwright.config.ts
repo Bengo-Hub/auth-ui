@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright E2E config for auth-ui (SSO / accounts.codevertexitsolutions.com).
+ * Playwright E2E config for auth-ui (SSO / accounts.codevertexafrica.com).
  * Tests run against the production base URL by default; set BASE_URL to override.
  */
 export default defineConfig({
@@ -16,7 +16,7 @@ export default defineConfig({
   ],
   outputDir: 'test-results',
   use: {
-    baseURL: process.env.BASE_URL || 'https://accounts.codevertexitsolutions.com',
+    baseURL: process.env.BASE_URL || 'https://accounts.codevertexafrica.com',
     headless: process.env.CI === 'true',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',

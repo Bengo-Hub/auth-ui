@@ -4,7 +4,7 @@
 
 **System Purpose**: The central identity and access management portal for the Codevertex ecosystem. It provides a unified, secure, and branded experience for users to sign in, sign up, and manage their accounts across all Codevertex services.
 
-**Public URL**: `https://accounts.codevertexitsolutions.com`
+**Public URL**: `https://accounts.codevertexafrica.com`
 
 **Key Capabilities**:
 - **Single Sign-On (SSO)**: Centralized login and signup for all Codevertex microservices.
@@ -48,7 +48,7 @@
 
 ### SSO Flow
 1. **Initiation**: User clicks "Login" on a service (e.g., `cafe-website`).
-2. **Redirect**: Service redirects to `https://accounts.codevertexitsolutions.com/login?client_id=...&redirect_uri=...&state=...`.
+2. **Redirect**: Service redirects to `https://accounts.codevertexafrica.com/login?client_id=...&redirect_uri=...&state=...`.
 3. **Authentication**: User logs in or signs up on `auth-ui`.
 4. **Callback**: `auth-ui` redirects back to the service's redirect URI with an authorization code.
 5. **Session**: Service exchanges code for tokens and establishes a session.
@@ -97,4 +97,4 @@
 - [ ] SEO optimization and meta tags.
 - [ ] Performance tuning and caching.
 - [ ] Security audit and penetration testing.
-- [ ] Deployment to `https://accounts.codevertexitsolutions.com`.
+- [ ] Deployment to `https://accounts.codevertexafrica.com`.

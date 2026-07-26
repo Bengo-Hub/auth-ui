@@ -3,7 +3,7 @@
  * Used for tenant auto-discovery and branding (name, slug, metadata.primary_color, logo_url, etc.).
  */
 
-const AUTH_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com';
+const AUTH_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com';
 
 export interface TenantBrandMetadata {
   logo_url?: string;

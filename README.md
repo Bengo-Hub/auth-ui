@@ -30,15 +30,15 @@ pnpm dev
 ```
 
 ## Deployment
-The application is deployed at `https://accounts.codevertexitsolutions.com`.
+The application is deployed at `https://accounts.codevertexafrica.com`.
 
 ## Environment
 
 | Variable | Description | Production |
 |----------|-------------|------------|
-| `NEXT_PUBLIC_API_URL` | SSO (auth-api) base URL used for API calls and for validating `return_to` (service-originated login). Must be set so the sso authorize URL is allowed as a safe redirect. | `https://sso.codevertexitsolutions.com` |
+| `NEXT_PUBLIC_API_URL` | SSO (auth-api) base URL used for API calls and for validating `return_to` (service-originated login). Must be set so the sso authorize URL is allowed as a safe redirect. | `https://sso.codevertexafrica.com` |
 
-Set `NEXT_PUBLIC_API_URL` to the auth-api (SSO) base in all environments. If unset, auth-ui falls back to `https://sso.codevertexitsolutions.com` for both the api-client base URL and return_to validation (see `src/lib/utils.ts`).
+Set `NEXT_PUBLIC_API_URL` to the auth-api (SSO) base in all environments. If unset, auth-ui falls back to `https://sso.codevertexafrica.com` for both the api-client base URL and return_to validation (see `src/lib/utils.ts`).
 
 **Entry flows:**
 - **Direct login:** User opens `/login` (no `return_to`). After credentials, auth-ui redirects to `/dashboard` or a valid relative return_to.

@@ -81,13 +81,13 @@ export default function Footer() {
                   Contact
                 </span>
                 <a
-                  href="mailto:support@codevertexitsolutions.com"
+                  href="mailto:support@codevertexafrica.com"
                   className="text-slate-600 transition-colors hover:text-primary dark:text-slate-300"
                 >
                   Support
                 </a>
                 <a
-                  href="mailto:privacy@codevertexitsolutions.com"
+                  href="mailto:privacy@codevertexafrica.com"
                   className="text-slate-600 transition-colors hover:text-primary dark:text-slate-300"
                 >
                   Privacy inquiries
@@ -110,7 +110,7 @@ export default function Footer() {
 
             <div className="flex items-center gap-2">
               <a
-                href="https://codevertexitsolutions.com"
+                href="https://codevertexafrica.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 transition-all hover:ring-4 hover:ring-primary/20"

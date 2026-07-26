@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SUBSCRIPTIONS_API = process.env.SUBSCRIPTIONS_API_URL || 'https://pricingapi.codevertexitsolutions.com';
+const SUBSCRIPTIONS_API = process.env.SUBSCRIPTIONS_API_URL || 'https://pricingapi.codevertexafrica.com';
 const SERVICE_KEY = process.env.INTERNAL_SERVICE_KEY || '';
 
 /**

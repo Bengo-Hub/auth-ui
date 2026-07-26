@@ -62,7 +62,7 @@ export default function PrivacyPolicyPage() {
             use, disclose, and safeguard your information when you use our services, including the Codevertex
             SSO platform at{' '}
             <Link href="/" className="text-primary underline">
-              accounts.codevertexitsolutions.com
+              accounts.codevertexafrica.com
             </Link>{' '}
             and any other application within our ecosystem.
           </p>
@@ -94,10 +94,10 @@ export default function PrivacyPolicyPage() {
             <div className="mt-8 p-4 rounded-2xl bg-slate-50 dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/5">
               <p className="text-xs font-bold text-slate-500 mb-2">Data Protection</p>
               <a
-                href="mailto:info@codevertexitsolutions.com"
+                href="mailto:info@codevertexafrica.com"
                 className="text-xs text-primary hover:underline break-all"
               >
-                info@codevertexitsolutions.com
+                info@codevertexafrica.com
               </a>
               <p className="text-xs text-slate-400 mt-1">Pioneer House, 2nd Floor,<br />Oginga Street, Kisumu, Kenya</p>
             </div>
@@ -122,9 +122,9 @@ export default function PrivacyPolicyPage() {
                 The services covered include, but are not limited to:
               </p>
               <ul>
-                <li><strong>Codevertex SSO</strong> — accounts.codevertexitsolutions.com (identity and authentication gateway)</li>
-                <li><strong>MarketFlow CRM</strong> — marketflow.codevertexitsolutions.com (AI marketing automation)</li>
-                <li><strong>Codevertex ERP, POS, ISP Billing, TruLoad, Books, Projects, Ordering App</strong> — all *.codevertexitsolutions.com subdomains</li>
+                <li><strong>Codevertex SSO</strong> — accounts.codevertexafrica.com (identity and authentication gateway)</li>
+                <li><strong>MarketFlow CRM</strong> — marketflow.codevertexafrica.com (AI marketing automation)</li>
+                <li><strong>Codevertex ERP, POS, ISP Billing, TruLoad, Books, Projects, Ordering App</strong> — all *.codevertexafrica.com subdomains</li>
                 <li>Any mobile application, API endpoint, or service that links to this Privacy Policy</li>
               </ul>
               <p>
@@ -348,8 +348,8 @@ export default function PrivacyPolicyPage() {
               <p>
                 While we apply industry-leading security practices, no system is 100% secure. If you discover
                 a security vulnerability, please disclose it responsibly to{' '}
-                <a href="mailto:developers@codevertexitsolutions.com" className="text-primary">
-                  developers@codevertexitsolutions.com
+                <a href="mailto:developers@codevertexafrica.com" className="text-primary">
+                  developers@codevertexafrica.com
                 </a>
                 .
               </p>
@@ -417,8 +417,8 @@ export default function PrivacyPolicyPage() {
               </ul>
               <p>
                 To exercise any of these rights, contact our Data Protection at{' '}
-                <a href="mailto:info@codevertexitsolutions.com" className="text-primary">
-                  info@codevertexitsolutions.com
+                <a href="mailto:info@codevertexafrica.com" className="text-primary">
+                  info@codevertexafrica.com
                 </a>{' '}
                 with the subject line <strong>&quot;Data Rights Request — [Your Name]&quot;</strong>.
               </p>
@@ -456,8 +456,8 @@ export default function PrivacyPolicyPage() {
                 Our services are not directed to individuals under the age of 18. We do not knowingly collect
                 personal data from children. If you believe we have inadvertently collected information from
                 a minor, please contact us immediately at{' '}
-                <a href="mailto:info@codevertexitsolutions.com" className="text-primary">
-                  info@codevertexitsolutions.com
+                <a href="mailto:info@codevertexafrica.com" className="text-primary">
+                  info@codevertexafrica.com
                 </a>{' '}
                 and we will delete it promptly.
               </p>
@@ -500,9 +500,9 @@ export default function PrivacyPolicyPage() {
               </p>
               <div className="not-prose grid sm:grid-cols-2 gap-4 mt-6">
                 {[
-                  { icon: Mail, label: 'General & Privacy Enquiries', value: 'info@codevertexitsolutions.com', href: 'mailto:info@codevertexitsolutions.com' },
-                  { icon: Mail, label: 'Legal & Compliance', value: 'legal@codevertexitsolutions.com', href: 'mailto:legal@codevertexitsolutions.com' },
-                  { icon: Mail, label: 'Developer / API', value: 'developers@codevertexitsolutions.com', href: 'mailto:developers@codevertexitsolutions.com' },
+                  { icon: Mail, label: 'General & Privacy Enquiries', value: 'info@codevertexafrica.com', href: 'mailto:info@codevertexafrica.com' },
+                  { icon: Mail, label: 'Legal & Compliance', value: 'legal@codevertexafrica.com', href: 'mailto:legal@codevertexafrica.com' },
+                  { icon: Mail, label: 'Developer / API', value: 'developers@codevertexafrica.com', href: 'mailto:developers@codevertexafrica.com' },
                   { icon: MapPin, label: 'Registered Office', value: 'Pioneer House, 2nd Floor, Oginga Street, Kisumu, Kenya', href: null },
                 ].map(({ icon: Icon, label, value, href }) => (
                   <div key={label} className="flex gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/5">

@@ -98,10 +98,10 @@ export default function TermsOfServicePage() {
             <div className="mt-8 p-4 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/5">
               <p className="text-xs font-bold text-slate-500 mb-2">Legal Contact</p>
               <a
-                href="mailto:legal@codevertexitsolutions.com"
+                href="mailto:legal@codevertexafrica.com"
                 className="text-xs text-primary hover:underline"
               >
-                legal@codevertexitsolutions.com
+                legal@codevertexafrica.com
               </a>
               <p className="text-xs text-slate-400 mt-2">Pioneer House, 2nd Floor,<br />Oginga Street, Kisumu, Kenya</p>
             </div>
@@ -122,20 +122,20 @@ export default function TermsOfServicePage() {
                 including:
               </p>
               <ul>
-                <li><strong>Codevertex SSO</strong> — the unified identity and authentication platform at <code>accounts.codevertexitsolutions.com</code></li>
-                <li><strong>MarketFlow CRM</strong> — the AI-powered marketing automation SaaS at <code>marketflow.codevertexitsolutions.com</code></li>
-                <li><strong>Codevertex Power Suite</strong> — ERP, POS, ISP Billing, TruLoad, Books, Projects, Ordering, and Notifications services at <code>*.codevertexitsolutions.com</code></li>
+                <li><strong>Codevertex SSO</strong> — the unified identity and authentication platform at <code>accounts.codevertexafrica.com</code></li>
+                <li><strong>MarketFlow CRM</strong> — the AI-powered marketing automation SaaS at <code>marketflow.codevertexafrica.com</code></li>
+                <li><strong>Codevertex Power Suite</strong> — ERP, POS, ISP Billing, TruLoad, Books, Projects, Ordering, and Notifications services at <code>*.codevertexafrica.com</code></li>
                 <li>Any associated APIs, mobile applications, or integrations that reference these Terms</li>
               </ul>
               <p>
                 <strong>Codevertex Africa Limited</strong> is registered and operating from Pioneer House, 2nd
                 Floor, Oginga Street, Kisumu, Kenya. Corporate email:{' '}
-                <a href="mailto:info@codevertexitsolutions.com" className="text-primary">
-                  info@codevertexitsolutions.com
+                <a href="mailto:info@codevertexafrica.com" className="text-primary">
+                  info@codevertexafrica.com
                 </a>
                 . Website:{' '}
-                <a href="https://codevertexitsolutions.com" target="_blank" rel="noopener noreferrer" className="text-primary">
-                  codevertexitsolutions.com
+                <a href="https://codevertexafrica.com" target="_blank" rel="noopener noreferrer" className="text-primary">
+                  codevertexafrica.com
                 </a>
                 .
               </p>
@@ -179,7 +179,7 @@ export default function TermsOfServicePage() {
               <h3>3.2 Account Security</h3>
               <ul>
                 <li>You are responsible for maintaining the confidentiality of your credentials, including any multi-factor authentication (MFA) devices or passkeys.</li>
-                <li>You must notify us immediately at <a href="mailto:support@codevertexitsolutions.com" className="text-primary">support@codevertexitsolutions.com</a> if you suspect unauthorised access to your account.</li>
+                <li>You must notify us immediately at <a href="mailto:support@codevertexafrica.com" className="text-primary">support@codevertexafrica.com</a> if you suspect unauthorised access to your account.</li>
                 <li>You are liable for all activity that occurs under your account, whether or not authorised, until you notify us and we take corrective action.</li>
               </ul>
               <h3>3.3 Account Accuracy</h3>
@@ -366,8 +366,8 @@ export default function TermsOfServicePage() {
                 Payments for completed billing periods are generally non-refundable. Exceptions apply where
                 required by Kenyan consumer protection law or where we have materially failed to deliver the
                 contracted service. Refund requests should be directed to{' '}
-                <a href="mailto:support@codevertexitsolutions.com" className="text-primary">
-                  support@codevertexitsolutions.com
+                <a href="mailto:support@codevertexafrica.com" className="text-primary">
+                  support@codevertexafrica.com
                 </a>
                 .
               </p>
@@ -555,9 +555,9 @@ export default function TermsOfServicePage() {
               </p>
               <div className="not-prose grid sm:grid-cols-2 gap-4 mt-6">
                 {[
-                  { icon: Mail, label: 'Legal & Terms', value: 'legal@codevertexitsolutions.com', href: 'mailto:legal@codevertexitsolutions.com' },
-                  { icon: Mail, label: 'General Support', value: 'support@codevertexitsolutions.com', href: 'mailto:support@codevertexitsolutions.com' },
-                  { icon: Mail, label: 'Corporate Enquiries', value: 'info@codevertexitsolutions.com', href: 'mailto:info@codevertexitsolutions.com' },
+                  { icon: Mail, label: 'Legal & Terms', value: 'legal@codevertexafrica.com', href: 'mailto:legal@codevertexafrica.com' },
+                  { icon: Mail, label: 'General Support', value: 'support@codevertexafrica.com', href: 'mailto:support@codevertexafrica.com' },
+                  { icon: Mail, label: 'Corporate Enquiries', value: 'info@codevertexafrica.com', href: 'mailto:info@codevertexafrica.com' },
                   { icon: MapPin, label: 'Registered Address', value: 'Pioneer House, 2nd Floor, Oginga Street, Kisumu, Kenya', href: null },
                 ].map(({ icon: Icon, label, value, href }) => (
                   <div key={label} className="flex gap-4 p-5 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/5">
