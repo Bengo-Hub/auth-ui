@@ -48,50 +48,50 @@ export interface ServiceCategory {
 // Production domains from devops-k8s values.yaml files
 export const PRODUCTION_DOMAINS = {
   // Auth & Identity
-  sso: 'https://sso.codevertexitsolutions.com',
-  accounts: 'https://accounts.codevertexitsolutions.com',
+  sso: 'https://sso.codevertexafrica.com',
+  accounts: 'https://accounts.codevertexafrica.com',
 
   // Core Services
   cafe: 'https://theurbanloftcafe.com',
-  ordering: 'https://ordersapp.codevertexitsolutions.com',
-  orderingApi: 'https://orderingapi.codevertexitsolutions.com',
-  pos: 'https://pos.codevertexitsolutions.com',
-  posApi: 'https://posapi.codevertexitsolutions.com',
+  ordering: 'https://ordering.codevertexafrica.com',
+  orderingApi: 'https://orderingapi.codevertexafrica.com',
+  pos: 'https://pos.codevertexafrica.com',
+  posApi: 'https://posapi.codevertexafrica.com',
 
   // Operations
-  logistics: 'https://logistics.codevertexitsolutions.com',
-  logisticsApi: 'https://logisticsapi.codevertexitsolutions.com',
-  inventory: 'https://inventory.codevertexitsolutions.com',
-  inventoryApi: 'https://inventoryapi.codevertexitsolutions.com',
+  logistics: 'https://logistics.codevertexafrica.com',
+  logisticsApi: 'https://logisticsapi.codevertexafrica.com',
+  inventory: 'https://inventory.codevertexafrica.com',
+  inventoryApi: 'https://inventoryapi.codevertexafrica.com',
 
   // Finance & Enterprise
-  books: 'https://books.codevertexitsolutions.com',
-  booksApi: 'https://booksapi.codevertexitsolutions.com',
-  erp: 'https://erp.codevertexitsolutions.com',
-  erpApi: 'https://erpapi.codevertexitsolutions.com',
+  books: 'https://books.codevertexafrica.com',
+  booksApi: 'https://booksapi.codevertexafrica.com',
+  erp: 'https://erp.codevertexafrica.com',
+  erpApi: 'https://erpapi.codevertexafrica.com',
 
   // Project & Support
-  projects: 'https://projects.codevertexitsolutions.com',
-  projectsApi: 'https://projectsapi.codevertexitsolutions.com',
-  ticketing: 'https://ticketing.codevertexitsolutions.com',
-  ticketingApi: 'https://ticketingapi.codevertexitsolutions.com',
+  projects: 'https://projects.codevertexafrica.com',
+  projectsApi: 'https://projectsapi.codevertexafrica.com',
+  ticketing: 'https://ticketing.codevertexafrica.com',
+  ticketingApi: 'https://ticketingapi.codevertexafrica.com',
 
   // Specialized
-  ispBilling: 'https://ispbilling.codevertexitsolutions.com',
-  ispBillingApi: 'https://ispbillingapi.codevertexitsolutions.com',
-  truload: 'https://truload.codevertexitsolutions.com',
-  truloadApi: 'https://truloadapi.codevertexitsolutions.com',
-  iot: 'https://iot.codevertexitsolutions.com',
+  ispBilling: 'https://ispbilling.codevertexafrica.com',
+  ispBillingApi: 'https://ispbillingapi.codevertexafrica.com',
+  truload: 'https://truload.codevertexafrica.com',
+  truloadApi: 'https://truloadapi.codevertexafrica.com',
+  iot: 'https://iot.codevertexafrica.com',
 
   // Marketing
-  marketflow: 'https://marketflow.codevertexitsolutions.com',
-  marketflowApi: 'https://marketflowapi.codevertexitsolutions.com',
+  marketflow: 'https://marketflow.codevertexafrica.com',
+  marketflowApi: 'https://marketflowapi.codevertexafrica.com',
 
   // Infrastructure
-  notifications: 'https://notifications.codevertexitsolutions.com',
-  notificationsApi: 'https://notificationsapi.codevertexitsolutions.com',
-  subscription: 'https://pricingapi.codevertexitsolutions.com',
-  superset: 'https://superset.codevertexitsolutions.com',
+  notifications: 'https://notifications.codevertexafrica.com',
+  notificationsApi: 'https://notificationsapi.codevertexafrica.com',
+  subscription: 'https://pricingapi.codevertexafrica.com',
+  superset: 'https://superset.codevertexafrica.com',
 } as const;
 
 export const SERVICES: Service[] = [

@@ -7,23 +7,23 @@ const SERVICE_HEALTH_CONFIG: Record<string, { url: string; healthPath: string }>
     healthPath: '/',
   },
   ordering: {
-    url: 'https://ordersapp.codevertexitsolutions.com',
+    url: 'https://ordering.codevertexafrica.com',
     healthPath: '/healthz',
   },
   pos: {
-    url: 'https://pos.codevertexitsolutions.com',
+    url: 'https://pos.codevertexafrica.com',
     healthPath: '/healthz',
   },
   logistics: {
-    url: 'https://logistics.codevertexitsolutions.com',
+    url: 'https://logistics.codevertexafrica.com',
     healthPath: '/healthz',
   },
   inventory: {
-    url: 'https://inventory.codevertexitsolutions.com',
+    url: 'https://inventory.codevertexafrica.com',
     healthPath: '/healthz',
   },
   books: {
-    url: 'https://books.codevertexitsolutions.com',
+    url: 'https://books.codevertexafrica.com',
     healthPath: '/healthz',
   },
   erp: {
@@ -31,15 +31,15 @@ const SERVICE_HEALTH_CONFIG: Record<string, { url: string; healthPath: string }>
     healthPath: '/',
   },
   projects: {
-    url: 'https://projects.codevertexitsolutions.com',
+    url: 'https://projects.codevertexafrica.com',
     healthPath: '/healthz',
   },
   ticketing: {
-    url: 'https://ticketing.codevertexitsolutions.com',
+    url: 'https://ticketing.codevertexafrica.com',
     healthPath: '/healthz',
   },
   isp: {
-    url: 'https://ispbilling.codevertexitsolutions.com',
+    url: 'https://ispbilling.codevertexafrica.com',
     healthPath: '/api/health',
   },
   truload: {

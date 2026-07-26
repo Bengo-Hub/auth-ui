@@ -6,25 +6,25 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /** SSO base URL for return_to validation (same as api-client). Must be set so service-originated login return_to (sso authorize URL) is allowed. */
-const SSO_ISSUER_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexitsolutions.com').replace(/\/$/, '');
+const SSO_ISSUER_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com').replace(/\/$/, '');
 
 /** Allowed origins for return_to (absolute URLs). Enables redirect to service landing after login from auth-ui. */
 const ALLOWED_REDIRECT_ORIGINS = [
-  'https://sso.codevertexitsolutions.com',
-  'https://accounts.codevertexitsolutions.com',
-  'https://ordersapp.codevertexitsolutions.com',
-  'https://books.codevertexitsolutions.com',
-  'https://pos.codevertexitsolutions.com',
-  'https://inventory.codevertexitsolutions.com',
-  'https://logistics.codevertexitsolutions.com',
-  'https://notifications.codevertexitsolutions.com',
-  'https://pricing.codevertexitsolutions.com',
-  'https://ispbilling.codevertexitsolutions.com',
-  'https://riderapp.codevertexitsolutions.com',
+  'https://sso.codevertexafrica.com',
+  'https://accounts.codevertexafrica.com',
+  'https://ordering.codevertexafrica.com',
+  'https://books.codevertexafrica.com',
+  'https://pos.codevertexafrica.com',
+  'https://inventory.codevertexafrica.com',
+  'https://logistics.codevertexafrica.com',
+  'https://notifications.codevertexafrica.com',
+  'https://pricing.codevertexafrica.com',
+  'https://ispbilling.codevertexafrica.com',
+  'https://riderapp.codevertexafrica.com',
   'https://theurbanloftcafe.com',
-  'https://marketflow.codevertexitsolutions.com',
-  'https://projects.codevertexitsolutions.com',
-  'https://ticketing.codevertexitsolutions.com',
+  'https://marketflow.codevertexafrica.com',
+  'https://projects.codevertexafrica.com',
+  'https://ticketing.codevertexafrica.com',
   'http://localhost:3000',
   'http://localhost:3010',
   'http://localhost:3011',
@@ -62,7 +62,7 @@ export function isValidReturnUrl(url: string | null | undefined): boolean {
   }
 
   // Fallback: sso authorize URL (avoids redirect loop when env or encoding differs on some browsers)
-  if (url.includes('/api/v1/authorize') && url.includes('codevertexitsolutions.com')) {
+  if (url.includes('/api/v1/authorize') && url.includes('codevertexafrica.com')) {
     return true;
   }
 

@@ -30,9 +30,9 @@ COPY . .
 
 # IMPORTANT: Next.js bakes NEXT_PUBLIC_* env vars at build time
 # These MUST be set during docker build for production
-ARG NEXT_PUBLIC_API_URL=https://sso.codevertexitsolutions.com
-ARG NEXT_PUBLIC_APP_URL=https://accounts.codevertexitsolutions.com
-ARG NEXT_PUBLIC_NOTIFICATIONS_URL=https://notificationsapi.codevertexitsolutions.com
+ARG NEXT_PUBLIC_API_URL=https://sso.codevertexafrica.com
+ARG NEXT_PUBLIC_APP_URL=https://accounts.codevertexafrica.com
+ARG NEXT_PUBLIC_NOTIFICATIONS_URL=https://notificationsapi.codevertexafrica.com
 
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL

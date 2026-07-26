@@ -1,8 +1,8 @@
 # auth-ui -- Architecture
 
 **Service**: auth-ui (Next.js 15)
-**Deployed**: auth.codevertexitsolutions.com
-**Backend**: authapi.codevertexitsolutions.com (auth-api, Go)
+**Deployed**: auth.codevertexafrica.com
+**Backend**: authapi.codevertexafrica.com (auth-api, Go)
 
 ---
 
@@ -56,10 +56,10 @@ src/app/
 ## Authentication Flow
 
 ```
-User visits Codevertex service (e.g., ordersapp.codevertexitsolutions.com)
+User visits Codevertex service (e.g., ordering.codevertexafrica.com)
   |
   v
-Service redirects to auth.codevertexitsolutions.com/login
+Service redirects to auth.codevertexafrica.com/login
   with client_id, redirect_uri, scope, code_challenge
   |
   v

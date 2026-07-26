@@ -14,7 +14,7 @@
 
 **Duration**: March 6 -- March 17, 2026 (10 working days)
 **Status**: In Progress
-**Goal**: Ship a production-ready SSO portal at `auth.codevertexitsolutions.com` supporting all Codevertex service logins, tenant admin, and platform admin for the `urban-loft` tenant.
+**Goal**: Ship a production-ready SSO portal at `auth.codevertexafrica.com` supporting all Codevertex service logins, tenant admin, and platform admin for the `urban-loft` tenant.
 
 ---
 
@@ -22,7 +22,7 @@
 
 - **March 17**: All Codevertex services go live; auth-ui must be the SSO entry point
 - **Tenant**: `urban-loft` only (The Urban Loft Cafe)
-- **Users**: Platform admin (`admin@codevertexitsolutions.com`), tenant admin (`admin@theurbanloftcafe.com`)
+- **Users**: Platform admin (`admin@codevertexafrica.com`), tenant admin (`admin@theurbanloftcafe.com`)
 - **Scope**: Login/signup, OIDC redirect, dashboard, tenant admin, platform admin. Advanced features are post-MVP.
 
 ---
@@ -38,7 +38,7 @@
 - [ ] Verify `bb_session` cookie is set correctly (httpOnly, Secure, SameSite)
 - [ ] Verify Zustand store receives and holds access token in memory
 - [ ] Verify failed login shows inline error message
-- [ ] Test with `admin@theurbanloftcafe.com` (tenant admin) and `admin@codevertexitsolutions.com` (platform admin)
+- [ ] Test with `admin@theurbanloftcafe.com` (tenant admin) and `admin@codevertexafrica.com` (platform admin)
 - [ ] Verify redirect back to requesting service after login (OIDC flow)
 
 ### CP-2: OIDC Redirect Flow from Downstream Services
@@ -49,9 +49,9 @@
 - [ ] Verify ordering-frontend can redirect to auth-ui `/login` with OIDC params
 - [ ] Verify auth-ui preserves `client_id`, `redirect_uri`, `state`, `code_challenge` through login flow
 - [ ] Verify on successful login, auth-ui redirects to `redirect_uri` with authorization code
-- [ ] Test with ordering-frontend (`ordersapp.codevertexitsolutions.com`)
-- [ ] Test with POS frontend (`pos.codevertexitsolutions.com`)
-- [ ] Test with notifications-ui (`notifications.codevertexitsolutions.com`)
+- [ ] Test with ordering-frontend (`ordering.codevertexafrica.com`)
+- [ ] Test with POS frontend (`pos.codevertexafrica.com`)
+- [ ] Test with notifications-ui (`notifications.codevertexafrica.com`)
 
 ### CP-3: Token Refresh & Session Persistence
 
@@ -180,10 +180,10 @@
 ### Launch Day (March 17)
 
 - [ ] Deploy final image via ArgoCD
-- [ ] Verify login page loads at `https://accounts.codevertexitsolutions.com`
+- [ ] Verify login page loads at `https://accounts.codevertexafrica.com`
 - [ ] Test login with tenant admin account
 - [ ] Test OIDC redirect from ordering-frontend
-- [ ] Verify platform admin section accessible to `admin@codevertexitsolutions.com`
+- [ ] Verify platform admin section accessible to `admin@codevertexafrica.com`
 - [ ] Monitor error rate and page load times
 
 ### Post-Launch (March 18-21)
@@ -209,7 +209,7 @@
 
 ## Success Criteria
 
-- [ ] Users can log in and reach dashboard at `auth.codevertexitsolutions.com`
+- [ ] Users can log in and reach dashboard at `auth.codevertexafrica.com`
 - [ ] OIDC redirect flow works from ordering-frontend, POS, notifications-ui
 - [x] Platform admin can access gateway configuration *(via treasury-ui; auth-ui redirect only)*
 - [ ] Tenant admin can manage users and API keys for `urban-loft`
