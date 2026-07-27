@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useLogout } from '@/hooks/useLogout';
 import { cn } from '@/lib/utils';
 import {
+  Activity,
   Building2,
   ChevronDown,
   ChevronLeft,
@@ -60,6 +61,7 @@ const PLATFORM_ADMIN_ITEMS: NavItem[] = [
   { title: 'Password Policy', href: '/dashboard/platform/security/password-policy', icon: KeyRound },
   { title: 'Apps & Keys', href: '/dashboard/platform/apps', icon: Cpu },
   { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
+  { title: 'Infra Monitor', href: '/dashboard/platform/monitoring', icon: Activity },
   {
     title: 'Membership Tiers',
     href: 'https://pricing.codevertexafrica.com/codevertex/platform/plans',
