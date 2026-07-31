@@ -60,7 +60,8 @@ const USE_CASES = [
   { value: 'logistics', label: 'Logistics / Fleet Management' },
   { value: 'weighbridge', label: 'Weighbridge / Commercial Weighing' },
   { value: 'services', label: 'Services / Professional' },
-  { value: 'pharmacy', label: 'Pharmacy / Health' },
+  { value: 'pharmacy', label: 'Pharmacy / Chemist' },
+  { value: 'hospital', label: 'Hospital / Clinic (Consultation, Lab, Pharmacy, Billing)' },
   { value: 'library', label: 'Library / Resource Center' },
   { value: 'other', label: 'Other' },
 ];

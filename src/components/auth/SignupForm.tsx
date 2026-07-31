@@ -65,7 +65,8 @@ const USE_CASES = [
   { value: 'isp', label: 'ISP / Telecom (Internet Service Provider)' },
   { value: 'hotspot', label: 'Hotspot Business (WiFi vouchers)' },
   { value: 'services', label: 'Services / Professional' },
-  { value: 'pharmacy', label: 'Pharmacy / Health' },
+  { value: 'pharmacy', label: 'Pharmacy / Chemist' },
+  { value: 'hospital', label: 'Hospital / Clinic (Consultation, Lab, Pharmacy, Billing)' },
   { value: 'library', label: 'Library / Resource Center' },
   { value: 'other', label: 'Other' },
 ];
