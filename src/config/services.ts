@@ -6,6 +6,7 @@
 import {
     BarChart2,
     Bell,
+    BookOpen,
     Box,
     Briefcase,
     Coffee,
@@ -63,6 +64,8 @@ export const PRODUCTION_DOMAINS = {
   logisticsApi: 'https://logisticsapi.codevertexafrica.com',
   inventory: 'https://inventory.codevertexafrica.com',
   inventoryApi: 'https://inventoryapi.codevertexafrica.com',
+  library: 'https://library.codevertexafrica.com',
+  libraryApi: 'https://libraryapi.codevertexafrica.com',
 
   // Finance & Enterprise
   books: 'https://books.codevertexafrica.com',
@@ -164,6 +167,20 @@ export const SERVICES: Service[] = [
     apiUrl: PRODUCTION_DOMAINS.inventoryApi,
     color: 'bg-amber-600',
     gradient: 'from-amber-500 to-orange-500',
+    category: 'operations',
+    status: 'coming-soon',
+  },
+  {
+    id: 'library',
+    name: 'Codevertex Library',
+    shortName: 'Library',
+    description: 'Library management system for cataloging, circulation, patron management, and e-book lending.',
+    icon: BookOpen,
+    svgIcon: '/svgs/services/library.svg',
+    url: PRODUCTION_DOMAINS.library,
+    apiUrl: PRODUCTION_DOMAINS.libraryApi,
+    color: 'bg-indigo-600',
+    gradient: 'from-indigo-500 to-blue-600',
     category: 'operations',
     status: 'coming-soon',
   },

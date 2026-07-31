@@ -941,6 +941,7 @@ function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug: strin
                   className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
                   <option value="pos">POS</option>
                   <option value="inventory">Inventory</option>
+                  <option value="library">Library</option>
                 </select>
               </div>
               <div className="space-y-1">

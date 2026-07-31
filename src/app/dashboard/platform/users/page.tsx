@@ -337,6 +337,7 @@ function EditUserDialog({
 const PIN_SERVICES = [
   { value: 'pos', label: 'POS' },
   { value: 'inventory', label: 'Inventory' },
+  { value: 'library', label: 'Library' },
 ];
 
 // Platform-admin PIN dialog. Reuses the tenant "Set Service PIN" flow, but adds
