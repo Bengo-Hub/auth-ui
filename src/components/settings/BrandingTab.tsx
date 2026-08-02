@@ -66,30 +66,101 @@ const USE_CASES = [
   { value: 'other', label: 'Other' },
 ];
 
+// Mirrors auth-api's internal/pkg/imageutil server-side cap — the server is
+// authoritative, but shrinking client-side first avoids a slow upload of a
+// multi-MB file just to have the server reject or downscale it.
+const LOGO_MAX_DIMENSION = 512;
+const LOGO_MAX_BYTES = 350 * 1024;
+const LOGO_MAX_SOURCE_BYTES = 8 * 1024 * 1024;
+
+// Downscales/re-encodes an image file to fit within LOGO_MAX_DIMENSION and
+// LOGO_MAX_BYTES, returning a data URL. Tries PNG first (preserves
+// transparency), then falls back to JPEG at decreasing quality.
+async function compressImageFile(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, LOGO_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('canvas unavailable');
+  ctx.drawImage(bitmap, 0, 0, w, h);
+
+  const toBlob = (type: string, quality?: number) =>
+    new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
+
+  const pngBlob = await toBlob('image/png');
+  if (pngBlob && pngBlob.size <= LOGO_MAX_BYTES) return blobToDataURL(pngBlob);
+
+  for (const quality of [0.85, 0.7, 0.55, 0.4]) {
+    const jpegBlob = await toBlob('image/jpeg', quality);
+    if (jpegBlob && jpegBlob.size <= LOGO_MAX_BYTES) return blobToDataURL(jpegBlob);
+  }
+  throw new Error(
+    `Could not compress this image under ${Math.round(LOGO_MAX_BYTES / 1024)}KB. Please use a smaller or simpler image.`,
+  );
+}
+
+function blobToDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
 function ImageUploadField({
   label,
   value,
   onChange,
+  onError,
   hint,
 }: {
   label: string;
   value: string;
   onChange: (url: string) => void;
+  onError?: (message: string) => void;
   hint?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [compressing, setCompressing] = useState(false);
 
   const handleFile = useCallback(
-    (file: File) => {
-      if (!file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (typeof e.target?.result === 'string') onChange(e.target.result);
-      };
-      reader.readAsDataURL(file);
+    async (file: File) => {
+      if (!file.type.startsWith('image/')) {
+        onError?.('Please choose an image file.');
+        return;
+      }
+      if (file.size > LOGO_MAX_SOURCE_BYTES) {
+        onError?.(`Image is too large (max ${LOGO_MAX_SOURCE_BYTES / (1024 * 1024)}MB before compression).`);
+        return;
+      }
+      // SVGs are vector and already tiny — rasterizing them through canvas would
+      // lose scalability for no size benefit, so just size-cap and pass through.
+      if (file.type === 'image/svg+xml') {
+        if (file.size > LOGO_MAX_BYTES) {
+          onError?.(`SVG is too large (max ${Math.round(LOGO_MAX_BYTES / 1024)}KB).`);
+          return;
+        }
+        onChange(await blobToDataURL(file));
+        return;
+      }
+      setCompressing(true);
+      try {
+        const dataUrl = await compressImageFile(file);
+        onChange(dataUrl);
+      } catch (err: any) {
+        onError?.(err?.message || 'Could not process this image.');
+      } finally {
+        setCompressing(false);
+      }
     },
-    [onChange],
+    [onChange, onError],
   );
 
   const handleDrop = useCallback(
@@ -120,7 +191,12 @@ function ImageUploadField({
             : 'border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-slate-800/50'
         }`}
       >
-        {value ? (
+        {compressing ? (
+          <div className="flex flex-col items-center gap-2 py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-[11px] text-slate-400">Compressing…</p>
+          </div>
+        ) : value ? (
           <div className="relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -149,7 +225,7 @@ function ImageUploadField({
                 Drop an image or <span className="text-primary">browse</span>
               </p>
               <p className="text-[11px] text-slate-400 mt-1">
-                PNG, SVG, JPG — max 512 KB
+                PNG, SVG, JPG — auto-compressed to under {Math.round(LOGO_MAX_BYTES / 1024)}KB
               </p>
             </div>
           </>
@@ -532,6 +608,9 @@ export function BrandingTab() {
                 label="Brand Logo"
                 value={tenantData?.logo_url || ''}
                 onChange={(v) => updateField('logo_url', v)}
+                onError={(message) =>
+                  toast({ title: 'Image not usable', description: message, variant: 'destructive' })
+                }
                 hint="Transparent rectangular logo (512 x 128 px recommended)"
               />
               <div className="space-y-6">
