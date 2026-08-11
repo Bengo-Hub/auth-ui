@@ -38,6 +38,10 @@ export interface User {
   /** @deprecated see subscription_plan. */
   subscription_status?: string;
   is_platform_owner?: boolean;
+  // True when this session belongs to the shared public demo tenant
+  // (codevertex-demo). Self-service password/2FA changes are blocked
+  // server-side for these accounts — the UI hides those controls too.
+  is_demo?: boolean;
   mfa_enabled?: boolean;
   // Set when an admin-provisioned/reset account must pick a new password before
   // using the dashboard. Cleared once the password is changed.

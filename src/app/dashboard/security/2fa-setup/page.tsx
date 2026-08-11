@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/useAuth';
 import apiClient from '@/lib/api-client';
 import { motion } from 'framer-motion';
 import {
@@ -18,7 +19,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 type SetupStep = 'scan' | 'verify' | 'backup' | 'complete';
@@ -26,6 +27,11 @@ type SetupStep = 'scan' | 'verify' | 'backup' | 'complete';
 export default function TwoFactorSetupPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user, isPlatformOwner, isLoading: authLoading } = useAuth();
+  // The shared public demo tenant's credentials are used by every visitor —
+  // enrolling 2FA here would lock everyone else out. Server-side enforced too
+  // (demoSelfServiceBlocked in auth-api), this just avoids showing the wizard.
+  const demoRestricted = !!user?.is_demo && !isPlatformOwner;
   const [step, setStep] = useState<SetupStep>('scan');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,10 +64,12 @@ export default function TwoFactorSetupPage() {
     }
   }, []);
 
-  // Initialize on mount
-  useState(() => {
+  // Initialize on mount, unless this session belongs to the restricted demo account.
+  useEffect(() => {
+    if (authLoading || demoRestricted) return;
     startSetup();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, demoRestricted]);
 
   // Step 2: Confirm TOTP code
   const confirmCode = async () => {
@@ -125,6 +133,28 @@ export default function TwoFactorSetupPage() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  if (demoRestricted) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Link
+          href="/dashboard/profile?tab=security"
+          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition-colors mb-6"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Security
+        </Link>
+        <div className="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm text-center">
+          <Shield className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">2FA setup is disabled for this account</h1>
+          <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            This is a shared public demo login. Enrolling 2FA here would lock out every other visitor
+            using the same credentials. A platform administrator can enforce 2FA on it from the Users admin panel.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">

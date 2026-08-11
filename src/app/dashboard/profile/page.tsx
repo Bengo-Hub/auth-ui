@@ -465,8 +465,13 @@ function NotificationsTab() {
 function SecurityTab() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isPlatformOwner } = useAuth();
   const isMfaEnabled = user?.mfa_enabled ?? false;
+  // The shared public demo tenant's credentials are used by every visitor —
+  // letting any of them change the password or enroll 2FA would lock
+  // everyone else out. Blocked server-side too (see demoSelfServiceBlocked
+  // in auth-api); platform admins manage this account from /dashboard/platform/users instead.
+  const demoRestricted = !!user?.is_demo && !isPlatformOwner;
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [revokingAll, setRevokingAll] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -518,23 +523,33 @@ function SecurityTab() {
             <p className="text-sm text-slate-500 dark:text-slate-400">Update your password to keep your account secure.</p>
           </div>
         </div>
-        <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
-          <div className="space-y-2">
-            <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Current Password</Label>
-            <Input type="password" placeholder="••••••••" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className={inputCls} />
+        {demoRestricted ? (
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">Password changes are disabled for this demo account</p>
+              <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">This is a shared public demo login. A platform administrator can change it from the Users admin panel.</p>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">New Password</Label>
-            <Input type="password" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputCls} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Confirm New Password</Label>
-            <Input type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputCls} />
-          </div>
-          <Button type="submit" disabled={changingPassword} className="h-11 px-8 rounded-xl bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 text-white font-bold">
-            {changingPassword ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Updating…</> : 'Update Password'}
-          </Button>
-        </form>
+        ) : (
+          <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Current Password</Label>
+              <Input type="password" placeholder="••••••••" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className={inputCls} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">New Password</Label>
+              <Input type="password" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputCls} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Confirm New Password</Label>
+              <Input type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputCls} />
+            </div>
+            <Button type="submit" disabled={changingPassword} className="h-11 px-8 rounded-xl bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 text-white font-bold">
+              {changingPassword ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Updating…</> : 'Update Password'}
+            </Button>
+          </form>
+        )}
       </FieldCard>
 
       {/* 2FA */}
@@ -547,15 +562,25 @@ function SecurityTab() {
               <p className="text-sm text-slate-500 dark:text-slate-400">Add an extra layer of security to your account.</p>
             </div>
           </div>
-          <Button
-            variant={isMfaEnabled ? 'outline' : 'default'}
-            className={`h-11 px-6 rounded-xl font-bold ${!isMfaEnabled ? 'bg-primary hover:bg-primary/90' : 'dark:border-slate-700 dark:text-white'}`}
-            onClick={() => { if (!isMfaEnabled) router.push('/dashboard/security/2fa-setup'); else toast({ title: '2FA Active', description: 'Two-factor authentication is currently enabled.' }); }}
-          >
-            {isMfaEnabled ? '2FA Enabled' : 'Enable 2FA'}
-          </Button>
+          {!demoRestricted && (
+            <Button
+              variant={isMfaEnabled ? 'outline' : 'default'}
+              className={`h-11 px-6 rounded-xl font-bold ${!isMfaEnabled ? 'bg-primary hover:bg-primary/90' : 'dark:border-slate-700 dark:text-white'}`}
+              onClick={() => { if (!isMfaEnabled) router.push('/dashboard/security/2fa-setup'); else toast({ title: '2FA Active', description: 'Two-factor authentication is currently enabled.' }); }}
+            >
+              {isMfaEnabled ? '2FA Enabled' : 'Enable 2FA'}
+            </Button>
+          )}
         </div>
-        {isMfaEnabled ? (
+        {demoRestricted ? (
+          <div className="mt-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">2FA setup is disabled for this demo account</p>
+              <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">This is a shared public demo login — enrolling 2FA here would lock out every other visitor. A platform administrator can enforce 2FA on it from the Users admin panel.</p>
+            </div>
+          </div>
+        ) : isMfaEnabled ? (
           <div className="mt-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-900/30 flex items-start gap-3">
             <Key className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
             <div>
