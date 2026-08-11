@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Loader2,
+  Mail,
   RefreshCw,
   Server,
   XCircle,
@@ -66,6 +67,11 @@ interface CronJobStatus {
   healthy: boolean;
 }
 
+interface MailStats {
+  available: boolean;
+  queue_depth: number;
+}
+
 interface Overview {
   generated_at: string;
   nodes: NodeStat[];
@@ -74,6 +80,7 @@ interface Overview {
   pvcs: PVCSummary[];
   ingresses: IngressSummary[];
   cronjobs: CronJobStatus[];
+  mail: MailStats;
 }
 
 function usageBarColor(pct: number): string {
@@ -214,6 +221,23 @@ export default function PlatformMonitoringPage() {
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Mail queue — Stalwart's only signal not visible from k8s resource
+              metrics alone; email-provisioner exposes it via a small internal
+              endpoint (see plan Part 13.3). */}
+          <div className="rounded-lg border p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Mail Queue (Stalwart)</span>
+            </div>
+            {!data?.mail?.available ? (
+              <Badge variant="outline">unavailable</Badge>
+            ) : (
+              <span className="text-sm font-mono tabular-nums">
+                {data.mail.queue_depth} queued
+              </span>
+            )}
           </div>
 
           {/* Nodes */}
