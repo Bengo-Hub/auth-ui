@@ -72,6 +72,20 @@ interface MailStats {
   queue_depth: number;
 }
 
+interface PodProblem {
+  namespace: string;
+  pod: string;
+  container: string;
+  reason: string;
+  restart_count: number;
+}
+
+interface DependencyStatus {
+  name: string;
+  ok: boolean;
+  detail?: string;
+}
+
 interface Overview {
   generated_at: string;
   nodes: NodeStat[];
@@ -81,6 +95,8 @@ interface Overview {
   ingresses: IngressSummary[];
   cronjobs: CronJobStatus[];
   mail: MailStats;
+  problems: PodProblem[];
+  dependency_health: DependencyStatus[];
 }
 
 function usageBarColor(pct: number): string {
@@ -126,9 +142,16 @@ export default function PlatformMonitoringPage() {
     },
     staleTime: 30_000,
     refetchOnWindowFocus: false,
+    // Auto-refresh so this dashboard is actually a live signal, not just a
+    // snapshot from whenever someone last clicked Refresh — the gap that let
+    // the 2026-08-16 incident run 2 hours before anyone noticed.
+    refetchInterval: 30_000,
   });
 
   const unhealthyCronJobs = (data?.cronjobs ?? []).filter((c) => !c.suspended && !c.healthy);
+  const problems = data?.problems ?? [];
+  const downDependencies = (data?.dependency_health ?? []).filter((d) => !d.ok);
+  const hasCriticalIssues = problems.length > 0 || downDependencies.length > 0;
 
   return (
     <div className="space-y-6">
@@ -170,6 +193,66 @@ export default function PlatformMonitoringPage() {
         </div>
       ) : (
         <>
+          {/* Problems + dependency health — surfaced first and loudest. This
+              panel didn't exist before the 2026-08-16 incident: a crash-looping
+              redis-master and auth-api sat here invisibly for 2 hours, only
+              ever showing up as ordinary rows in "Top Pods (by memory)". */}
+          {hasCriticalIssues ? (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/5">
+              <div className="px-4 py-3 border-b border-destructive/30 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <h2 className="font-semibold text-sm text-destructive">
+                  {problems.length + downDependencies.length} active issue
+                  {problems.length + downDependencies.length === 1 ? '' : 's'}
+                </h2>
+              </div>
+              <div className="divide-y divide-destructive/20">
+                {downDependencies.map((d) => (
+                  <div key={`dep-${d.name}`} className="px-4 py-3 flex items-center gap-3">
+                    <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">Dependency down: {d.name}</p>
+                      {d.detail && (
+                        <p className="text-xs text-muted-foreground font-mono truncate">
+                          {d.detail}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {problems.map((p) => (
+                  <div
+                    key={`${p.namespace}/${p.pod}/${p.container}`}
+                    className="px-4 py-3 flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {p.namespace}/{p.pod}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{p.container}</p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-right shrink-0">
+                      <Badge variant="outline" className="border-destructive/40 text-destructive">
+                        {p.reason}
+                      </Badge>
+                      <p className="text-muted-foreground mt-1">
+                        {p.restart_count} restart{p.restart_count === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-lg border p-4 flex items-center gap-3">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+              <span className="text-sm font-medium">No pod problems or dependency failures</span>
+            </div>
+          )}
+
           {/* CronJob health — the highest-value signal: catches silently-failing */}
           {/* maintenance jobs before disk/resources become a crisis. */}
           <div className="rounded-lg border">
