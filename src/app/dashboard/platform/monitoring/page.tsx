@@ -1,12 +1,17 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Activity,
   AlertTriangle,
+  Bell,
   CheckCircle2,
   Loader2,
   Mail,
@@ -119,6 +124,114 @@ function UsageBar({ label, pct, detail }: { label: string; pct: number; detail: 
         />
       </div>
       <p className="text-[11px] text-muted-foreground mt-1">{detail}</p>
+    </div>
+  );
+}
+
+type IntegrationRow = {
+  id: string;
+  name: string;
+  is_active: boolean;
+};
+
+const ALERT_CHANNELS_INTEGRATION_NAME = 'platform_alert_channels';
+
+/**
+ * Configures where fleet-health-watcher sends alerts (Slack webhook / alert
+ * email). Reuses the existing generic integrations store (POST
+ * /api/v1/admin/integrations) — the same mechanism already used for OAuth
+ * provider credentials — rather than a bare kubectl-managed secret, so this
+ * is admin-UI-configurable. Fields are always blank on load (the backend
+ * never re-serves stored credentials); leaving a field blank on save keeps
+ * whatever is already stored. A static Kubernetes Secret fallback covers
+ * alerting before this is ever configured, and continues covering it if
+ * auth-api itself is unreachable when the watcher runs.
+ */
+function AlertSettingsCard() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [slackWebhookUrl, setSlackWebhookUrl] = useState('');
+  const [alertEmailTo, setAlertEmailTo] = useState('');
+
+  const { data: configs } = useQuery<IntegrationRow[]>({
+    queryKey: ['admin_integrations'],
+    queryFn: async () => {
+      const response = await apiClient.get<IntegrationRow[]>('/api/v1/admin/integrations');
+      return (response as any)?.data ?? response;
+    },
+  });
+  const configured = (configs ?? []).some((c) => c.name === ALERT_CHANNELS_INTEGRATION_NAME);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const credentials: Record<string, string> = {};
+      if (slackWebhookUrl !== '') credentials.slack_webhook_url = slackWebhookUrl;
+      if (alertEmailTo !== '') credentials.alert_email_to = alertEmailTo;
+      await apiClient.post('/api/v1/admin/integrations', {
+        name: ALERT_CHANNELS_INTEGRATION_NAME,
+        display_name: 'Platform Alert Channels',
+        description: 'Where fleet-health-watcher sends alerts (Slack webhook / email).',
+        credentials,
+        is_active: true,
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Saved', description: 'Alert channels updated.' });
+      setSlackWebhookUrl('');
+      setAlertEmailTo('');
+      qc.invalidateQueries({ queryKey: ['admin_integrations'] });
+    },
+    onError: () =>
+      toast({ title: 'Error', description: 'Failed to save alert channels', variant: 'destructive' }),
+  });
+
+  return (
+    <div className="rounded-lg border p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Bell className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Alert Channels</span>
+        </div>
+        {configured ? (
+          <Badge variant="outline">configured</Badge>
+        ) : (
+          <Badge variant="outline">using default fallback</Badge>
+        )}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="slack-webhook-url" className="text-xs">
+            Slack Webhook URL
+          </Label>
+          <Input
+            id="slack-webhook-url"
+            type="url"
+            placeholder={configured ? '••••••••  (leave blank to keep current)' : 'https://hooks.slack.com/services/…'}
+            value={slackWebhookUrl}
+            onChange={(e) => setSlackWebhookUrl(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="alert-email-to" className="text-xs">
+            Alert Email
+          </Label>
+          <Input
+            id="alert-email-to"
+            type="email"
+            placeholder={configured ? '••••••••  (leave blank to keep current)' : 'ops@codevertexafrica.com'}
+            value={alertEmailTo}
+            onChange={(e) => setAlertEmailTo(e.target.value)}
+          />
+        </div>
+      </div>
+      <Button
+        size="sm"
+        onClick={() => save.mutate()}
+        disabled={save.isPending || (slackWebhookUrl === '' && alertEmailTo === '')}
+      >
+        {save.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+        Save
+      </Button>
     </div>
   );
 }
@@ -252,6 +365,8 @@ export default function PlatformMonitoringPage() {
               <span className="text-sm font-medium">No pod problems or dependency failures</span>
             </div>
           )}
+
+          <AlertSettingsCard />
 
           {/* CronJob health — the highest-value signal: catches silently-failing */}
           {/* maintenance jobs before disk/resources become a crisis. */}
