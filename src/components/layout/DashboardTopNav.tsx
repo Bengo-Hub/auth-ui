@@ -3,14 +3,7 @@
 import { useTenant } from '@/components/providers/tenant-provider';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { JoinOrganizationDialog } from '@/components/organizations/JoinOrganizationDialog';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useVisibleServices, type ServiceKey, AppSwitcherGrid } from '@bengo-hub/shared-ui-lib/app-switcher';
+import { AccountPanel } from '@bengo-hub/shared-ui-lib/account-panel';
 import {
   Bell,
   Building2,
@@ -95,6 +89,7 @@ export function DashboardTopNav() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [appsOpen, setAppsOpen] = useState(false);
+  const [accountPanelOpen, setAccountPanelOpen] = useState(false);
 
   const displayTitle = getServiceTitle('SSO');
   const orgSlug = user?.tenant?.slug ?? user?.tenants?.[0]?.slug ?? '';
@@ -278,73 +273,57 @@ export function DashboardTopNav() {
           <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900" />
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="pl-1 pr-1 sm:pl-2 sm:pr-1 h-12 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-transparent">
-              <div className="flex items-center gap-2 sm:gap-3 group">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-primary to-rose-400 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
-                  {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
-                </div>
-                <div className="hidden md:block text-left mr-2">
-                  <p className="text-xs font-black text-slate-900 dark:text-white truncate max-w-[100px]">
-                    {user?.name || user?.email?.split('@')[0]}
-                  </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    {user?.roles?.[0] || 'User'}
-                  </p>
-                </div>
-              </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 rounded-[1.5rem] p-3 shadow-2xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <DropdownMenuLabel className="mb-2 px-2">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-black text-slate-900 dark:text-white">{user?.name || 'Account'}</p>
-                <p className="text-xs text-slate-500 truncate font-medium">{user?.email}</p>
-                <div className="mt-2 py-1 px-2 rounded-lg bg-primary/5 border border-primary/10 w-fit">
-                   <p className="text-[10px] font-black text-primary uppercase tracking-widest">
-                     {user?.roles?.[0] || 'Member'}
-                   </p>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
-            
-            <div className="grid gap-1 py-1">
-              <DropdownMenuItem asChild className="rounded-xl cursor-pointer py-3 focus:bg-primary/5 focus:text-primary">
-                <Link href="/dashboard/profile" className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
-                    <User className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <span className="font-bold text-sm">Account Profile</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="rounded-xl cursor-pointer py-3 focus:bg-primary/5 focus:text-primary">
-                <Link href="/dashboard/settings" className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
-                    <Settings className="w-4 h-4 text-amber-500" />
-                  </div>
-                  <span className="font-bold text-sm">Preferences</span>
-                </Link>
-              </DropdownMenuItem>
-            </div>
-
-            <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
-            <DropdownMenuItem
-              onClick={() => logout()}
-              className="rounded-xl cursor-pointer py-3 text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-500/10 focus:text-rose-600"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
-                  <LogOut className="w-4 h-4" />
-                </div>
-                <span className="font-bold text-sm">Sign Out</span>
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <button
+          onClick={() => setAccountPanelOpen(true)}
+          className="flex items-center gap-2 sm:gap-3 pl-1 pr-1 sm:pl-2 sm:pr-3 h-12 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-transparent group"
+        >
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-primary to-rose-400 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
+            {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
+          </div>
+          <div className="hidden md:block text-left">
+            <p className="text-xs font-black text-slate-900 dark:text-white truncate max-w-[100px]">
+              {user?.name || user?.email?.split('@')[0]}
+            </p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {user?.roles?.[0] || 'User'}
+            </p>
+          </div>
+        </button>
       </div>
     </header>
+
+    <AccountPanel
+      open={accountPanelOpen}
+      onClose={() => setAccountPanelOpen(false)}
+      user={{ name: user?.name || user?.email?.split('@')[0] || 'Account', email: user?.email || '' }}
+      onSignOut={() => logout()}
+    >
+      <div className="flex flex-col gap-3">
+        <div className="w-fit rounded-lg bg-primary/5 border border-primary/10 px-2 py-1">
+          <p className="text-[10px] font-black text-primary uppercase tracking-widest">{user?.roles?.[0] || 'Member'}</p>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <Link
+            href="/dashboard/profile"
+            onClick={() => setAccountPanelOpen(false)}
+            className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
+          >
+            <User className="h-4 w-4 text-blue-500" /> Account Profile
+          </Link>
+          <Link
+            href="/dashboard/settings"
+            onClick={() => setAccountPanelOpen(false)}
+            className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
+          >
+            <Settings className="h-4 w-4 text-amber-500" /> Preferences
+          </Link>
+        </div>
+        <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+          <p className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Codevertex Suite</p>
+          <AppSwitcherGrid services={services} onNavigate={() => setAccountPanelOpen(false)} label="" />
+        </div>
+      </div>
+    </AccountPanel>
     {/* Portal: drawer rendered at document.body to escape header's backdrop-filter stacking context */}
     {typeof document !== 'undefined' && createPortal(drawer, document.body)}
     </>
