@@ -33,9 +33,16 @@ export default function DashboardLayout({
     '/dashboard/platform',
     '/dashboard/tenants',
     '/dashboard/integrations',
-    '/dashboard/developer',
-    '/dashboard/api-keys',
   ];
+  // /dashboard/developer (and /dashboard/api-keys, which just redirects there) needs the
+  // "admin" or new "developer" tenant role (or platform owner) — not just any authenticated
+  // member (a cashier/waiter shouldn't land on an integrations/API-credentials page). This is
+  // a UX/discoverability gate only: App/API-key management itself is already tenant-scoped
+  // (not role-scoped) server-side (see AppHandler.CreateApp), so this doesn't change who CAN
+  // act, only who sees the page. Platform-only actions within it (OAuth clients, promoting an
+  // app to production) are separately gated by isPlatformOwner, authoritatively on the backend.
+  const DEVELOPER_PORTAL_ROUTES = ['/dashboard/developer', '/dashboard/api-keys'];
+  const DEVELOPER_PORTAL_ROLES = ['admin', 'developer', 'superuser', 'owner'];
 
   useEffect(() => {
     if (meLoading) return;
@@ -43,6 +50,18 @@ export default function DashboardLayout({
       (prefix) => pathname === prefix || pathname?.startsWith(prefix + '/'),
     );
     if (user && requiresPlatform && !isPlatformOwner) {
+      router.replace('/unauthorized');
+      return;
+    }
+    const requiresDeveloperRole = DEVELOPER_PORTAL_ROUTES.some(
+      (prefix) => pathname === prefix || pathname?.startsWith(prefix + '/'),
+    );
+    if (
+      user &&
+      requiresDeveloperRole &&
+      !isPlatformOwner &&
+      !user.roles?.some((r) => DEVELOPER_PORTAL_ROLES.includes(r))
+    ) {
       router.replace('/unauthorized');
     }
   }, [user, pathname, router, isPlatformOwner, meLoading]);

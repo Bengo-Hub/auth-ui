@@ -26,16 +26,9 @@ import {
     Trash2,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 // ── Types ────────────────────────────────────────────────────────────────────
-
-interface OAuthClient {
-  id: string;
-  client_id: string;
-  client_secret: string;
-  name: string;
-  redirect_uris: string[];
-}
 
 interface APIKey {
   id: string;
@@ -54,7 +47,19 @@ type ActiveTab = 'oauth' | 'api-keys' | 'apps';
 // ── Main Component ───────────────────────────────────────────────────────────
 
 export default function DeveloperPortal() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('oauth');
+  const { isPlatformOwner } = useAuth();
+  const [activeTab, setActiveTab] = useState<ActiveTab>('apps');
+
+  // OAuth clients are a platform-admin-only concept today (AdminHandler.requireAdmin
+  // gates every /admin/clients endpoint to platform owners) — hide the tab for everyone
+  // else rather than showing a tab that 403s on every action.
+  const tabs = (
+    [
+      { id: 'apps', label: 'Apps', icon: Cpu },
+      { id: 'api-keys', label: 'API Keys', icon: Key },
+      ...(isPlatformOwner ? [{ id: 'oauth' as ActiveTab, label: 'OAuth Clients', icon: Globe }] : []),
+    ] as { id: ActiveTab; label: string; icon: React.ComponentType<{ className?: string }> }[]
+  );
 
   return (
     <div className="space-y-12">
@@ -62,7 +67,7 @@ export default function DeveloperPortal() {
         <div>
           <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Developer Portal</h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 font-light">
-            Manage your OAuth2 applications, API keys, and webhooks.
+            Manage your apps, API keys{isPlatformOwner ? ', and OAuth clients' : ''}.
           </p>
         </div>
         <div className="flex gap-3">
@@ -74,13 +79,7 @@ export default function DeveloperPortal() {
 
       {/* Tabs */}
       <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl w-fit overflow-x-auto">
-        {(
-          [
-            { id: 'oauth', label: 'OAuth Clients', icon: Globe },
-            { id: 'api-keys', label: 'API Keys', icon: Key },
-            { id: 'apps', label: 'Apps', icon: Cpu },
-          ] as { id: ActiveTab; label: string; icon: React.ComponentType<{ className?: string }> }[]
-        ).map(({ id, label, icon: Icon }) => (
+        {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
@@ -96,9 +95,9 @@ export default function DeveloperPortal() {
         ))}
       </div>
 
-      {activeTab === 'oauth' && <OAuthSection />}
+      {activeTab === 'oauth' && isPlatformOwner && <OAuthSection />}
       {activeTab === 'api-keys' && <APIKeySection />}
-      {activeTab === 'apps' && <DeveloperAppSection />}
+      {activeTab === 'apps' && <DeveloperAppSection isPlatformOwner={isPlatformOwner} />}
 
       {/* Resources & Documentation */}
       <ResourcesSection />
@@ -107,206 +106,37 @@ export default function DeveloperPortal() {
 }
 
 // ── OAuth Clients Section ────────────────────────────────────────────────────
+//
+// OAuth client CRUD already has a complete, correctly-wired implementation at
+// /dashboard/platform/clients (useOAuthClients/useCreateOAuthClient/useUpdateOAuthClient/
+// useDeleteOAuthClient, backed by /api/v1/admin/clients — including redirect-URI editing,
+// which this portal's old "Manage Redirect URIs" button never actually did). Rather than a
+// second, duplicate CRUD implementation here, this tab just points to it.
 
 function OAuthSection() {
-  const [clients, setClients] = useState<OAuthClient[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newRedirectUri, setNewRedirectUri] = useState('');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const fetchClients = useCallback(async () => {
-    try {
-      const response = await apiClient.get('/api/v1/developer/clients');
-      setClients(response.data);
-    } catch (err) {
-      console.error('Failed to fetch clients', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
-
-  const handleCreateClient = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsCreating(true);
-    try {
-      await apiClient.post('/api/v1/developer/clients', {
-        name: newName,
-        redirect_uris: [newRedirectUri],
-      });
-      setNewName('');
-      setNewRedirectUri('');
-      fetchClients();
-    } catch (err) {
-      console.error('Failed to create client', err);
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
   return (
-    <div className="grid grid-cols-1 gap-12">
-      {/* Create New Client */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm"
-      >
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center">
-            <Plus className="h-6 w-6 text-orange-500" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Register New Application</h2>
-            <p className="text-slate-500 dark:text-slate-400">Create a new OAuth client to integrate with Codevertex SSO.</p>
-          </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between gap-6"
+    >
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center shrink-0">
+          <Globe className="h-6 w-6 text-orange-500" />
         </div>
-
-        <form onSubmit={handleCreateClient} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <Label htmlFor="name" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Application Name</Label>
-              <Input
-                id="name"
-                placeholder="My Awesome App"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                required
-              />
-            </div>
-            <div className="space-y-3">
-              <Label htmlFor="redirect" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Redirect URI</Label>
-              <Input
-                id="redirect"
-                placeholder="https://myapp.com/api/auth/callback"
-                value={newRedirectUri}
-                onChange={(e) => setNewRedirectUri(e.target.value)}
-                className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                required
-              />
-            </div>
-          </div>
-          <Button
-            type="submit"
-            disabled={isCreating}
-            className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20"
-          >
-            {isCreating ? 'Creating...' : 'Create OAuth Client'}
-          </Button>
-        </form>
-      </motion.div>
-
-      {/* List of Clients */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white">Your Applications</h2>
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : clients.length === 0 ? (
-          <div className="p-20 rounded-[3rem] bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
-            <Globe className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-500 dark:text-slate-400">No applications registered yet.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {clients.map((client) => (
-              <motion.div
-                key={client.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all"
-              >
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700">
-                      <Globe className="h-6 w-6 text-slate-400 dark:text-slate-500" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">{client.name}</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">ID: {client.id}</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl"
-                    onClick={async () => {
-                      if (!confirm(`Delete OAuth client "${client.name}"? This cannot be undone.`)) return;
-                      try {
-                        await apiClient.delete(`/api/v1/developer/clients/${client.id}`);
-                        fetchClients();
-                      } catch (err) {
-                        console.error('Failed to delete client', err);
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Client ID</Label>
-                    <div className="flex gap-2">
-                      <code className="flex-1 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-sm font-mono break-all border border-slate-100 dark:border-slate-700 text-slate-900 dark:text-slate-300">
-                        {client.client_id}
-                      </code>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-12 w-12 rounded-xl border-slate-200 dark:border-slate-700 dark:text-white"
-                        onClick={() => copyToClipboard(client.client_id, `${client.id}-id`)}
-                      >
-                        {copiedId === `${client.id}-id` ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Client Secret</Label>
-                    <div className="flex gap-2">
-                      <code className="flex-1 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-sm font-mono break-all border border-slate-100 dark:border-slate-700 text-slate-900 dark:text-slate-300">
-                        {client.client_secret ? '••••••••••••••••••••••••••••••••' : 'Not available'}
-                      </code>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-12 w-12 rounded-xl border-slate-200 dark:border-slate-700 dark:text-white"
-                        onClick={() => copyToClipboard(client.client_secret, `${client.id}-secret`)}
-                      >
-                        {copiedId === `${client.id}-secret` ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-8 pt-8 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                    <ShieldAlert className="h-4 w-4 text-amber-500" />
-                    Never share your client secret.
-                  </div>
-                  <Button variant="link" className="text-primary font-bold p-0 h-auto">
-                    Manage Redirect URIs <ExternalLink className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">OAuth Clients</h2>
+          <p className="text-slate-500 dark:text-slate-400">
+            Register and manage OAuth2 clients (redirect URIs, secrets, scopes) in the platform admin console.
+          </p>
+        </div>
+      </div>
+      <Button asChild className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 shrink-0">
+        <a href="/dashboard/platform/clients">
+          Manage OAuth Clients <ExternalLink className="h-4 w-4 ml-2" />
+        </a>
+      </Button>
+    </motion.div>
   );
 }
 
@@ -716,6 +546,7 @@ interface DevApp {
   name: string;
   description?: string;
   app_type: string;
+  environment: string;
   client_id: string;
   key_prefix: string;
   scopes?: string[];
@@ -724,8 +555,10 @@ interface DevApp {
   created_at: string;
 }
 
-function DeveloperAppSection() {
+function DeveloperAppSection({ isPlatformOwner }: { isPlatformOwner: boolean }) {
+  const { user } = useAuth();
   const [apps, setApps] = useState<DevApp[]>([]);
+  const [goLiveRequested, setGoLiveRequested] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -786,6 +619,36 @@ function DeveloperAppSection() {
       fetchApps();
     } catch (err) {
       console.error('Failed to revoke app', err);
+    }
+  };
+
+  const handlePromote = async (id: string, name: string) => {
+    if (!confirm(`Promote "${name}" to production? This unlocks live API access and cannot be undone.`)) return;
+    try {
+      await apiClient.post(`/api/v1/admin/apps/${id}/promote`);
+      fetchApps();
+    } catch (err) {
+      console.error('Failed to promote app', err);
+    }
+  };
+
+  // Reuses the same integration-request workflow (Slack/email notify to the platform
+  // team) already built for eTIMS go-live, rather than a bespoke request path — a tenant
+  // admin can't self-promote (see AppHandler.PromoteToProduction), so this is how they ask
+  // a platform admin to review and do it.
+  const handleRequestGoLive = async (id: string, name: string) => {
+    if (!user?.email) return;
+    try {
+      await apiClient.post('/api/v1/integration-requests', {
+        request_type: 'app_production_access',
+        requester_name: user.name || user.email,
+        requester_email: user.email,
+        integration_mode: 'self_serve',
+        notes: `Requesting production promotion for app "${name}" (id: ${id}).`,
+      });
+      setGoLiveRequested((prev) => new Set(prev).add(id));
+    } catch (err) {
+      console.error('Failed to request go-live', err);
     }
   };
 
@@ -908,6 +771,11 @@ function DeveloperAppSection() {
                             ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
                             : 'bg-slate-100 dark:bg-slate-700 text-slate-500'
                         }`}>{app.status}</span>
+                        <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          app.environment === 'production'
+                            ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                        }`}>{app.environment === 'production' ? 'Production' : 'Sandbox'}</span>
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400">
                         <code className="font-mono text-xs">{app.key_prefix}...</code>
@@ -923,6 +791,21 @@ function DeveloperAppSection() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    {app.status === 'active' && app.environment !== 'production' && (
+                      isPlatformOwner ? (
+                        <Button variant="outline" size="sm" onClick={() => handlePromote(app.id, app.name)}
+                          className="rounded-xl border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+                          Promote to production
+                        </Button>
+                      ) : goLiveRequested.has(app.id) ? (
+                        <span className="text-xs font-bold text-slate-400">Go-live requested</span>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => handleRequestGoLive(app.id, app.name)}
+                          className="rounded-xl border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+                          Request go-live
+                        </Button>
+                      )
+                    )}
                     {app.status === 'active' && (
                       <>
                         <Button variant="outline" size="sm" onClick={() => handleRotate(app.id)}

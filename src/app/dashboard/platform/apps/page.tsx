@@ -29,6 +29,7 @@ interface App {
   name: string;
   description?: string;
   app_type: string;
+  environment: string;
   client_id: string;
   key_prefix: string;
   tenant_id?: string;
@@ -173,6 +174,17 @@ export default function PlatformAppsPage() {
       toast({ title: 'App resumed' });
     } catch {
       toast({ title: 'Resume failed', variant: 'destructive' });
+    }
+  };
+
+  const handlePromote = async (id: string, name: string) => {
+    if (!confirm(`Promote "${name}" to production? This unlocks live API access and cannot be undone.`)) return;
+    try {
+      await apiClient.post(`/api/v1/admin/apps/${id}/promote`);
+      fetchApps();
+      toast({ title: 'App promoted to production' });
+    } catch {
+      toast({ title: 'Promote failed', variant: 'destructive' });
     }
   };
 
@@ -402,6 +414,13 @@ export default function PlatformAppsPage() {
                         <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400">
                           {app.app_type}
                         </span>
+                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-bold ${
+                          app.environment === 'production'
+                            ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                        }`}>
+                          {app.environment === 'production' ? 'Production' : 'Sandbox'}
+                        </span>
                         {app.scopes?.includes(INTERNAL_SERVICE_KEY_SCOPE) && (
                           <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400">
                             <KeyRound className="h-3 w-3" /> Fleet Internal Service Key
@@ -426,10 +445,21 @@ export default function PlatformAppsPage() {
                   <div className="flex items-center gap-2 shrink-0">
                     {app.status === 'active' && (
                       <>
+                        {app.environment !== 'production' && (
+                          <Button variant="outline" size="sm" onClick={() => handlePromote(app.id, app.name)}
+                            className="rounded-xl border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+                            Promote to production
+                          </Button>
+                        )}
                         <Button variant="outline" size="sm" onClick={() => handleRotate(app.id, app.name)}
                           className="rounded-xl border-slate-200 dark:border-slate-700 font-bold text-xs dark:text-white">
                           <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                           Rotate
+                        </Button>
+                        <Button variant="ghost" size="icon" title="Suspend"
+                          className="text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl"
+                          onClick={() => handleSuspend(app.id)}>
+                          <Pause className="h-4 w-4" />
                         </Button>
                         {revokeTarget === app.id ? (
                           <div className="flex items-center gap-1">
@@ -439,16 +469,23 @@ export default function PlatformAppsPage() {
                               onClick={() => setRevokeTarget(null)}>Cancel</Button>
                           </div>
                         ) : (
-                          <Button variant="ghost" size="icon"
-                            className="text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl"
+                          <Button variant="ghost" size="icon" title="Revoke"
+                            className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl"
                             onClick={() => setRevokeTarget(app.id)}>
                             <ShieldOff className="h-4 w-4" />
                           </Button>
                         )}
                       </>
                     )}
-                    <Button variant="ghost" size="icon"
-                      className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl"
+                    {app.status === 'suspended' && (
+                      <Button variant="outline" size="sm" onClick={() => handleResume(app.id)}
+                        className="rounded-xl border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                        <Play className="h-3.5 w-3.5 mr-1.5" />
+                        Resume
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" title="Delete"
+                      className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl"
                       onClick={() => handleDelete(app.id, app.name)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>

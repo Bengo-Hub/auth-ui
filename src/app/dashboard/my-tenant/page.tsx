@@ -556,6 +556,7 @@ function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
 // finance_admin) are JIT-provisioned by each service and not listed here.
 const TEAM_ROLES = [
   'admin',                // Full tenant admin (all services)
+  'developer',           // Developer Portal access (apps/API keys/OAuth) — no admin/billing/team access
   'manager',             // Store/operations manager
   'staff',               // General cross-service staff
   'member',              // Basic ordering/tenant member
