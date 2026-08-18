@@ -346,11 +346,15 @@ function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
       await invalidate();
       closeForm();
     } catch (err) {
-      const status = (err as { response?: { status?: number; data?: string } }).response?.status;
+      const response = (err as { response?: { status?: number; data?: { message?: string } } }).response;
+      const status = response?.status;
       let msg = 'Failed to save branch';
       if (status === 409) msg = 'A branch with that code already exists';
       else if (status === 403) msg = 'You do not have permission to manage branches';
       else if (status === 422) msg = 'Invalid use case for this branch';
+      // Structural plan limit (max_outlets) — server message already names the limit; falls back
+      // to a generic upgrade prompt if the body shape ever changes.
+      else if (status === 402) msg = response?.data?.message ?? "You've reached your plan's outlet limit. Upgrade your plan to add more outlets.";
       toast({ title: msg, variant: 'destructive' });
     } finally {
       setSaving(false);
