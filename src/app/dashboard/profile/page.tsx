@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PasskeysSection } from '@/components/settings/PasskeysSection';
+import { MyEmailAddressesCard, MyMobileNumbersCard } from '@/components/profile/contact-cards';
 import { useRevokeSession, useSessions } from '@/hooks/use-dashboard-api';
 import { useUpdateProfile, useUpdateNotificationSettings, useChangePassword, useVerifyMyEmail } from '@/hooks/useProfile';
 import { VerifyEmailDialog, type EmailVerificationState } from '@bengo-hub/shared-ui-lib/auth';
@@ -41,6 +42,13 @@ const TIMEZONES = [
   'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Moscow',
   'Asia/Dubai', 'Asia/Kolkata', 'Asia/Singapore', 'Asia/Tokyo',
   'Australia/Sydney', 'Pacific/Auckland',
+];
+
+const GENDERS = [
+  { value: '', label: "Prefer not to say" },
+  { value: 'female', label: 'Female' },
+  { value: 'male', label: 'Male' },
+  { value: 'other', label: 'Other' },
 ];
 
 const LOCALES = [
@@ -161,6 +169,7 @@ function ProfileTab() {
   const [phone, setPhone] = useState(profile.phone ?? '');
   const [bio, setBio] = useState(profile.bio ?? '');
   const [country, setCountry] = useState(profile.country ?? '');
+  const [gender, setGender] = useState(profile.gender ?? '');
   const [timezone, setTimezone] = useState(profile.timezone ?? 'UTC');
   const [locale, setLocale] = useState(profile.locale ?? 'en');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -188,7 +197,7 @@ function ProfileTab() {
     e.preventDefault();
     setMessage(null);
     try {
-      await updateProfile.mutateAsync({ name, phone, bio, country, timezone, locale });
+      await updateProfile.mutateAsync({ name, phone, bio, country, gender, timezone, locale });
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to update profile' });
@@ -252,6 +261,8 @@ function ProfileTab() {
                 account created with a placeholder (e.g. <id>@unknown.local) replaces it
                 with a real one by verifying a code sent to the new address. */}
             <EmailVerificationCard />
+            <MyEmailAddressesCard />
+            <MyMobileNumbersCard />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
@@ -269,6 +280,18 @@ function ProfileTab() {
                   <Globe className="h-3 w-3" /> Country
                 </Label>
                 <Input value={country} onChange={(e) => setCountry(e.target.value)} className={inputCls} placeholder="e.g. Kenya" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Gender</Label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40"
+                >
+                  {GENDERS.map((g) => (
+                    <option key={g.value} value={g.value}>{g.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
 

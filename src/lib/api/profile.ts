@@ -23,6 +23,7 @@ export interface ProfileUpdate {
   phone?: string;
   bio?: string;
   country?: string;
+  gender?: string;
   timezone?: string;
   locale?: string;
   preferences?: Record<string, unknown>;
@@ -64,4 +65,76 @@ export async function sendMyEmailCode(email: string): Promise<void> {
  */
 export async function verifyMyEmailCode(email: string, code: string): Promise<void> {
   await apiClient.post('/api/v1/auth/me/email/verify-code', { email, code });
+}
+
+// --- My Email Addresses / My Mobile Numbers (Zoho-style additional contact
+// entries, distinct from the single primary User.email column above) ---
+
+export interface UserEmail {
+  id: string;
+  email: string;
+  is_verified: boolean;
+  is_primary: boolean;
+  created_at: string;
+}
+
+export interface UserPhone {
+  id: string;
+  phone: string;
+  is_verified: boolean;
+  is_primary: boolean;
+  created_at: string;
+}
+
+/** GET /api/v1/auth/me/emails */
+export async function listMyEmails(): Promise<UserEmail[]> {
+  const res = await apiClient.get('/api/v1/auth/me/emails');
+  const raw = (res as { data?: { emails?: UserEmail[] } }).data ?? res;
+  return (raw as { emails?: UserEmail[] }).emails ?? [];
+}
+
+/** POST /api/v1/auth/me/emails/send-code — proves ownership of a NEW additional address. */
+export async function sendAddEmailCode(email: string): Promise<void> {
+  await apiClient.post('/api/v1/auth/me/emails/send-code', { email });
+}
+
+/** POST /api/v1/auth/me/emails/verify-code — confirms the code and adds the address. */
+export async function verifyAddEmailCode(email: string, code: string): Promise<void> {
+  await apiClient.post('/api/v1/auth/me/emails/verify-code', { email, code });
+}
+
+/** POST /api/v1/auth/me/emails/{id}/primary */
+export async function setPrimaryMyEmail(id: string): Promise<void> {
+  await apiClient.post(`/api/v1/auth/me/emails/${id}/primary`, {});
+}
+
+/** DELETE /api/v1/auth/me/emails/{id} */
+export async function deleteMyEmail(id: string): Promise<void> {
+  await apiClient.delete(`/api/v1/auth/me/emails/${id}`);
+}
+
+/** GET /api/v1/auth/me/phones */
+export async function listMyPhones(): Promise<UserPhone[]> {
+  const res = await apiClient.get('/api/v1/auth/me/phones');
+  const raw = (res as { data?: { phones?: UserPhone[] } }).data ?? res;
+  return (raw as { phones?: UserPhone[] }).phones ?? [];
+}
+
+/**
+ * POST /api/v1/auth/me/phones — adds a number with NO verification step. This
+ * platform has no SMS-OTP provider wired anywhere yet, so phones are stored
+ * as unverified contact info only (a deliberate scope limit, not a bug).
+ */
+export async function addMyPhone(phone: string): Promise<void> {
+  await apiClient.post('/api/v1/auth/me/phones', { phone });
+}
+
+/** POST /api/v1/auth/me/phones/{id}/primary */
+export async function setPrimaryMyPhone(id: string): Promise<void> {
+  await apiClient.post(`/api/v1/auth/me/phones/${id}/primary`, {});
+}
+
+/** DELETE /api/v1/auth/me/phones/{id} */
+export async function deleteMyPhone(id: string): Promise<void> {
+  await apiClient.delete(`/api/v1/auth/me/phones/${id}`);
 }

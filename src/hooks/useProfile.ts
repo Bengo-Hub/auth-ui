@@ -1,11 +1,20 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  addMyPhone,
   changePassword,
+  deleteMyEmail,
+  deleteMyPhone,
+  listMyEmails,
+  listMyPhones,
+  sendAddEmailCode,
   sendMyEmailCode,
+  setPrimaryMyEmail,
+  setPrimaryMyPhone,
   updateNotificationSettings,
   updateProfile,
+  verifyAddEmailCode,
   verifyMyEmailCode,
   type NotificationSettings,
   type ProfileUpdate,
@@ -64,6 +73,66 @@ export function useVerifyMyEmail() {
     },
   });
   return { sendCode, verifyCode };
+}
+
+// --- My Email Addresses / My Mobile Numbers ---
+
+export function useMyEmails() {
+  return useQuery({ queryKey: ['my-emails'], queryFn: listMyEmails, staleTime: 60 * 1000 });
+}
+
+export function useAddMyEmail() {
+  const queryClient = useQueryClient();
+  const sendCode = useMutation({ mutationFn: (email: string) => sendAddEmailCode(email) });
+  const verifyCode = useMutation({
+    mutationFn: ({ email, code }: { email: string; code: string }) => verifyAddEmailCode(email, code),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-emails'] }),
+  });
+  return { sendCode, verifyCode };
+}
+
+export function useSetPrimaryMyEmail() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => setPrimaryMyEmail(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-emails'] }),
+  });
+}
+
+export function useDeleteMyEmail() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteMyEmail(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-emails'] }),
+  });
+}
+
+export function useMyPhones() {
+  return useQuery({ queryKey: ['my-phones'], queryFn: listMyPhones, staleTime: 60 * 1000 });
+}
+
+export function useAddMyPhone() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (phone: string) => addMyPhone(phone),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-phones'] }),
+  });
+}
+
+export function useSetPrimaryMyPhone() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => setPrimaryMyPhone(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-phones'] }),
+  });
+}
+
+export function useDeleteMyPhone() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteMyPhone(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-phones'] }),
+  });
 }
 
 export function useChangePassword() {
