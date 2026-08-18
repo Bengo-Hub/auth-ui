@@ -152,6 +152,8 @@ function AlertSettingsCard() {
   const { toast } = useToast();
   const [slackWebhookUrl, setSlackWebhookUrl] = useState('');
   const [alertEmailTo, setAlertEmailTo] = useState('');
+  const [etimsSupportSlackWebhookUrl, setEtimsSupportSlackWebhookUrl] = useState('');
+  const [etimsSupportEmailTo, setEtimsSupportEmailTo] = useState('');
 
   const { data: configs } = useQuery<IntegrationRow[]>({
     queryKey: ['admin_integrations'],
@@ -167,10 +169,12 @@ function AlertSettingsCard() {
       const credentials: Record<string, string> = {};
       if (slackWebhookUrl !== '') credentials.slack_webhook_url = slackWebhookUrl;
       if (alertEmailTo !== '') credentials.alert_email_to = alertEmailTo;
+      if (etimsSupportSlackWebhookUrl !== '') credentials.etims_support_slack_webhook_url = etimsSupportSlackWebhookUrl;
+      if (etimsSupportEmailTo !== '') credentials.etims_support_email_to = etimsSupportEmailTo;
       await apiClient.post('/api/v1/admin/integrations', {
         name: ALERT_CHANNELS_INTEGRATION_NAME,
         display_name: 'Platform Alert Channels',
-        description: 'Where fleet-health-watcher sends alerts (Slack webhook / email).',
+        description: 'Where fleet-health-watcher sends alerts, and where integration requests notify support (Slack webhook / email).',
         credentials,
         is_active: true,
       });
@@ -179,6 +183,8 @@ function AlertSettingsCard() {
       toast({ title: 'Saved', description: 'Alert channels updated.' });
       setSlackWebhookUrl('');
       setAlertEmailTo('');
+      setEtimsSupportSlackWebhookUrl('');
+      setEtimsSupportEmailTo('');
       qc.invalidateQueries({ queryKey: ['admin_integrations'] });
     },
     onError: () =>
@@ -224,10 +230,44 @@ function AlertSettingsCard() {
           />
         </div>
       </div>
+      <div className="pt-2 border-t space-y-1.5">
+        <p className="text-xs font-medium text-muted-foreground">
+          eTIMS / integration-request support channel <span className="font-normal">(optional — falls back to the alert channels above when unset)</span>
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="etims-support-slack-webhook-url" className="text-xs">
+              eTIMS Support Slack Webhook
+            </Label>
+            <Input
+              id="etims-support-slack-webhook-url"
+              type="url"
+              placeholder="https://hooks.slack.com/services/… (leave blank to use the alert webhook above)"
+              value={etimsSupportSlackWebhookUrl}
+              onChange={(e) => setEtimsSupportSlackWebhookUrl(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="etims-support-email-to" className="text-xs">
+              eTIMS Support Email
+            </Label>
+            <Input
+              id="etims-support-email-to"
+              type="email"
+              placeholder="etims-support@codevertexafrica.com"
+              value={etimsSupportEmailTo}
+              onChange={(e) => setEtimsSupportEmailTo(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
       <Button
         size="sm"
         onClick={() => save.mutate()}
-        disabled={save.isPending || (slackWebhookUrl === '' && alertEmailTo === '')}
+        disabled={
+          save.isPending ||
+          (slackWebhookUrl === '' && alertEmailTo === '' && etimsSupportSlackWebhookUrl === '' && etimsSupportEmailTo === '')
+        }
       >
         {save.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         Save

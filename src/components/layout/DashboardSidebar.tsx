@@ -15,6 +15,7 @@ import {
   Cpu,
   Database,
   ExternalLink,
+  Inbox,
   Key,
   KeyRound,
   KeySquare,
@@ -60,6 +61,7 @@ const PLATFORM_ADMIN_ITEMS: NavItem[] = [
   { title: 'Audit Log', href: '/dashboard/platform/audit', icon: ScrollText },
   { title: 'Password Policy', href: '/dashboard/platform/security/password-policy', icon: KeyRound },
   { title: 'Apps & Keys', href: '/dashboard/platform/apps', icon: Cpu },
+  { title: 'Integration Requests', href: '/dashboard/platform/integration-requests', icon: Inbox },
   { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
   { title: 'Infra Monitor', href: '/dashboard/platform/monitoring', icon: Activity },
   {
