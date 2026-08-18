@@ -19,6 +19,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { useVisibleServices, type ServiceKey, AppSwitcherGrid } from '@bengo-hub/shared-ui-lib/app-switcher';
 import {
   Bell,
   Building2,
@@ -26,6 +27,7 @@ import {
   Cpu,
   Database,
   ExternalLink,
+  Grid3x3,
   Home,
   Key,
   LayoutDashboard,
@@ -42,6 +44,30 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+
+// Same convention as every other *-ui's header.tsx SERVICE_URLS map: each app
+// resolves its own env vars as literal expressions so its bundler can
+// statically inline them, then hands the resolved base URLs to
+// useVisibleServices — see shared-ui-lib's app-switcher README for why this
+// isn't resolved inside the shared hook itself.
+const SERVICE_URLS: Partial<Record<ServiceKey, string>> = {
+  pos: process.env.NEXT_PUBLIC_POS_UI_URL ?? 'https://pos.codevertexafrica.com',
+  inventory: process.env.NEXT_PUBLIC_INVENTORY_UI_URL ?? 'https://inventory.codevertexafrica.com',
+  treasury: process.env.NEXT_PUBLIC_TREASURY_UI_URL ?? 'https://books.codevertexafrica.com',
+  marketflow: process.env.NEXT_PUBLIC_CRM_UI_URL ?? 'https://marketflow.codevertexafrica.com',
+  logistics: process.env.NEXT_PUBLIC_LOGISTICS_UI_URL ?? 'https://logistics.codevertexafrica.com',
+  erp: process.env.NEXT_PUBLIC_ERP_UI_URL ?? 'https://erp.codevertexafrica.com',
+  ordering: process.env.NEXT_PUBLIC_ORDERING_UI_URL ?? 'https://ordering.codevertexafrica.com',
+  subscriptions: process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL ?? 'https://pricing.codevertexafrica.com',
+  projects: process.env.NEXT_PUBLIC_PROJECTS_UI_URL ?? 'https://projects.codevertexafrica.com',
+  afya: process.env.NEXT_PUBLIC_HOSPITAL_UI_URL ?? 'https://afya.codevertexafrica.com',
+  mail: process.env.NEXT_PUBLIC_MAIL_UI_URL ?? 'https://webmail.codevertexafrica.com',
+  notifications: process.env.NEXT_PUBLIC_NOTIFICATIONS_UI_URL ?? 'https://notifications.codevertexafrica.com',
+  library: process.env.NEXT_PUBLIC_LIBRARY_UI_URL ?? 'https://library.codevertexafrica.com',
+  ticketing: process.env.NEXT_PUBLIC_TICKETING_UI_URL ?? 'https://ticketing.codevertexafrica.com',
+  ispbilling: process.env.NEXT_PUBLIC_ISPBILLING_UI_URL ?? 'https://ispbilling.codevertexafrica.com',
+  truload: process.env.NEXT_PUBLIC_TRULOAD_UI_URL ?? 'https://truload.codevertexafrica.com',
+};
 
 const MOBILE_NAV_ITEMS = [
   { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -68,8 +94,21 @@ export function DashboardTopNav() {
   const { isPlatformOwner, isTenantAdmin } = useAuth();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [appsOpen, setAppsOpen] = useState(false);
 
   const displayTitle = getServiceTitle('SSO');
+  const orgSlug = user?.tenant?.slug ?? user?.tenants?.[0]?.slug ?? '';
+  const rawServices = useVisibleServices({
+    orgSlug,
+    urls: SERVICE_URLS,
+    canManageLinks: isPlatformOwner || isTenantAdmin,
+  });
+  // mail-ui doesn't share this app's SSO session (it authenticates its own
+  // mailbox credential separately) — its real entry point is /login?tenant=,
+  // not the `${base}/${slug}` shape every other service uses.
+  const services = rawServices.map((svc) =>
+    svc.key === 'mail' && svc.href ? { ...svc, href: `${SERVICE_URLS.mail}/login?tenant=${orgSlug}` } : svc,
+  );
 
   const drawer = (
     <AnimatePresence>
@@ -222,7 +261,18 @@ export function DashboardTopNav() {
           <JoinOrganizationDialog />
         </div>
         <ThemeToggle />
-        
+
+        <DropdownMenu open={appsOpen} onOpenChange={setAppsOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Codevertex apps">
+              <Grid3x3 className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80 max-h-[70vh] overflow-y-auto rounded-[1.5rem] p-4 shadow-2xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <AppSwitcherGrid services={services} onNavigate={() => setAppsOpen(false)} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button variant="ghost" size="icon" className="relative group rounded-xl">
           <Bell className="h-5 w-5 text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors" />
           <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900" />
