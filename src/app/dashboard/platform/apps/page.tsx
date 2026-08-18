@@ -10,7 +10,10 @@ import {
     Check,
     ClipboardCopy,
     Cpu,
+    KeyRound,
     Loader2,
+    Pause,
+    Play,
     Plus,
     RefreshCw,
     ShieldOff,
@@ -19,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useTenants } from '@/hooks/use-dashboard-api';
 
 interface App {
   id: string;
@@ -27,6 +31,7 @@ interface App {
   app_type: string;
   client_id: string;
   key_prefix: string;
+  tenant_id?: string;
   scopes?: string[];
   allowed_ips?: string[];
   status: string;
@@ -34,6 +39,12 @@ interface App {
   last_used_at?: string;
   created_at: string;
 }
+
+// Preset scopes shown as one-click chips alongside the free-text field. The
+// internal_service_key tag is special-cased (see INTERNAL_SERVICE_KEY_SCOPE
+// below) -- it marks the App that mirrors the fleet's shared S2S secret.
+const INTERNAL_SERVICE_KEY_SCOPE = 'internal_service_key';
+const SCOPE_PRESETS = ['s2s:*', INTERNAL_SERVICE_KEY_SCOPE, 'etims:read', 'etims:write', 'treasury:read'];
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -57,16 +68,25 @@ export default function PlatformAppsPage() {
   const [newToken, setNewToken] = useState<string | null>(null);
   const [tokenCopied, setTokenCopied] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
+  const { data: tenants } = useTenants();
 
   // Create form state
   const [form, setForm] = useState({
     name: '',
     description: '',
     app_type: 'platform',
+    tenant_id: '',
     scopes: 's2s:*',
     allowed_ips: '',
     expires_in: '',
   });
+
+  const toggleScope = (scope: string) => {
+    const current = form.scopes.split(',').map((s) => s.trim()).filter(Boolean);
+    const next = current.includes(scope) ? current.filter((s) => s !== scope) : [...current, scope];
+    setForm((f) => ({ ...f, scopes: next.join(', ') }));
+  };
+  const activeScopes = form.scopes.split(',').map((s) => s.trim()).filter(Boolean);
 
   const fetchApps = useCallback(async () => {
     try {
@@ -91,6 +111,9 @@ export default function PlatformAppsPage() {
         app_type: form.app_type,
         scopes: form.scopes.split(',').map((s) => s.trim()).filter(Boolean),
       };
+      if (form.app_type === 'tenant' && form.tenant_id) {
+        payload.tenant_id = form.tenant_id;
+      }
       if (form.allowed_ips.trim()) {
         payload.allowed_ips = form.allowed_ips.split(',').map((s) => s.trim()).filter(Boolean);
       }
@@ -100,7 +123,7 @@ export default function PlatformAppsPage() {
       const res = await apiClient.post<{ token: string }>('/api/v1/admin/apps', payload);
       setNewToken(res.data.token);
       setShowCreate(false);
-      setForm({ name: '', description: '', app_type: 'platform', scopes: 's2s:*', allowed_ips: '', expires_in: '' });
+      setForm({ name: '', description: '', app_type: 'platform', tenant_id: '', scopes: 's2s:*', allowed_ips: '', expires_in: '' });
       fetchApps();
       toast({ title: 'App created', description: 'Save the token — it will not be shown again.' });
     } catch {
@@ -130,6 +153,26 @@ export default function PlatformAppsPage() {
       toast({ title: 'App revoked' });
     } catch {
       toast({ title: 'Revoke failed', variant: 'destructive' });
+    }
+  };
+
+  const handleSuspend = async (id: string) => {
+    try {
+      await apiClient.post(`/api/v1/admin/apps/${id}/suspend`);
+      fetchApps();
+      toast({ title: 'App suspended', description: 'Its token is paused — resume it to reactivate.' });
+    } catch {
+      toast({ title: 'Suspend failed', variant: 'destructive' });
+    }
+  };
+
+  const handleResume = async (id: string) => {
+    try {
+      await apiClient.post(`/api/v1/admin/apps/${id}/resume`);
+      fetchApps();
+      toast({ title: 'App resumed' });
+    } catch {
+      toast({ title: 'Resume failed', variant: 'destructive' });
     }
   };
 
@@ -240,11 +283,47 @@ export default function PlatformAppsPage() {
                   <option value="tenant">Tenant (scoped)</option>
                 </select>
               </div>
-              <div className="space-y-2">
+              {form.app_type === 'tenant' && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    Tenant <span className="font-normal text-slate-400">(optional — defaults to your own)</span>
+                  </Label>
+                  <select
+                    value={form.tenant_id}
+                    onChange={(e) => setForm((f) => ({ ...f, tenant_id: e.target.value }))}
+                    className="w-full h-14 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
+                  >
+                    <option value="">My own tenant</option>
+                    {(tenants ?? []).map((t: { id: string; name: string; slug: string }) => (
+                      <option key={t.id} value={t.id}>{t.name} ({t.slug})</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-400">
+                    Pick a different tenant to hand it a credential on their behalf — e.g. an external API-partner onboarded for eTIMS-as-a-service.
+                  </p>
+                </div>
+              )}
+              <div className="space-y-2 md:col-span-2">
                 <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Scopes <span className="font-normal text-slate-400">(comma-separated)</span></Label>
                 <Input value={form.scopes} onChange={(e) => setForm((f) => ({ ...f, scopes: e.target.value }))}
                   placeholder="s2s:*, treasury:read"
                   className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+                <div className="flex gap-2 flex-wrap pt-1">
+                  {SCOPE_PRESETS.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => toggleScope(s)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold border transition-colors ${
+                        activeScopes.includes(s)
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Allowed IPs <span className="font-normal text-slate-400">(optional)</span></Label>
@@ -314,6 +393,8 @@ export default function PlatformAppsPage() {
                         <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-bold ${
                           app.status === 'active'
                             ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                            : app.status === 'suspended'
+                            ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
                             : 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400'
                         }`}>
                           {app.status}
@@ -321,6 +402,11 @@ export default function PlatformAppsPage() {
                         <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400">
                           {app.app_type}
                         </span>
+                        {app.scopes?.includes(INTERNAL_SERVICE_KEY_SCOPE) && (
+                          <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400">
+                            <KeyRound className="h-3 w-3" /> Fleet Internal Service Key
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400 flex-wrap">
                         <code className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{app.key_prefix}...</code>
