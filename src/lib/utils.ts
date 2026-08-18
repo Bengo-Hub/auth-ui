@@ -53,7 +53,14 @@ export function isValidReturnUrl(url: string | null | undefined): boolean {
     const slashIndex = url.indexOf('/', 1);
     if (colonIndex !== -1 && (slashIndex === -1 || colonIndex < slashIndex)) return false;
 
-    return true;
+    // auth-ui has no tenant-slug-prefixed routing (unlike pos/ordering/etc.), so
+    // /dashboard is the only same-origin destination worth returning to after
+    // login. Trusting any relative path here let a stale link, typo, or another
+    // service's tenant URL (e.g. "/acme") survive as return_to: the 401
+    // interceptor + login flow would keep echoing that broken path back,
+    // bouncing the user into the same 404 forever instead of recovering.
+    const path = url.split(/[?#]/)[0];
+    return path === '/dashboard' || path.startsWith('/dashboard/');
   }
 
   // Allow absolute URLs that start with our SSO issuer (for OIDC / service-originated login return_to)
