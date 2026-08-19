@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Mail, Phone, Plus, Star, Trash2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PhoneInputField } from '@/components/ui/phone-input';
 import {
   useMyEmails,
   useAddMyEmail,
@@ -246,14 +247,9 @@ export function MyMobileNumbersCard() {
         {adding && (
           <div className={rowCls}>
             <Phone className="h-4 w-4 shrink-0 text-slate-400" />
-            <input
-              type="tel"
-              autoFocus
-              value={phone}
-              onChange={(ev) => setPhone(ev.target.value)}
-              placeholder="+254 700 000 000"
-              className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-            />
+            <div className="flex-1 min-w-0">
+              <PhoneInputField value={phone} onChange={setPhone} className="is-flat" />
+            </div>
             <button
               type="button"
               onClick={handleAdd}

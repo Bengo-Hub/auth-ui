@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInputField } from '@/components/ui/phone-input';
 import apiClient from '@/lib/api-client';
 import { isValidReturnUrl } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -1002,11 +1003,8 @@ function Step1({
               </div>
               <div className="space-y-2">
                 <Label>WhatsApp / Phone Number <span className="text-rose-500">*</span></Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-slate-400 text-xs">📱</span>
-                  <Input placeholder="e.g. 0743793901 or 254743793901" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9+\s-]/g, ''))} className="pl-10 h-11 rounded-xl" />
-                </div>
-                <p className="text-[10px] text-slate-500">Your WhatsApp number for customer enquiries. Supports KE, UG, TZ, RW, BI, ET country codes.</p>
+                <PhoneInputField value={phoneNumber} onChange={setPhoneNumber} />
+                <p className="text-[10px] text-slate-500">Your WhatsApp number for customer enquiries.</p>
               </div>
             </div>
           )}
@@ -1030,10 +1028,7 @@ function Step1({
               </div>
               <div className="space-y-2">
                 <Label>Primary WhatsApp Phone <span className="text-rose-500">*</span></Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-slate-400 text-xs">📱</span>
-                  <Input placeholder="e.g. 0743793901 or 254743793901" value={ispWhatsapp} onChange={(e: any) => setIspWhatsapp(e.target.value.replace(/[^0-9+\s-]/g, ''))} className="pl-10 h-11 rounded-xl" />
-                </div>
+                <PhoneInputField value={ispWhatsapp} onChange={setIspWhatsapp} />
                 <p className="text-[10px] text-slate-500">Your primary WhatsApp number for subscriber support and billing notices.</p>
               </div>
               <div className="space-y-2">

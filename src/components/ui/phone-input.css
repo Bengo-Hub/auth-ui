@@ -1,0 +1,90 @@
+/* Styles react-phone-number-input's generated DOM to match this app's Input
+   component (h-12 rounded-xl border-slate-200/700 bg-white/slate-800). */
+
+.PhoneInput {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 3rem;
+  padding: 0 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgb(226 232 240);
+  background-color: #fff;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.dark .PhoneInput {
+  border-color: rgb(51 65 85);
+  background-color: rgb(30 41 59);
+}
+.PhoneInput:focus-within {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(145, 0, 176, 0.35);
+}
+.PhoneInput--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.PhoneInputInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.875rem;
+  color: rgb(15 23 42);
+}
+.dark .PhoneInputInput {
+  color: #fff;
+}
+.PhoneInputInput::placeholder {
+  color: rgb(148 163 184);
+}
+
+.PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding-right: 0.5rem;
+  border-right: 1px solid rgb(226 232 240);
+}
+.dark .PhoneInputCountry {
+  border-color: rgb(51 65 85);
+}
+
+.PhoneInputCountryIcon {
+  width: 1.4rem;
+  height: 1.05rem;
+  border-radius: 0.2rem;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.PhoneInputCountrySelect {
+  background: transparent;
+  border: none;
+  font-size: 0.8rem;
+  color: rgb(71 85 105);
+  cursor: pointer;
+}
+.dark .PhoneInputCountrySelect {
+  color: rgb(148 163 184);
+}
+
+.PhoneInputCountrySelectArrow {
+  opacity: 0.6;
+  margin-left: 0.25rem;
+}
+
+/* Flat variant — for embedding inside an existing bordered row/container so
+   the phone input doesn't draw a second nested border/background. */
+.PhoneInput.is-flat {
+  height: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+.PhoneInput.is-flat:focus-within {
+  box-shadow: none;
+}
