@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight, Book, Clock, Key, Receipt } from 'lucide-react';
+import { ArrowRight, Bell, Book, Clock, CreditCard, Key, Receipt } from 'lucide-react';
 import Link from 'next/link';
 import { fadeInUp } from './docs-components';
 
@@ -31,13 +31,28 @@ const LIVE_SERVICES = [
     tagline: 'Invoicing, payments, and KRA eTIMS tax compliance.',
     readme: 'Read this if you’re building billing, payment collection, or Kenyan e-invoicing/fiscalisation.',
   },
+  {
+    slug: 'notifications-api',
+    name: 'Notifications API',
+    icon: Bell,
+    color: 'from-sky-500/20 to-primary/20',
+    iconColor: 'text-sky-600 dark:text-sky-400',
+    tagline: 'Email, SMS, push, and WhatsApp delivery.',
+    readme: 'Read this if you’re sending templated messages — reminders, receipts, or alerts — across any channel.',
+  },
+  {
+    slug: 'subscriptions-api',
+    name: 'Subscriptions API',
+    icon: CreditCard,
+    color: 'from-amber-500/20 to-primary/20',
+    iconColor: 'text-amber-600 dark:text-amber-400',
+    tagline: 'Plan catalog, pricing, and entitlements.',
+    readme: 'Read this if you’re building a pricing page, quote tool, or need real plan/tier data.',
+  },
 ];
 
 const COMING_SOON_SERVICES = [
   { name: 'POS API', tagline: 'Point-of-sale transactions and till management.' },
-  { name: 'Inventory API', tagline: 'Stock, warehouses, and adjustments.' },
-  { name: 'Library API', tagline: 'Catalog, circulation, and member management.' },
-  { name: 'Notifications API', tagline: 'Email, SMS, and push delivery.' },
 ];
 
 export default function DocsHubPage() {
