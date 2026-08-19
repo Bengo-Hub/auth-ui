@@ -7,6 +7,7 @@ import { useLogout } from '@/hooks/useLogout';
 import { cn } from '@/lib/utils';
 import {
   Activity,
+  BookOpen,
   Building2,
   ChevronDown,
   ChevronLeft,
@@ -48,19 +49,33 @@ interface NavGroup {
 
 const ACCOUNT_ITEMS: NavItem[] = [
   { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+  { title: 'Profile', href: '/dashboard/profile', icon: User },
 ];
 
-const PLATFORM_ADMIN_ITEMS: NavItem[] = [
-  { title: 'Organizations', href: '/dashboard/tenants', icon: Building2 },
+// Consolidates what were 4 flat, un-nested entries (Developer/Apps & Keys/
+// OAuth Clients/Integrations) into one categorized group, matching the Zoho
+// Mail Admin reference's grouped left-nav pattern. Docs is a net-new sidebar
+// entry — /docs already exists as a real page but had no dashboard nav link
+// at all before this. Pure re-categorization: role-gating (isPlatformOwner)
+// is unchanged from today.
+const DEVELOPER_ITEMS: NavItem[] = [
+  { title: 'Overview', href: '/dashboard/developer', icon: Code2 },
+  { title: 'Apps & Keys', href: '/dashboard/platform/apps', icon: Cpu },
   { title: 'OAuth Clients', href: '/dashboard/platform/clients', icon: Key },
   { title: 'Integrations', href: '/dashboard/integrations', icon: Wrench },
-  { title: 'Developer', href: '/dashboard/developer', icon: Code2 },
-  { title: 'Users', href: '/dashboard/platform/users', icon: Users },
+  { title: 'API Docs', href: '/docs', icon: BookOpen },
+];
+
+const SECURITY_ITEMS: NavItem[] = [
   { title: 'Roles', href: '/dashboard/platform/roles', icon: ShieldCheck },
   { title: 'Permissions', href: '/dashboard/platform/permissions', icon: KeySquare },
-  { title: 'Audit Log', href: '/dashboard/platform/audit', icon: ScrollText },
   { title: 'Password Policy', href: '/dashboard/platform/security/password-policy', icon: KeyRound },
-  { title: 'Apps & Keys', href: '/dashboard/platform/apps', icon: Cpu },
+  { title: 'Audit Log', href: '/dashboard/platform/audit', icon: ScrollText },
+];
+
+const PLATFORM_ITEMS: NavItem[] = [
+  { title: 'Organizations', href: '/dashboard/tenants', icon: Building2 },
+  { title: 'Users', href: '/dashboard/platform/users', icon: Users },
   { title: 'Integration Requests', href: '/dashboard/platform/integration-requests', icon: Inbox },
   { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
   { title: 'Infra Monitor', href: '/dashboard/platform/monitoring', icon: Activity },
@@ -195,8 +210,22 @@ export function DashboardSidebar() {
         }
       : null;
 
+  // Developer/Security/Platform are all still platform-owner-only, exactly as
+  // today (PLATFORM_ADMIN_ITEMS was one flat isPlatformOwner-gated list) —
+  // this pass only re-categorizes those same links into labeled groups, it
+  // doesn't change who can see what. Fixing tenant-admin visibility into
+  // their own Developer/Apps area is Phase 11's job (unifying the two
+  // separate tenant-scoped vs platform-scoped Apps pages), not this one's.
+  const developerGroup: NavGroup | null = isPlatformOwner
+    ? { label: 'Developer', icon: Code2, items: DEVELOPER_ITEMS }
+    : null;
+
+  const securityGroup: NavGroup | null = isPlatformOwner
+    ? { label: 'Security & Compliance', icon: ShieldCheck, items: SECURITY_ITEMS }
+    : null;
+
   const platformGroup: NavGroup | null = isPlatformOwner
-    ? { label: 'Platform', icon: Wrench, items: PLATFORM_ADMIN_ITEMS }
+    ? { label: 'Platform', icon: Wrench, items: PLATFORM_ITEMS }
     : null;
 
   return (
@@ -277,6 +306,26 @@ export function DashboardSidebar() {
         {orgGroup && (
           <SectionGroup
             group={orgGroup}
+            isCollapsed={isCollapsed}
+            pathname={pathname}
+            defaultOpen
+          />
+        )}
+
+        {/* Developer group (platform owners only, for now — see Phase 11) */}
+        {developerGroup && (
+          <SectionGroup
+            group={developerGroup}
+            isCollapsed={isCollapsed}
+            pathname={pathname}
+            defaultOpen
+          />
+        )}
+
+        {/* Security & Compliance group (platform owners only) */}
+        {securityGroup && (
+          <SectionGroup
+            group={securityGroup}
             isCollapsed={isCollapsed}
             pathname={pathname}
             defaultOpen
