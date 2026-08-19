@@ -1,17 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import {
   ShieldCheck,
   Loader2,
   RefreshCw,
   Plus,
-  Lock,
-  Pencil,
-  Trash2,
-  Users,
-  KeySquare,
 } from 'lucide-react';
 import {
   useRoles,
@@ -32,15 +26,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-
-function ScopeBadge({ scope }: { scope?: string }) {
-  if (!scope) return <span className="text-muted-foreground">—</span>;
-  return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-      {scope}
-    </span>
-  );
-}
+import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
+import { buildRoleColumns } from './roles-columns';
 
 function CreateRoleDialog({ onClose }: { onClose: () => void }) {
   const { toast } = useToast();
@@ -167,12 +154,15 @@ function EditRoleDialog({ role, onClose }: { role: Role; onClose: () => void }) 
   );
 }
 
-function RoleRow({ role }: { role: Role }) {
-  const { toast } = useToast();
+export default function RolesPage() {
+  const { data: roles, isLoading, isError, refetch } = useRoles();
+  const [creating, setCreating] = useState(false);
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
   const del = useDeleteRole();
-  const [editing, setEditing] = useState(false);
+  const { toast } = useToast();
+  const list = roles ?? [];
 
-  const doDelete = () => {
+  const doDelete = (role: Role) => {
     if (!confirm(`Delete role "${role.role_code}"? Its permission assignments will be removed.`)) return;
     del.mutate(role.role_code, {
       onSuccess: () => toast({ title: 'Deleted', description: `Role "${role.role_code}" removed.` }),
@@ -181,56 +171,7 @@ function RoleRow({ role }: { role: Role }) {
     });
   };
 
-  return (
-    <>
-      {editing && <EditRoleDialog role={role} onClose={() => setEditing(false)} />}
-      <tr className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-        <td className="px-4 py-3">
-          <Link href={`/dashboard/platform/roles/${role.role_code}`} className="font-medium text-sm hover:underline flex items-center gap-2">
-            {role.is_wildcard && <Lock className="h-3.5 w-3.5 text-amber-600" />}
-            {role.name}
-          </Link>
-          <div className="text-xs text-muted-foreground font-mono">{role.role_code}</div>
-        </td>
-        <td className="px-4 py-3"><ScopeBadge scope={role.scope} /></td>
-        <td className="px-4 py-3">
-          {role.is_system ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">System</span>
-          ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">Custom</span>
-          )}
-        </td>
-        <td className="px-4 py-3 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <KeySquare className="h-3.5 w-3.5" />
-            {role.is_wildcard ? 'All' : role.permission_count}
-          </span>
-        </td>
-        <td className="px-4 py-3 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" />{role.member_count}</span>
-        </td>
-        <td className="px-4 py-3">
-          <div className="flex items-center justify-end gap-1">
-            <Link href={`/dashboard/platform/roles/${role.role_code}`}>
-              <Button variant="ghost" size="sm">Permissions</Button>
-            </Link>
-            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={role.is_system} onClick={() => setEditing(true)} title={role.is_system ? 'System role — read-only' : 'Edit'}>
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-600" disabled={role.is_system} onClick={doDelete} title={role.is_system ? 'System role — cannot delete' : 'Delete'}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </td>
-      </tr>
-    </>
-  );
-}
-
-export default function RolesPage() {
-  const { data: roles, isLoading, refetch } = useRoles();
-  const [creating, setCreating] = useState(false);
-  const list = roles ?? [];
+  const columns = useMemo(() => buildRoleColumns({ onEdit: setEditingRole, onDelete: doDelete }), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="p-6 space-y-6">
@@ -255,34 +196,18 @@ export default function RolesPage() {
       </div>
 
       {creating && <CreateRoleDialog onClose={() => setCreating(false)} />}
+      {editingRole && <EditRoleDialog role={editingRole} onClose={() => setEditingRole(null)} />}
 
-      <div className="rounded-lg border overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : list.length === 0 ? (
-          <div className="py-16 text-center text-muted-foreground">No roles found</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs uppercase tracking-wider">
-              <tr>
-                <th className="px-4 py-3 text-left">Role</th>
-                <th className="px-4 py-3 text-left">Scope</th>
-                <th className="px-4 py-3 text-left">Type</th>
-                <th className="px-4 py-3 text-left">Permissions</th>
-                <th className="px-4 py-3 text-left">Members</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((r) => (
-                <RoleRow key={r.role_code} role={r} />
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <DataTable
+        columns={columns}
+        rows={list}
+        rowKey={(r) => r.role_code}
+        loading={isLoading}
+        error={isError}
+        onRetry={() => refetch()}
+        emptyText="No roles found"
+        storageKey="platform-roles-col-prefs"
+      />
     </div>
   );
 }
