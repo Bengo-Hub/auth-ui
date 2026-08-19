@@ -38,9 +38,11 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
-// Global SSO roles assignable per tenant membership.
+// Global SSO roles assignable per tenant membership. 'developer' and 'superuser' grant
+// developer-portal access (superuser also grants platform-owner status when the tenant is
+// "codevertex" — see auth-api's isPlatformAdminRole/DEVELOPER_PORTAL_ROLES).
 export const SSO_ROLES = [
-  'admin', 'manager', 'staff', 'member', 'viewer', 'cashier', 'waiter',
+  'admin', 'superuser', 'developer', 'manager', 'staff', 'member', 'viewer', 'cashier', 'waiter',
   'barista', 'kitchen', 'bar', 'receptionist', 'accountant', 'rider', 'driver',
   'delivery_coordinator', 'technician', 'customer',
 ];

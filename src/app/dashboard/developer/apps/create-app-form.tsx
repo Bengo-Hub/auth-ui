@@ -11,6 +11,16 @@ import { INTERNAL_SERVICE_KEY_SCOPE } from './apps-columns';
 
 const SCOPE_PRESETS = ['s2s:*', INTERNAL_SERVICE_KEY_SCOPE, 'etims:read', 'etims:write', 'treasury:read'];
 
+// A tenant app is tied to ONE service surface — never a platform-wide grant. Mirrors the
+// server-side allow-list in auth-api's validateTenantAppScopes (app_handler.go); s2s:*/
+// internal_service_key are platform-admin-only and deliberately excluded here.
+const TENANT_SERVICES = [
+  { value: 'treasury', label: 'Treasury API', hint: 'Invoicing, payments, KRA eTIMS' },
+  { value: 'notifications', label: 'Notifications API', hint: 'Email, SMS, push, WhatsApp' },
+  { value: 'sso', label: 'SSO / Auth API', hint: 'Identity, tenant, user lookups' },
+  { value: 'subscriptions', label: 'Subscriptions API', hint: 'Plans, pricing, entitlements' },
+] as const;
+
 export interface CreateAppPayload {
   name: string;
   description?: string;
@@ -42,16 +52,18 @@ export function CreateAppForm({ isPlatformOwner, creating, onCreate, onCancel }:
 
 function TenantCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppFormProps, 'isPlatformOwner'>) {
   const [name, setName] = useState('');
-  const [scopes, setScopes] = useState('');
+  const [service, setService] = useState<string>(TENANT_SERVICES[0].value);
+  const [readWrite, setReadWrite] = useState<'read' | 'write'>('read');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onCreate({ name, app_type: 'tenant', scopes: scopes.split(',').map((s) => s.trim()).filter(Boolean) });
+    const scope = `${service}:${readWrite}`;
+    await onCreate({ name, app_type: 'tenant', scopes: [scope] });
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-      <FormHeader title="Create App Token" subtitle="Generates a bng_app_* token for service integration." onCancel={onCancel} />
+      <FormHeader title="Create App Token" subtitle="Generates a bng_app_* token, scoped to one service — never platform-wide." onCancel={onCancel} />
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -59,8 +71,25 @@ function TenantCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppFormPr
             <Input required value={name} onChange={(e) => setName(e.target.value)} placeholder="My Integration App" className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
           </div>
           <div className="space-y-2">
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Scopes <span className="font-normal text-slate-400">(comma-separated)</span></Label>
-            <Input value={scopes} onChange={(e) => setScopes(e.target.value)} placeholder="read:orders, write:inventory" className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Service</Label>
+            <select value={service} onChange={(e) => setService(e.target.value)} className="w-full h-14 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
+              {TENANT_SERVICES.map((s) => (
+                <option key={s.value} value={s.value}>{s.label} — {s.hint}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Access</Label>
+            <div className="flex gap-2">
+              {(['read', 'write'] as const).map((rw) => (
+                <button key={rw} type="button" onClick={() => setReadWrite(rw)} className={`px-4 py-2.5 rounded-full text-xs font-mono font-bold border transition-colors capitalize ${readWrite === rw ? 'bg-primary text-white border-primary' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}>
+                  {rw}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-slate-400 pt-1">
+              An app is always limited to one service and never carries platform-wide (<code>s2s.*</code>) access — that tier is platform-admin-only.
+            </p>
           </div>
         </div>
         <FormActions creating={creating} onCancel={onCancel} label="Create App" />
@@ -80,6 +109,12 @@ function PlatformCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppForm
     const next = activeScopes.includes(scope) ? activeScopes.filter((s) => s !== scope) : [...activeScopes, scope];
     setForm((f) => ({ ...f, scopes: next.join(', ') }));
   };
+  // s2s:*/internal_service_key are platform-app-only server-side (see validateTenantAppScopes
+  // in auth-api) — don't offer them as presets once "Tenant (scoped)" is selected, so a
+  // platform admin scoping an app to a tenant doesn't hit a confusing 400 on submit.
+  const scopePresets = form.app_type === 'tenant'
+    ? SCOPE_PRESETS.filter((s) => s !== 's2s:*' && s !== INTERNAL_SERVICE_KEY_SCOPE)
+    : SCOPE_PRESETS;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +162,7 @@ function PlatformCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppForm
             <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Scopes <span className="font-normal text-slate-400">(comma-separated)</span></Label>
             <Input value={form.scopes} onChange={(e) => setForm((f) => ({ ...f, scopes: e.target.value }))} placeholder="s2s:*, treasury:read" className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
             <div className="flex gap-2 flex-wrap pt-1">
-              {SCOPE_PRESETS.map((s) => (
+              {scopePresets.map((s) => (
                 <button key={s} type="button" onClick={() => toggleScope(s)} className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold border transition-colors ${activeScopes.includes(s) ? 'bg-primary text-white border-primary' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}>
                   {s}
                 </button>

@@ -99,6 +99,16 @@ export default function APIKeysPage() {
         </Button>
       </header>
 
+      <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800">
+        <AlertTriangle className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          <strong className="text-slate-700 dark:text-slate-300">Deprecated.</strong> Plain API keys are being retired in favor of{' '}
+          <a href="/dashboard/developer/apps" className="text-primary font-semibold hover:underline">Apps</a> (<code>bng_app_*</code> tokens),
+          which carry a real sandbox/production distinction and a scope tied to one service. This page stays platform-owner-only until the
+          shared internal-service credential finishes migrating to an App secret — prefer creating an App instead.
+        </p>
+      </div>
+
       {createdKey && (
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
           <div className="flex items-start gap-3 mb-4">

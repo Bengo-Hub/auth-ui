@@ -27,6 +27,11 @@ const USE_CASE_LABELS: Record<string, string> = {
   weighbridge: 'Weighbridge / TruLoad',
   isp: 'ISP Billing',
   erp: 'ERP',
+  // Auto-created by the developer-portal approval pipeline (see auth-api's
+  // autoProvisionExternalDeveloper) for an external dev/API partner with no real
+  // tenant — labeled distinctly so it doesn't get mistaken for a paying customer org.
+  developer_external: 'Developer / API Partner',
+  axle_load_enforcement: 'Axle Load Enforcement',
   other: 'Other',
 };
 
@@ -65,6 +70,11 @@ export function buildTenantColumns(cb: TenantColumnCallbacks): DataTableColumn<T
           <div className="font-bold flex items-center gap-2 truncate">
             <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
             {t.name}
+            {t.use_case === 'developer_external' && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-400 shrink-0">
+                Developer
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-xs">
             <span className="text-muted-foreground font-mono">{t.id.slice(0, 8)}...</span>

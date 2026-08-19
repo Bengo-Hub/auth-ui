@@ -123,6 +123,7 @@ function CreateOrgDialog() {
                 <option value="weighbridge">Weighbridge / TruLoad</option>
                 <option value="isp">ISP Billing</option>
                 <option value="erp">ERP</option>
+                <option value="developer_external">Developer / API Partner</option>
                 <option value="other">Other</option>
               </select>
             </div>
@@ -210,6 +211,7 @@ function EditOrgDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: b
                 <option value="weighbridge">Weighbridge / TruLoad</option>
                 <option value="isp">ISP Billing</option>
                 <option value="erp">ERP</option>
+                <option value="developer_external">Developer / API Partner</option>
                 <option value="other">Other</option>
               </select>
             </div>
