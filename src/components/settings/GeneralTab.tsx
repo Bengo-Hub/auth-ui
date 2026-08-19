@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { CountrySelect } from '@/components/ui/country-select';
+import { CountrySelect } from '@bengo-hub/shared-ui-lib/contact';
 import { useAuth } from '@/hooks/useAuth';
 import apiClient from '@/lib/api-client';
 import { Globe, Loader2, Mail, Palette, Smartphone } from 'lucide-react';
@@ -128,11 +128,7 @@ export function GeneralTab() {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Country</Label>
-            <CountrySelect
-              value={prefs.country}
-              onChange={(v) => setField('country', v)}
-              className="w-full h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border-none px-3 text-sm text-slate-900 dark:text-white"
-            />
+            <CountrySelect value={prefs.country} onChange={(v) => setField('country', v)} />
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Timezone</Label>

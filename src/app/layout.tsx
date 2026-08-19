@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono, Outfit } from "next/font/google";
 import "./globals.css";
+import "@bengo-hub/shared-ui-lib/contact/style.css";
 
 // Matches library-ui's exact font pairing (Phase 8b) — DM Sans is the
 // primary body/UI face, Outfit and JetBrains Mono are declared alongside it

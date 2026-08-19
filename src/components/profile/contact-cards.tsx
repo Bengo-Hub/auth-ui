@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Mail, Phone, Plus, Star, Trash2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { PhoneInputField } from '@/components/ui/phone-input';
+import { PhoneInputField } from '@bengo-hub/shared-ui-lib/contact';
 import {
   useMyEmails,
   useAddMyEmail,

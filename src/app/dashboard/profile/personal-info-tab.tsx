@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ImageUploadField } from '@/components/ui/image-upload-field';
-import { PhoneInputField } from '@/components/ui/phone-input';
-import { CountrySelect } from '@/components/ui/country-select';
+import { PhoneInputField, CountrySelect } from '@bengo-hub/shared-ui-lib/contact';
 import { useUpdateProfile } from '@/hooks/useProfile';
 import { useAuthStore } from '@/store/auth-store';
 import { useToast } from '@/hooks/use-toast';
@@ -130,11 +129,7 @@ export function PersonalInfoTab() {
                 <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
                   <Globe className="h-3 w-3" /> Country
                 </Label>
-                <CountrySelect
-                  value={country}
-                  onChange={setCountry}
-                  className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40"
-                />
+                <CountrySelect value={country} onChange={setCountry} />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Gender</Label>
