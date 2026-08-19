@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { CreditCard, ExternalLink, FileJson, FileText, Receipt, ScrollText, Webhook } from 'lucide-react';
 import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
+import { DocsAccessGate } from '@/components/docs/DocsAccessGate';
 
 // New category page (Phase 12), sourced from treasury-api's own swagger.json
 // (internal/http/docs/swagger.json) rather than guessing at module names —
@@ -16,6 +17,7 @@ const TREASURY_API_URL = process.env.NEXT_PUBLIC_TREASURY_API_URL || 'https://bo
 
 export default function TreasuryApiDocsPage() {
   return (
+    <DocsAccessGate resourceKey="treasury-api" serviceName="Treasury API">
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
       <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -157,5 +159,6 @@ export default function TreasuryApiDocsPage() {
         </div>
       </section>
     </div>
+    </DocsAccessGate>
   );
 }

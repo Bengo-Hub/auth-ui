@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
+import { DocsAccessGate } from '@/components/docs/DocsAccessGate';
 
 // Moved from docs/page.tsx (Phase 12) — this content was 100% auth-api-scoped
 // and is genuinely good, so it's kept as-is under its own category route
@@ -27,6 +28,7 @@ const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codev
 
 export default function AuthApiDocsPage() {
   return (
+    <DocsAccessGate resourceKey="auth-api" serviceName="Auth API">
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
       <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -412,5 +414,6 @@ router.Get("/api/v1/protected", func(w http.ResponseWriter, r *http.Request) {
         </div>
       </section>
     </div>
+    </DocsAccessGate>
   );
 }

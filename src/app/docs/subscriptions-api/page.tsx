@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
+import { DocsAccessGate } from '@/components/docs/DocsAccessGate';
 
 // subscriptions-api docs page — content sourced directly from the service's own real,
 // populated swagger.json (unlike auth-api's own stub spec). This is the first public
@@ -24,6 +25,7 @@ const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_SUBSCRIPTIONS_API_URL || 'htt
 
 export default function SubscriptionsApiDocsPage() {
   return (
+    <DocsAccessGate resourceKey="subscriptions-api" serviceName="Subscriptions API">
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
       <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -112,7 +114,7 @@ export default function SubscriptionsApiDocsPage() {
                 <CodeBlock
                   title="List public plans"
                   language="bash"
-                  code={`curl "${PRODUCTION_API_URL}/plans?active=true&service=pos"`}
+                  code={`curl "${PRODUCTION_API_URL}/api/v1/plans?active=true"`}
                 />
               </div>
             </motion.div>
@@ -124,20 +126,21 @@ export default function SubscriptionsApiDocsPage() {
                   title="200 OK"
                   language="json"
                   code={`{
-  "plans": [
+  "data": [
     {
-      "id": "b6b0...uuid",
-      "planCode": "GROWTH",
-      "name": "Growth",
-      "description": "For scaling teams",
-      "planType": "recurring",
+      "id": "bb5f7b97-...",
+      "planCode": "POWERSUITE_DUKA_BASIC",
+      "name": "PowerSuite Retail (Duka) — Basic",
+      "description": "...",
+      "planType": "TIERED",
       "serviceTag": "pos",
-      "basePrice": 4500,
+      "basePrice": 2500,
+      "setupFee": 0,
       "currency": "KES",
       "billingCycle": "MONTHLY",
       "freeTrialDays": 14,
-      "tierOrder": 2,
-      "tierLimits": { "outlets": 3, "staff_accounts": 15 },
+      "tierOrder": 1,
+      "tierLimits": { "outlets": 1, "staff_accounts": 5 },
       "isActive": true,
       "isPublic": true
     }
@@ -169,26 +172,26 @@ export default function SubscriptionsApiDocsPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
             <SectionHeader icon={Tag} title="Plans" badge="Public — no auth" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <EndpointCard method="GET" path="/plans" description="List plans — filter by ?active and ?service (pos, erp, inventory, ordering, truload, logistics, marketplace)" auth={false} />
-              <EndpointCard method="GET" path="/plans/code/{code}" description="Get a plan by code, e.g. STARTER, GROWTH, PROFESSIONAL" auth={false} />
-              <EndpointCard method="GET" path="/plans/{id}" description="Get a plan by UUID" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/plans" description="List plans — filter by ?active and ?service (pos, erp, inventory, ordering, truload, logistics, marketflow)" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/plans/code/{code}" description="Get a plan by code, e.g. ERP_STARTER, POWERSUITE_DUKA_BASIC" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/plans/{id}" description="Get a plan by UUID" auth={false} />
             </div>
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
             <SectionHeader icon={Layers} title="Service charges" badge="Admin scope required" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <EndpointCard method="GET" path="/service-charges/plans" description="List usage-based service-charge plans" />
-              <EndpointCard method="GET" path="/service-charges/plans/{code}" description="Get a service-charge plan by code" />
+              <EndpointCard method="GET" path="/api/v1/service-charges/plans" description="List usage-based service-charge plans" />
+              <EndpointCard method="GET" path="/api/v1/service-charges/plans/{code}" description="Get a service-charge plan by code" />
             </div>
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
             <SectionHeader icon={CreditCard} title="Platform administration" badge="Platform owner only" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <EndpointCard method="GET" path="/admin/plans" description="List all plans, including inactive/non-public ones" />
-              <EndpointCard method="GET" path="/admin/plans/{id}" description="Get full admin detail for a plan" />
-              <EndpointCard method="GET" path="/platform/stats" description="Aggregated platform stats — total plans, subscriptions, MRR" />
+              <EndpointCard method="GET" path="/api/v1/admin/plans" description="List all plans, including inactive/non-public ones" />
+              <EndpointCard method="GET" path="/api/v1/admin/plans/{id}" description="Get full admin detail for a plan" />
+              <EndpointCard method="GET" path="/api/v1/platform/stats" description="Aggregated platform stats — total plans, subscriptions, MRR" />
             </div>
           </motion.div>
         </div>
@@ -211,11 +214,13 @@ export default function SubscriptionsApiDocsPage() {
             <CodeBlock
               title="Fetch live plans for a pricing page"
               language="typescript"
-              code={`const res = await fetch('${PRODUCTION_API_URL}/plans?active=true&service=pos');
-const { plans } = await res.json();
+              code={`const res = await fetch('${PRODUCTION_API_URL}/api/v1/plans?active=true');
+const { data: plans } = await res.json();
 
 // plans[].basePrice, .currency, .billingCycle, .tierLimits, .freeTrialDays
-// are all safe to render directly — this endpoint is public, no key needed.`}
+// are all safe to render directly — this endpoint is public, no key needed.
+// Fetch this server-side (not from the browser) unless your domain is on
+// subscriptions-api's CORS allowlist.`}
             />
           </motion.div>
         </div>
@@ -284,5 +289,6 @@ const { plans } = await res.json();
         </div>
       </section>
     </div>
+    </DocsAccessGate>
   );
 }

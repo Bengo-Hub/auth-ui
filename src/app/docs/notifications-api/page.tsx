@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
+import { DocsAccessGate } from '@/components/docs/DocsAccessGate';
 
 // notifications-api docs page — built from a direct read of notifications-service's
 // router.go and provider implementations (not the service's own internal docs, which
@@ -26,6 +27,7 @@ const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_NOTIFICATIONS_API_URL || 'htt
 
 export default function NotificationsApiDocsPage() {
   return (
+    <DocsAccessGate resourceKey="notifications-api" serviceName="Notifications API">
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
       <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -331,5 +333,6 @@ export default function NotificationsApiDocsPage() {
         </div>
       </section>
     </div>
+    </DocsAccessGate>
   );
 }
