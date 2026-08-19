@@ -1,973 +1,142 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import apiClient from '@/lib/api-client';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import {
-    AlertTriangle,
-    BookOpen,
-    Check,
-    ClipboardCopy,
-    Code2,
-    Copy,
-    Cpu,
-    ExternalLink,
-    Globe,
-    Key,
-    Loader2,
-    Package,
-    Plus,
-    RefreshCw,
-    ShieldAlert,
-    ShieldOff,
-    Terminal,
-    Trash2,
-} from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import apiClient from '@/lib/api-client';
+import { StatCard } from '@/components/dashboard/stat-card';
+import {
+  ArrowRight,
+  BookOpen,
+  Code2,
+  Cpu,
+  ExternalLink,
+  Globe,
+  Key,
+  Package,
+  ShieldAlert,
+  Terminal,
+} from 'lucide-react';
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
-interface APIKey {
-  id: string;
-  name: string;
-  key_prefix: string;
-  service?: string;
-  scopes?: string[];
-  status: string;
-  last_used_at?: string;
-  expires_at?: string;
-  created_at: string;
-}
-
-type ActiveTab = 'oauth' | 'api-keys' | 'apps';
-
-// ── Main Component ───────────────────────────────────────────────────────────
-
-export default function DeveloperPortal() {
+/** Developer Portal Overview (Phase 11) — replaces the old tabbed page.
+ * Apps/API Keys/OAuth Clients each moved to their own real route; this is
+ * now a real landing page with live counts instead of a static tab switcher. */
+export default function DeveloperPortalOverview() {
   const { isPlatformOwner } = useAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('apps');
+  const [appCount, setAppCount] = useState<number | null>(null);
+  const [keyCount, setKeyCount] = useState<number | null>(null);
 
-  // OAuth clients are a platform-admin-only concept today (AdminHandler.requireAdmin
-  // gates every /admin/clients endpoint to platform owners) — hide the tab for everyone
-  // else rather than showing a tab that 403s on every action.
-  const tabs = (
-    [
-      { id: 'apps', label: 'Apps', icon: Cpu },
-      { id: 'api-keys', label: 'API Keys', icon: Key },
-      ...(isPlatformOwner ? [{ id: 'oauth' as ActiveTab, label: 'OAuth Clients', icon: Globe }] : []),
-    ] as { id: ActiveTab; label: string; icon: React.ComponentType<{ className?: string }> }[]
-  );
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      apiClient.get<unknown[]>('/api/v1/admin/apps').catch(() => ({ data: [] })),
+      apiClient.get<unknown[]>('/api/v1/admin/api-keys').catch(() => ({ data: [] })),
+    ]).then(([apps, keys]) => {
+      if (cancelled) return;
+      const appList = Array.isArray(apps.data) ? apps.data : [];
+      setAppCount(isPlatformOwner ? appList.length : appList.filter((a: any) => a.app_type === 'tenant').length);
+      setKeyCount(Array.isArray(keys.data) ? keys.data.length : 0);
+    });
+    return () => { cancelled = true; };
+  }, [isPlatformOwner]);
 
   return (
-    <div className="space-y-12">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Developer Portal</h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 font-light">
-            Manage your apps, API keys{isPlatformOwner ? ', and OAuth clients' : ''}.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 dark:border-slate-700 font-bold dark:text-white">
-            <Terminal className="h-5 w-5 mr-2" /> API Docs
-          </Button>
-        </div>
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-1">Developer Portal</h1>
+        <p className="text-slate-500 dark:text-slate-400">
+          Manage your apps, API keys{isPlatformOwner ? ', and OAuth clients' : ''}.
+        </p>
       </header>
 
-      {/* Tabs */}
-      <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl w-fit overflow-x-auto">
-        {tabs.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActiveTab(id)}
-            className={`px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
-              activeTab === id
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-            }`}
-          >
-            <Icon className="h-4 w-4 inline-block mr-2" />
-            {label}
-          </button>
-        ))}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatCard label="Apps" value={appCount ?? '—'} icon={Cpu} color="purple" />
+        <StatCard label="API Keys" value={keyCount ?? '—'} icon={Key} color="blue" />
+        {isPlatformOwner && <StatCard label="OAuth Clients" value="—" icon={Globe} color="green" helper="See OAuth Clients" />}
       </div>
 
-      {activeTab === 'oauth' && isPlatformOwner && <OAuthSection />}
-      {activeTab === 'api-keys' && <APIKeySection />}
-      {activeTab === 'apps' && <DeveloperAppSection isPlatformOwner={isPlatformOwner} />}
+      <section className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <NavCard href="/dashboard/developer/apps" icon={Cpu} color="purple" title="Apps" desc="Service-to-service app tokens for integrations." />
+          <NavCard href="/dashboard/developer/api-keys" icon={Key} color="blue" title="API Keys" desc="Generate keys for service-to-service authentication." />
+          {isPlatformOwner && (
+            <NavCard href="/dashboard/developer/oauth-clients" icon={Globe} color="green" title="OAuth Clients" desc="Register and manage OAuth2 clients." />
+          )}
+          <NavCard href="/docs" icon={Code2} color="slate" title="API Docs" desc="Endpoints, authentication, and code examples." />
+        </div>
+      </section>
 
-      {/* Resources & Documentation */}
       <ResourcesSection />
     </div>
   );
 }
 
-// ── OAuth Clients Section ────────────────────────────────────────────────────
-//
-// OAuth client CRUD already has a complete, correctly-wired implementation at
-// /dashboard/platform/clients (useOAuthClients/useCreateOAuthClient/useUpdateOAuthClient/
-// useDeleteOAuthClient, backed by /api/v1/admin/clients — including redirect-URI editing,
-// which this portal's old "Manage Redirect URIs" button never actually did). Rather than a
-// second, duplicate CRUD implementation here, this tab just points to it.
+const NAV_COLOR_MAP: Record<string, string> = {
+  purple: 'bg-purple-50 dark:bg-purple-500/10 text-purple-500',
+  blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-500',
+  green: 'bg-green-50 dark:bg-green-500/10 text-green-500',
+  slate: 'bg-slate-100 dark:bg-slate-800 text-slate-500',
+};
 
-function OAuthSection() {
+function NavCard({ href, icon: Icon, color, title, desc }: { href: string; icon: React.ComponentType<{ className?: string }>; color: string; title: string; desc: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between gap-6"
-    >
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center shrink-0">
-          <Globe className="h-6 w-6 text-orange-500" />
+    <Link href={href} className="group p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:shadow-lg transition-all">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform ${NAV_COLOR_MAP[color]}`}>
+          <Icon className="h-5 w-5" />
         </div>
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">OAuth Clients</h2>
-          <p className="text-slate-500 dark:text-slate-400">
-            Register and manage OAuth2 clients (redirect URIs, secrets, scopes) in the platform admin console.
-          </p>
-        </div>
+        <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
       </div>
-      <Button asChild className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 shrink-0">
-        <a href="/dashboard/platform/clients">
-          Manage OAuth Clients <ExternalLink className="h-4 w-4 ml-2" />
-        </a>
-      </Button>
-    </motion.div>
+      <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">{title}</h3>
+      <p className="text-sm text-slate-500 dark:text-slate-400">{desc}</p>
+    </Link>
   );
 }
-
-// ── API Key Section ──────────────────────────────────────────────────────────
-
-function APIKeySection() {
-  const [keys, setKeys] = useState<APIKey[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  // Create form state
-  const [newKeyName, setNewKeyName] = useState('');
-  const [newKeyScopes, setNewKeyScopes] = useState('');
-  const [newKeyExpiresIn, setNewKeyExpiresIn] = useState('');
-  const [newKeyAllowedIPs, setNewKeyAllowedIPs] = useState('');
-
-  // Newly created key (shown once)
-  const [createdKey, setCreatedKey] = useState<string | null>(null);
-  const [createdKeyCopied, setCreatedKeyCopied] = useState(false);
-
-  // Revoke confirmation
-  const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
-  const [isRevoking, setIsRevoking] = useState(false);
-
-  const fetchKeys = useCallback(async () => {
-    try {
-      const response = await apiClient.get('/api/v1/admin/api-keys');
-      setKeys(Array.isArray(response.data) ? response.data : []);
-    } catch (err) {
-      console.error('Failed to fetch API keys', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchKeys();
-  }, [fetchKeys]);
-
-  const handleCreateKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsCreating(true);
-    try {
-      const payload: Record<string, unknown> = { name: newKeyName };
-      if (newKeyScopes.trim()) {
-        payload.scopes = newKeyScopes.split(',').map((s) => s.trim()).filter(Boolean);
-      }
-      if (newKeyExpiresIn.trim()) {
-        payload.expires_in = parseInt(newKeyExpiresIn, 10);
-      }
-      if (newKeyAllowedIPs.trim()) {
-        payload.allowed_ips = newKeyAllowedIPs.split(',').map((s) => s.trim()).filter(Boolean);
-      }
-
-      const response = await apiClient.post('/api/v1/admin/api-keys', payload);
-      setCreatedKey(response.data.key);
-      setNewKeyName('');
-      setNewKeyScopes('');
-      setNewKeyExpiresIn('');
-      setNewKeyAllowedIPs('');
-      setShowCreateForm(false);
-      fetchKeys();
-    } catch (err) {
-      console.error('Failed to create API key', err);
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const handleRevokeKey = async (id: string) => {
-    setIsRevoking(true);
-    try {
-      await apiClient.delete(`/api/v1/admin/api-keys/${id}`);
-      setRevokeTarget(null);
-      fetchKeys();
-    } catch (err) {
-      console.error('Failed to revoke API key', err);
-    } finally {
-      setIsRevoking(false);
-    }
-  };
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const formatRelativeDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 30) return `${diffDays} days ago`;
-    return formatDate(dateStr);
-  };
-
-  return (
-    <div className="grid grid-cols-1 gap-8">
-      {/* Newly Created Key Banner */}
-      {createdKey && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
-        >
-          <div className="flex items-start gap-3 mb-4">
-            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-            <div>
-              <h3 className="font-bold text-amber-900 dark:text-amber-200">
-                Save your API key now
-              </h3>
-              <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                This is the only time your full API key will be shown. Copy it now and store it securely.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 p-4 bg-white dark:bg-slate-800 rounded-xl text-sm font-mono break-all border border-amber-300 dark:border-amber-700 text-slate-900 dark:text-slate-200">
-              {createdKey}
-            </code>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-12 w-12 rounded-xl border-amber-300 dark:border-amber-700"
-              onClick={() => {
-                navigator.clipboard.writeText(createdKey);
-                setCreatedKeyCopied(true);
-                setTimeout(() => setCreatedKeyCopied(false), 2000);
-              }}
-            >
-              {createdKeyCopied ? <Check className="h-4 w-4 text-green-500" /> : <ClipboardCopy className="h-4 w-4" />}
-            </Button>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCreatedKey(null)}
-            className="mt-3 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300"
-          >
-            I&apos;ve saved my key
-          </Button>
-        </motion.div>
-      )}
-
-      {/* Create Key Form / Button */}
-      {showCreateForm ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm"
-        >
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-              <Key className="h-6 w-6 text-emerald-500" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Create API Key</h2>
-              <p className="text-slate-500 dark:text-slate-400">Generate a key for service-to-service authentication.</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleCreateKey} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <Label htmlFor="key-name" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
-                  Key Name *
-                </Label>
-                <Input
-                  id="key-name"
-                  placeholder="e.g., Production API"
-                  value={newKeyName}
-                  onChange={(e) => setNewKeyName(e.target.value)}
-                  className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                  required
-                />
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="key-scopes" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
-                  Scopes <span className="font-normal text-slate-400">(comma-separated)</span>
-                </Label>
-                <Input
-                  id="key-scopes"
-                  placeholder="e.g., read:users, write:orders"
-                  value={newKeyScopes}
-                  onChange={(e) => setNewKeyScopes(e.target.value)}
-                  className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                />
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="key-expires" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
-                  Expires In <span className="font-normal text-slate-400">(days, 0 = never)</span>
-                </Label>
-                <Input
-                  id="key-expires"
-                  type="number"
-                  min="0"
-                  placeholder="e.g., 90"
-                  value={newKeyExpiresIn}
-                  onChange={(e) => setNewKeyExpiresIn(e.target.value)}
-                  className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                />
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="key-ips" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
-                  Allowed IPs <span className="font-normal text-slate-400">(comma-separated)</span>
-                </Label>
-                <Input
-                  id="key-ips"
-                  placeholder="e.g., 10.0.0.1, 192.168.1.0/24"
-                  value={newKeyAllowedIPs}
-                  onChange={(e) => setNewKeyAllowedIPs(e.target.value)}
-                  className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                type="submit"
-                disabled={isCreating}
-                className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20"
-              >
-                {isCreating ? (
-                  <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Generating...</>
-                ) : (
-                  'Generate API Key'
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowCreateForm(false)}
-                className="h-14 px-8 rounded-2xl border-slate-200 dark:border-slate-700 font-bold dark:text-white"
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </motion.div>
-      ) : (
-        <div className="flex justify-start">
-          <Button
-            onClick={() => setShowCreateForm(true)}
-            className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Create API Key
-          </Button>
-        </div>
-      )}
-
-      {/* List of API Keys */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white">Your API Keys</h2>
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          </div>
-        ) : keys.length === 0 ? (
-          <div className="p-20 rounded-[3rem] bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
-            <Key className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-500 dark:text-slate-400">No API keys created yet.</p>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-              Create an API key for service-to-service authentication.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {keys.map((apiKey) => (
-              <motion.div
-                key={apiKey.id}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      apiKey.status === 'active'
-                        ? 'bg-emerald-50 dark:bg-emerald-500/10'
-                        : 'bg-slate-100 dark:bg-slate-800'
-                    }`}>
-                      <Key className={`h-5 w-5 ${
-                        apiKey.status === 'active'
-                          ? 'text-emerald-500'
-                          : 'text-slate-400'
-                      }`} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-bold text-slate-900 dark:text-white truncate">
-                          {apiKey.name}
-                        </h3>
-                        <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          apiKey.status === 'active'
-                            ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                        }`}>
-                          {apiKey.status}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        <span className="font-mono">{apiKey.key_prefix}...</span>
-                        <span>Created {formatDate(apiKey.created_at)}</span>
-                        {apiKey.last_used_at && (
-                          <span>Last used {formatRelativeDate(apiKey.last_used_at)}</span>
-                        )}
-                        {apiKey.expires_at && (
-                          <span className={
-                            new Date(apiKey.expires_at) < new Date()
-                              ? 'text-rose-500 dark:text-rose-400 font-medium'
-                              : ''
-                          }>
-                            Expires {formatDate(apiKey.expires_at)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0 ml-4">
-                    {apiKey.scopes && apiKey.scopes.length > 0 && (
-                      <div className="hidden lg:flex items-center gap-1.5">
-                        {apiKey.scopes.slice(0, 3).map((scope) => (
-                          <span
-                            key={scope}
-                            className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-mono text-slate-600 dark:text-slate-400"
-                          >
-                            {scope}
-                          </span>
-                        ))}
-                        {apiKey.scopes.length > 3 && (
-                          <span className="text-xs text-slate-400">+{apiKey.scopes.length - 3}</span>
-                        )}
-                      </div>
-                    )}
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                      onClick={() => copyToClipboard(apiKey.key_prefix, apiKey.id)}
-                    >
-                      {copiedId === apiKey.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                    </Button>
-
-                    {apiKey.status === 'active' && (
-                      revokeTarget === apiKey.id ? (
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="rounded-xl text-xs font-bold"
-                            disabled={isRevoking}
-                            onClick={() => handleRevokeKey(apiKey.id)}
-                          >
-                            {isRevoking ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Confirm'}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="rounded-xl text-xs"
-                            onClick={() => setRevokeTarget(null)}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl"
-                          onClick={() => setRevokeTarget(apiKey.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
-  );
-}
-
-// ── Developer Apps Section ───────────────────────────────────────────────────
-
-interface DevApp {
-  id: string;
-  name: string;
-  description?: string;
-  app_type: string;
-  environment: string;
-  client_id: string;
-  key_prefix: string;
-  scopes?: string[];
-  status: string;
-  last_used_at?: string;
-  created_at: string;
-}
-
-function DeveloperAppSection({ isPlatformOwner }: { isPlatformOwner: boolean }) {
-  const { user } = useAuth();
-  const [apps, setApps] = useState<DevApp[]>([]);
-  const [goLiveRequested, setGoLiveRequested] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newToken, setNewToken] = useState<string | null>(null);
-  const [tokenCopied, setTokenCopied] = useState(false);
-  const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
-  const [appName, setAppName] = useState('');
-  const [appScopes, setAppScopes] = useState('');
-
-  const fetchApps = useCallback(async () => {
-    try {
-      const res = await apiClient.get<DevApp[]>('/api/v1/admin/apps');
-      setApps((Array.isArray(res.data) ? res.data : []).filter((a) => a.app_type === 'tenant'));
-    } catch {
-      setApps([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchApps(); }, [fetchApps]);
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsCreating(true);
-    try {
-      const res = await apiClient.post<{ token: string }>('/api/v1/admin/apps', {
-        name: appName,
-        app_type: 'tenant',
-        scopes: appScopes.split(',').map((s) => s.trim()).filter(Boolean),
-      });
-      setNewToken(res.data.token);
-      setAppName('');
-      setAppScopes('');
-      setShowCreate(false);
-      fetchApps();
-    } catch (err) {
-      console.error('Failed to create app', err);
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const handleRotate = async (id: string) => {
-    try {
-      const res = await apiClient.post<{ token: string }>(`/api/v1/admin/apps/${id}/rotate`);
-      setNewToken(res.data.token);
-      fetchApps();
-    } catch (err) {
-      console.error('Failed to rotate token', err);
-    }
-  };
-
-  const handleRevoke = async (id: string) => {
-    try {
-      await apiClient.post(`/api/v1/admin/apps/${id}/revoke`);
-      setRevokeTarget(null);
-      fetchApps();
-    } catch (err) {
-      console.error('Failed to revoke app', err);
-    }
-  };
-
-  const handlePromote = async (id: string, name: string) => {
-    if (!confirm(`Promote "${name}" to production? This unlocks live API access and cannot be undone.`)) return;
-    try {
-      await apiClient.post(`/api/v1/admin/apps/${id}/promote`);
-      fetchApps();
-    } catch (err) {
-      console.error('Failed to promote app', err);
-    }
-  };
-
-  // Reuses the same integration-request workflow (Slack/email notify to the platform
-  // team) already built for eTIMS go-live, rather than a bespoke request path — a tenant
-  // admin can't self-promote (see AppHandler.PromoteToProduction), so this is how they ask
-  // a platform admin to review and do it.
-  const handleRequestGoLive = async (id: string, name: string) => {
-    if (!user?.email) return;
-    try {
-      await apiClient.post('/api/v1/integration-requests', {
-        request_type: 'app_production_access',
-        requester_name: user.name || user.email,
-        requester_email: user.email,
-        integration_mode: 'self_serve',
-        notes: `Requesting production promotion for app "${name}" (id: ${id}).`,
-      });
-      setGoLiveRequested((prev) => new Set(prev).add(id));
-    } catch (err) {
-      console.error('Failed to request go-live', err);
-    }
-  };
-
-  return (
-    <div className="space-y-8">
-      {/* One-time token banner */}
-      {newToken && (
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
-        >
-          <div className="flex items-start gap-3 mb-4">
-            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-            <div>
-              <p className="font-bold text-amber-900 dark:text-amber-200">Save this token — it won&apos;t be shown again</p>
-              <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">Store it securely in your service config or environment.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 p-4 bg-white dark:bg-slate-800 rounded-xl text-sm font-mono break-all border border-amber-300 dark:border-amber-700 text-slate-900 dark:text-slate-200">
-              {newToken}
-            </code>
-            <Button variant="outline" size="icon" className="h-12 w-12 rounded-xl border-amber-300 shrink-0"
-              onClick={() => { navigator.clipboard.writeText(newToken); setTokenCopied(true); setTimeout(() => setTokenCopied(false), 2000); }}>
-              {tokenCopied ? <Check className="h-4 w-4 text-green-500" /> : <ClipboardCopy className="h-4 w-4" />}
-            </Button>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => setNewToken(null)} className="mt-3 text-amber-600 dark:text-amber-400">
-            I&apos;ve saved my token
-          </Button>
-        </motion.div>
-      )}
-
-      {/* Create form */}
-      {showCreate ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm"
-        >
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Cpu className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Create App Token</h2>
-              <p className="text-slate-500 dark:text-slate-400">Generates a bng_app_* token for service integration.</p>
-            </div>
-          </div>
-          <form onSubmit={handleCreate} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">App Name *</Label>
-                <Input required value={appName} onChange={(e) => setAppName(e.target.value)}
-                  placeholder="My Integration App"
-                  className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
-              </div>
-              <div className="space-y-3">
-                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Scopes <span className="font-normal text-slate-400">(comma-separated)</span></Label>
-                <Input value={appScopes} onChange={(e) => setAppScopes(e.target.value)}
-                  placeholder="read:orders, write:inventory"
-                  className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Button type="submit" disabled={isCreating}
-                className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
-                {isCreating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Creating...</> : 'Create App'}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowCreate(false)}
-                className="h-14 px-8 rounded-2xl border-slate-200 dark:border-slate-700 font-bold dark:text-white">
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </motion.div>
-      ) : (
-        <div className="flex justify-start">
-          <Button onClick={() => setShowCreate(true)}
-            className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
-            <Plus className="h-5 w-5 mr-2" />
-            Create App Token
-          </Button>
-        </div>
-      )}
-
-      {/* Apps list */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white">Your Apps</h2>
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          </div>
-        ) : apps.length === 0 ? (
-          <div className="p-20 rounded-[3rem] bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
-            <Cpu className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-500 dark:text-slate-400">No apps yet. Create one to get a bng_app_* token.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {apps.map((app) => (
-              <motion.div key={app.id}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center ${
-                      app.status === 'active' ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-slate-100 dark:bg-slate-800'
-                    }`}>
-                      <Cpu className={`h-5 w-5 ${app.status === 'active' ? 'text-emerald-500' : 'text-slate-400'}`} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-slate-900 dark:text-white truncate">{app.name}</h3>
-                        <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          app.status === 'active'
-                            ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-500'
-                        }`}>{app.status}</span>
-                        <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          app.environment === 'production'
-                            ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                        }`}>{app.environment === 'production' ? 'Production' : 'Sandbox'}</span>
-                      </div>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        <code className="font-mono text-xs">{app.key_prefix}...</code>
-                        <span>Created {new Date(app.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                      </div>
-                      {app.scopes && app.scopes.length > 0 && (
-                        <div className="flex gap-1.5 flex-wrap mt-2">
-                          {app.scopes.map((s) => (
-                            <span key={s} className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-mono text-slate-600 dark:text-slate-400">{s}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {app.status === 'active' && app.environment !== 'production' && (
-                      isPlatformOwner ? (
-                        <Button variant="outline" size="sm" onClick={() => handlePromote(app.id, app.name)}
-                          className="rounded-xl border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
-                          Promote to production
-                        </Button>
-                      ) : goLiveRequested.has(app.id) ? (
-                        <span className="text-xs font-bold text-slate-400">Go-live requested</span>
-                      ) : (
-                        <Button variant="outline" size="sm" onClick={() => handleRequestGoLive(app.id, app.name)}
-                          className="rounded-xl border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
-                          Request go-live
-                        </Button>
-                      )
-                    )}
-                    {app.status === 'active' && (
-                      <>
-                        <Button variant="outline" size="sm" onClick={() => handleRotate(app.id)}
-                          className="rounded-xl border-slate-200 dark:border-slate-700 font-bold text-xs dark:text-white">
-                          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                          Rotate
-                        </Button>
-                        {revokeTarget === app.id ? (
-                          <div className="flex items-center gap-1">
-                            <Button variant="destructive" size="sm" className="rounded-xl text-xs font-bold"
-                              onClick={() => handleRevoke(app.id)}>Confirm</Button>
-                            <Button variant="ghost" size="sm" className="rounded-xl text-xs"
-                              onClick={() => setRevokeTarget(null)}>Cancel</Button>
-                          </div>
-                        ) : (
-                          <Button variant="ghost" size="icon"
-                            className="text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl"
-                            onClick={() => setRevokeTarget(app.id)}>
-                            <ShieldOff className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
-  );
-}
-
-// ── Resources & Documentation ────────────────────────────────────────────────
 
 function ResourcesSection() {
+  const links = [
+    { href: '/docs', icon: Code2, color: 'sky', title: 'API Documentation', desc: 'Complete API reference with endpoints, authentication, and code examples.' },
+    { href: 'https://github.com/Bengo-Hub/auth-api', icon: BookOpen, color: 'violet', title: 'Auth API', desc: 'Backend authentication service source code and implementation details.', external: true },
+    { href: 'https://github.com/Bengo-Hub/shared-auth-client', icon: Package, color: 'amber', title: 'Go SDK', desc: 'Shared Auth Client for Go services. JWT validation, middleware, and JWKS support.', external: true },
+    { href: 'https://github.com/Bengo-Hub/bengobox/blob/main/docs/RBAC_IMPLEMENTATION_GUIDE.md', icon: ShieldAlert, color: 'rose', title: 'RBAC Guide', desc: 'Role-based access control patterns and permission enforcement implementation.', external: true },
+    { href: 'https://sso.codevertexafrica.com/v1/docs/', icon: Terminal, color: 'emerald', title: 'Swagger UI', desc: 'Interactive API explorer with try-it-out functionality for all endpoints.', external: true },
+    { href: '/docs#quick-start', icon: Code2, color: 'primary', title: 'Quick Start', desc: 'Get started with example requests, authentication, and SDK integration.' },
+  ];
+  const colorMap: Record<string, string> = {
+    sky: 'bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400',
+    violet: 'bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400',
+    amber: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    rose: 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400',
+    emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    primary: 'bg-primary/10 text-primary',
+  };
+
   return (
-    <section className="space-y-6">
-      <h2 className="text-2xl font-black text-slate-900 dark:text-white">Resources & Documentation</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <motion.a
-          href="/docs"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center">
-              <Code2 className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+    <section className="space-y-4">
+      <h2 className="text-lg font-black text-slate-900 dark:text-white">Resources & Documentation</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {links.map((l, i) => (
+          <motion.a
+            key={l.href}
+            href={l.href}
+            target={l.external ? '_blank' : undefined}
+            rel={l.external ? 'noopener noreferrer' : undefined}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            className="group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorMap[l.color]}`}>
+                <l.icon className="h-5 w-5" />
+              </div>
+              <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
             </div>
-            <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
-          </div>
-          <h3 className="font-bold text-slate-900 dark:text-white mb-2">API Documentation</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Complete API reference with endpoints, authentication, and code examples.
-          </p>
-        </motion.a>
-
-        <motion.a
-          href="https://github.com/Bengo-Hub/auth-api"
-          target="_blank"
-          rel="noopener noreferrer"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-violet-600 dark:text-violet-400" />
-            </div>
-            <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
-          </div>
-          <h3 className="font-bold text-slate-900 dark:text-white mb-2">Auth API</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Backend authentication service source code and implementation details.
-          </p>
-        </motion.a>
-
-        <motion.a
-          href="https://github.com/Bengo-Hub/shared-auth-client"
-          target="_blank"
-          rel="noopener noreferrer"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
-              <Package className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-            </div>
-            <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
-          </div>
-          <h3 className="font-bold text-slate-900 dark:text-white mb-2">Go SDK</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Shared Auth Client for Go services. JWT validation, middleware, and JWKS support.
-          </p>
-        </motion.a>
-
-        <motion.a
-          href="https://github.com/Bengo-Hub/bengobox/blob/main/docs/RBAC_IMPLEMENTATION_GUIDE.md"
-          target="_blank"
-          rel="noopener noreferrer"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
-              <ShieldAlert className="h-6 w-6 text-rose-600 dark:text-rose-400" />
-            </div>
-            <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
-          </div>
-          <h3 className="font-bold text-slate-900 dark:text-white mb-2">RBAC Guide</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Role-based access control patterns and permission enforcement implementation.
-          </p>
-        </motion.a>
-
-        <motion.a
-          href="https://sso.codevertexafrica.com/v1/docs/"
-          target="_blank"
-          rel="noopener noreferrer"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-              <Terminal className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
-          </div>
-          <h3 className="font-bold text-slate-900 dark:text-white mb-2">Swagger UI</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Interactive API explorer with try-it-out functionality for all endpoints.
-          </p>
-        </motion.a>
-
-        <motion.a
-          href="/docs#quick-start"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="group p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-primary/10 flex items-center justify-center">
-              <Code2 className="h-6 w-6 text-primary dark:text-primary" />
-            </div>
-            <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
-          </div>
-          <h3 className="font-bold text-slate-900 dark:text-white mb-2">Quick Start</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Get started with example requests, authentication, and SDK integration.
-          </p>
-        </motion.a>
+            <h3 className="font-bold text-slate-900 dark:text-white mb-1 text-sm">{l.title}</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{l.desc}</p>
+          </motion.a>
+        ))}
       </div>
     </section>
   );

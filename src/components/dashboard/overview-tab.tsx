@@ -41,11 +41,12 @@ function formatRelative(dateStr: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-/** Platform analytics — account-level stats every signed-in user sees
- * (sessions, organizations, security posture), restyled to library-ui's
- * dense KPI-card pattern (Phase 15). Split out of dashboard/page.tsx to
- * keep it a thin tabbed shell. */
-export function PlatformTab() {
+/** Account-level stats every signed-in user sees (sessions, organizations,
+ * security posture), restyled to library-ui's dense KPI-card pattern (Phase
+ * 15). Renamed from "Platform" — the content is personal-account-level, not
+ * platform-wide, so that label was wrong for tenant users. Split out of
+ * dashboard/page.tsx to keep it a thin tabbed shell. */
+export function OverviewTab() {
   const { user } = useAuth();
   const { data: sessions = [], isLoading: sessionsLoading } = useSessions();
   const activeCount = sessions.filter((s: Session) => s.status === 'active').length;

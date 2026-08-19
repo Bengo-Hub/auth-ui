@@ -26,6 +26,7 @@ import {
   ScrollText,
   ShieldCheck,
   Store,
+  Terminal,
   User,
   Users,
   Wrench,
@@ -60,8 +61,9 @@ const ACCOUNT_ITEMS: NavItem[] = [
 // is unchanged from today.
 const DEVELOPER_ITEMS: NavItem[] = [
   { title: 'Overview', href: '/dashboard/developer', icon: Code2 },
-  { title: 'Apps & Keys', href: '/dashboard/platform/apps', icon: Cpu },
-  { title: 'OAuth Clients', href: '/dashboard/platform/clients', icon: Key },
+  { title: 'Apps', href: '/dashboard/developer/apps', icon: Cpu },
+  { title: 'API Keys', href: '/dashboard/developer/api-keys', icon: Terminal },
+  { title: 'OAuth Clients', href: '/dashboard/developer/oauth-clients', icon: Key },
   { title: 'Integrations', href: '/dashboard/integrations', icon: Wrench },
   { title: 'API Docs', href: '/docs', icon: BookOpen },
 ];
@@ -108,21 +110,21 @@ function NavLink({
       target={item.newTab ? '_blank' : undefined}
       rel={item.newTab ? 'noopener noreferrer' : undefined}
       className={cn(
-        'flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-300 group',
+        'flex items-center gap-3 px-5 py-3 rounded-2xl transition-all duration-300 group text-sm',
         isActive
-          ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02]'
-          : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground',
+          ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02] font-semibold'
+          : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground font-medium',
       )}
     >
       <item.icon
         className={cn(
-          'h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110',
+          'h-4.5 w-4.5 shrink-0 transition-transform duration-300 group-hover:scale-110',
           isActive ? 'text-primary-foreground' : 'group-hover:text-sidebar-foreground',
         )}
       />
       {!isCollapsed && (
         <div className="flex items-center justify-between flex-1 min-w-0">
-          <span className="font-bold text-xs uppercase tracking-widest truncate">{item.title}</span>
+          <span className="truncate">{item.title}</span>
           {item.newTab && <ExternalLink className="h-3 w-3 opacity-50 shrink-0" />}
         </div>
       )}
@@ -163,7 +165,7 @@ function SectionGroup({
       >
         <div className="flex items-center gap-2">
           <group.icon className="h-3.5 w-3.5 text-sidebar-section" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-sidebar-section">
+          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-section">
             {group.label}
           </span>
         </div>

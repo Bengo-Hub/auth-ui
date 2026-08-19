@@ -13,8 +13,20 @@ function formatBytes(bytes: number): string {
 
 /** Email Hosting analytics — real stats from mail-ui's Stalwart-backed
  * platform (Phase 15), via /api/mail-stats. New product surface: this app
- * has never shown anything about the email hosting service before. */
-export function EmailHostingTab() {
+ * has never shown anything about the email hosting service before.
+ *
+ * Caller (dashboard/page.tsx) already gates whether this tab renders at all
+ * (platform owner, or an active email-hosting subscription on the user's
+ * own tenant) — isPlatformOwner here only controls the admin-console link,
+ * since that's a genuine Stalwart-admin-credential surface a regular tenant
+ * user/admin has no access to, distinct from auth-ui's own tenant-admin role.
+ *
+ * Known limitation, not fixed by this gating pass: the stats themselves
+ * (domain/mailbox/storage counts) are platform-wide aggregates from
+ * mail-ui's fetchPlatformStats — Stalwart has no per-tenant account
+ * scoping yet (this deployment only hosts Codevertex's own domain/mailboxes
+ * today), so there's no per-tenant breakdown to show instead. */
+export function EmailHostingTab({ isPlatformOwner }: { isPlatformOwner: boolean }) {
   const { data, isLoading, isError, error } = useMailStats();
 
   if (isLoading) {
@@ -48,7 +60,11 @@ export function EmailHostingTab() {
       </div>
 
       <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400">
-        Hosted on Stalwart Mail Server, managed from <a href="https://webmail.codevertexafrica.com/admin" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">webmail.codevertexafrica.com/admin</a>.
+        {isPlatformOwner ? (
+          <>Hosted on Stalwart Mail Server, managed from <a href="https://webmail.codevertexafrica.com/admin" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">webmail.codevertexafrica.com/admin</a>.</>
+        ) : (
+          <>Hosted on Stalwart Mail Server. Manage your own mailbox at <a href="https://webmail.codevertexafrica.com" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">webmail.codevertexafrica.com</a>.</>
+        )}
       </div>
     </div>
   );

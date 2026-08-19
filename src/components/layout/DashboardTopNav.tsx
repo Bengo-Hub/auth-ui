@@ -70,10 +70,10 @@ const MOBILE_NAV_ITEMS = [
 
 const MOBILE_PLATFORM_ITEMS = [
   { title: 'Organizations', href: '/dashboard/tenants', icon: Building2 },
-  { title: 'OAuth Clients', href: '/dashboard/platform/clients', icon: Key },
+  { title: 'OAuth Clients', href: '/dashboard/developer/oauth-clients', icon: Key },
   { title: 'Integrations', href: '/dashboard/integrations', icon: Wrench },
   { title: 'Developer', href: '/dashboard/developer', icon: Code2 },
-  { title: 'Apps & Keys', href: '/dashboard/platform/apps', icon: Cpu },
+  { title: 'Apps & Keys', href: '/dashboard/developer/apps', icon: Cpu },
   { title: 'Users', href: '/dashboard/platform/users', icon: Users },
   { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
   { title: 'Membership Tiers', href: 'https://pricing.codevertexafrica.com/codevertex/platform/plans', icon: ExternalLink, newTab: true },
