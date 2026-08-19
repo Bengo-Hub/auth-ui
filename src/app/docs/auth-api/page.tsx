@@ -1,0 +1,416 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import {
+  ArrowRight,
+  Code2,
+  ExternalLink,
+  FileJson,
+  Globe,
+  Key,
+  LogIn,
+  Package,
+  RefreshCw,
+  Settings,
+  Smartphone,
+  Terminal,
+  Zap,
+} from 'lucide-react';
+import Link from 'next/link';
+import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
+
+// Moved from docs/page.tsx (Phase 12) — this content was 100% auth-api-scoped
+// and is genuinely good, so it's kept as-is under its own category route
+// rather than deleted. PRODUCTION_API_URL is now env-driven instead of a
+// hardcoded string, per this phase's own scope.
+const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com';
+
+export default function AuthApiDocsPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+      <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div initial="hidden" animate="visible" variants={fadeInUp} transition={{ duration: 0.5 }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+              <div className="p-3 sm:p-4 bg-gradient-to-br from-primary/20 to-sky-500/20 rounded-2xl">
+                <Key className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white">Auth API</h1>
+                <p className="text-slate-600 dark:text-slate-400 mt-1">Codevertex SSO API Reference &amp; Integration Guide</p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12"
+          >
+            <a
+              href={`${PRODUCTION_API_URL}/v1/docs/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group p-5 sm:p-6 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
+            >
+              <FileJson className="w-8 h-8 text-primary mb-4 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                Swagger UI
+                <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Interactive API documentation with try-it-out functionality</p>
+            </a>
+
+            <a
+              href={`${PRODUCTION_API_URL}/api/v1/openapi.json`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group p-5 sm:p-6 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
+            >
+              <Code2 className="w-8 h-8 text-primary mb-4 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                OpenAPI Spec
+                <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Download the OpenAPI 3.0 specification for code generation</p>
+            </a>
+
+            <Link
+              href="/dashboard/developer"
+              className="group p-5 sm:p-6 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 sm:col-span-2 lg:col-span-1"
+            >
+              <Key className="w-8 h-8 text-primary mb-4 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                Developer Portal
+                <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-primary" />
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Create OAuth clients and manage API credentials</p>
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8">
+            <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
+              <Zap className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Quick Start</h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} transition={{ delay: 0.1 }} className="space-y-6">
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white mb-4">Base URL</h3>
+                <CodeBlock code={PRODUCTION_API_URL} title="Production API" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white mb-4">Authentication</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">All authenticated endpoints require a Bearer token in the Authorization header:</p>
+                <CodeBlock
+                  title="Authenticated Request"
+                  language="bash"
+                  code={`curl -X GET "${PRODUCTION_API_URL}/api/v1/auth/me" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Content-Type: application/json"`}
+                />
+              </div>
+            </motion.div>
+
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} transition={{ delay: 0.2 }} className="space-y-6">
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white mb-4">Example: User Login</h3>
+                <CodeBlock
+                  title="Login Request"
+                  language="bash"
+                  code={`curl -X POST "${PRODUCTION_API_URL}/api/v1/auth/login" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "email": "user@example.com",
+    "password": "your_password",
+    "tenant_slug": "your-tenant"
+  }'`}
+                />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white mb-4">Response</h3>
+                <CodeBlock
+                  title="Success Response"
+                  language="json"
+                  code={`{
+  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "roles": ["admin"],
+    "permissions": ["auth.users.view", "auth.users.manage", "auth.tenants.view"]
+  }
+}`}
+                />
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8 sm:mb-12">
+            <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
+              <Terminal className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">API Endpoints</h2>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
+            <SectionHeader icon={LogIn} title="Authentication" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <EndpointCard method="POST" path="/api/v1/auth/register" description="Create a new user account" auth={false} />
+              <EndpointCard method="POST" path="/api/v1/auth/login" description="Authenticate with email and password" auth={false} />
+              <EndpointCard method="POST" path="/api/v1/auth/refresh" description="Refresh an expired access token" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/auth/me" description="Get current authenticated user" />
+              <EndpointCard method="POST" path="/api/v1/auth/logout" description="Invalidate the current session" />
+              <EndpointCard method="POST" path="/api/v1/auth/password-reset/request" description="Request password reset email" auth={false} />
+              <EndpointCard method="POST" path="/api/v1/auth/password-reset/confirm" description="Confirm password reset with token" auth={false} />
+            </div>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
+            <SectionHeader icon={Globe} title="OAuth Providers" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <EndpointCard method="POST" path="/api/v1/auth/oauth/google/start" description="Start Google OAuth flow" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/auth/oauth/google/callback" description="Handle Google OAuth callback" auth={false} />
+              <EndpointCard method="POST" path="/api/v1/auth/oauth/github/start" description="Start GitHub OAuth flow" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/auth/oauth/github/callback" description="Handle GitHub OAuth callback" auth={false} />
+              <EndpointCard method="POST" path="/api/v1/auth/oauth/microsoft/start" description="Start Microsoft OAuth flow" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/auth/oauth/microsoft/callback" description="Handle Microsoft OAuth callback" auth={false} />
+            </div>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
+            <SectionHeader icon={Smartphone} title="Multi-Factor Authentication" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <EndpointCard method="POST" path="/api/v1/auth/mfa/totp/start" description="Start TOTP setup (returns QR code)" />
+              <EndpointCard method="POST" path="/api/v1/auth/mfa/totp/confirm" description="Confirm TOTP setup with code" />
+              <EndpointCard method="POST" path="/api/v1/auth/mfa/backup-codes/regenerate" description="Generate new backup codes" />
+              <EndpointCard method="POST" path="/api/v1/auth/mfa/backup-codes/consume" description="Use a backup code for authentication" />
+            </div>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
+            <SectionHeader icon={RefreshCw} title="OpenID Connect" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <EndpointCard method="GET" path="/.well-known/openid-configuration" description="OIDC discovery document" auth={false} />
+              <EndpointCard method="GET" path="/.well-known/jwks.json" description="JSON Web Key Set for token verification" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/authorize" description="OAuth2 authorization endpoint" auth={false} />
+              <EndpointCard method="POST" path="/api/v1/token" description="OAuth2 token endpoint" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/userinfo" description="Get user info from access token" />
+            </div>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
+            <SectionHeader icon={Settings} title="Admin & Tenant Management" badge="Admin Scope Required" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <EndpointCard method="POST" path="/api/v1/admin/tenants" description="Create a new tenant" />
+              <EndpointCard method="GET" path="/api/v1/admin/tenants" description="List all tenants" />
+              <EndpointCard method="PUT" path="/api/v1/admin/tenants/{id}" description="Update tenant details" />
+              <EndpointCard method="DELETE" path="/api/v1/admin/tenants/{id}" description="Delete a tenant workspace" />
+              <EndpointCard method="POST" path="/api/v1/admin/clients" description="Create an OAuth client" />
+              <EndpointCard method="GET" path="/api/v1/admin/clients" description="List OAuth clients" />
+              <EndpointCard method="POST" path="/api/v1/admin/entitlements" description="Manage service entitlements" />
+              <EndpointCard method="POST" path="/api/v1/admin/keys/rotate" description="Rotate signing keys" />
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8">
+            <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
+              <Code2 className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">SDK Integration</h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} transition={{ delay: 0.1 }}>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                JavaScript / TypeScript
+              </h3>
+              <CodeBlock
+                title="Installation & Usage"
+                language="typescript"
+                code={`// Example: TypeScript/Next.js with axios
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: '${PRODUCTION_API_URL}/api/v1',
+  withCredentials: true, // for httpOnly cookies
+});
+
+// Login endpoint
+const response = await api.post('/auth/login', {
+  email: 'user@example.com',
+  password: 'password',
+  tenant_slug: 'your-tenant',
+});
+
+const { access_token, user } = response.data;
+
+// Use token in subsequent requests
+api.defaults.headers.common['Authorization'] = \`Bearer \${access_token}\`;
+
+// Get current user
+const meResponse = await api.get('/auth/me');
+console.log(meResponse.data.user);`}
+              />
+            </motion.div>
+
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} transition={{ delay: 0.2 }}>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-sky-500" />
+                Go
+              </h3>
+              <CodeBlock
+                title="Installation & Usage"
+                language="go"
+                code={`// Install Shared Auth Client (JWT validation)
+go get github.com/Bengo-Hub/shared-auth-client
+
+// Use with Chi router middleware
+import authclient "github.com/Bengo-Hub/shared-auth-client"
+
+// Initialize JWT validator
+validator := authclient.NewValidator(authclient.Config{
+    IssuerURL: "${PRODUCTION_API_URL}",
+    Audience:  "your-service",
+})
+
+// Add to router middleware
+router.Use(authclient.AuthMiddleware(validator))
+
+// Access claims in handlers
+router.Get("/api/v1/protected", func(w http.ResponseWriter, r *http.Request) {
+    claims := authclient.ClaimsFromContext(r.Context())
+    userID := claims.Subject
+    // ... handle request
+})`}
+              />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8 sm:mb-12">
+            <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
+              <Package className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">SDK &amp; Libraries</h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              transition={{ delay: 0.05 }}
+              className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-sky-100 dark:bg-sky-900/30 rounded-xl">
+                  <Code2 className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+                </div>
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Auth API</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">Backend REST API for authentication, user management, and OAuth/OIDC flows.</p>
+              <a href="https://github.com/bengobox/auth-api" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-semibold text-sm transition-colors">
+                View on GitHub
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </motion.div>
+
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              transition={{ delay: 0.1 }}
+              className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
+                  <Package className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Service Client (Go)</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">Go SDK for inter-service communication, JWT validation, and middleware integration.</p>
+              <a href="https://github.com/Bengo-Hub/shared-service-client" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-semibold text-sm transition-colors">
+                View on GitHub
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </motion.div>
+          </div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} transition={{ delay: 0.15 }} className="mt-8 sm:mt-10">
+            <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary" />
+              Quick Installation
+            </h3>
+            <CodeBlock title="Go SDK Installation" language="bash" code="go get github.com/Bengo-Hub/shared-service-client" />
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-20 lg:py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            className="relative p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-primary/10 via-sky-500/5 to-violet-500/10 dark:from-primary/20 dark:via-sky-500/10 dark:to-violet-500/20 border border-primary/20 text-center overflow-hidden"
+          >
+            <div className="relative z-10">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mb-4">Ready to integrate?</h2>
+              <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-xl mx-auto leading-relaxed">
+                Create your OAuth client in the Developer Portal and start building with Codevertex SSO today.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/dashboard/developer"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-2xl transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
+                >
+                  <Key className="w-5 h-5" />
+                  Create OAuth Client
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+                <a
+                  href={`${PRODUCTION_API_URL}/v1/docs/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold rounded-2xl hover:border-primary/50 hover:shadow-lg transition-all"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  Open Swagger UI
+                </a>
+              </div>
+            </div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl -ml-32 -mb-32 pointer-events-none" />
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  );
+}
