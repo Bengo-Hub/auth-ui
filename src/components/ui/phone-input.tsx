@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PhoneInput, { type Country, parsePhoneNumber } from 'react-phone-number-input';
 import './phone-input.css';
 
@@ -47,6 +47,18 @@ export function PhoneInputField({
     }
     return value;
   });
+
+  // The lazy initializer above only fixes what's DISPLAYED — if the parent's
+  // form state still holds the raw legacy value (e.g. the user hits "Save"
+  // without ever touching this field), it would resubmit the un-normalized
+  // string, which auth-api correctly rejects (no country code to parse from).
+  // Sync the upgraded value up once, immediately after mount.
+  useEffect(() => {
+    if (displayValue && displayValue !== value) {
+      onChange(displayValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <PhoneInput
