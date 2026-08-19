@@ -27,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInputField } from '@bengo-hub/shared-ui-lib/contact';
 import {
   Dialog,
   DialogContent,
@@ -100,7 +101,7 @@ export function CreateUserDialog({ onClose }: { onClose: () => void }) {
               </div>
               <div>
                 <Label>Phone (optional)</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1" placeholder="+254 700 000 000" />
+                <PhoneInputField value={phone} onChange={setPhone} className="mt-1" />
               </div>
             </div>
             <DialogFooter>

@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInputField } from '@bengo-hub/shared-ui-lib/contact';
 import { useToast } from '@/hooks/use-toast';
 import apiClient from '@/lib/api-client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -296,9 +297,7 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Contact Phone (optional)</Label>
-                  <Input type="tel" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
-                    placeholder="0712 345 678"
-                    className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+                  <PhoneInputField value={form.contact_phone} onChange={(v) => setForm({ ...form, contact_phone: v })} />
                   <p className="text-[11px] text-slate-400">Shown on this branch&apos;s receipts. Falls back to the tenant&apos;s general contact if left blank.</p>
                 </div>
                 <div className="space-y-1">

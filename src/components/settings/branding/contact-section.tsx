@@ -2,7 +2,8 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Clock, Globe, Mail, Phone } from 'lucide-react';
+import { PhoneInputField } from '@bengo-hub/shared-ui-lib/contact';
+import { Clock, Globe, Mail } from 'lucide-react';
 
 // IANA timezones offered for a tenant's day/shift boundaries. East Africa first
 // (default Africa/Nairobi / EAT), then other common business zones. The backend
@@ -58,16 +59,10 @@ export function ContactSection({
           <Label className="text-xs font-black uppercase tracking-widest text-slate-400">
             Support Phone
           </Label>
-          <div className="relative">
-            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              value={tenantData?.contact_phone || ''}
-              onChange={(e) =>
-                updateField('contact_phone', e.target.value)
-              }
-              className="rounded-xl h-12 bg-slate-50 dark:bg-slate-800 border-none font-bold pl-12"
-            />
-          </div>
+          <PhoneInputField
+            value={tenantData?.contact_phone || ''}
+            onChange={(v) => updateField('contact_phone', v)}
+          />
         </div>
         <div className="space-y-2 sm:col-span-2">
           <Label className="text-xs font-black uppercase tracking-widest text-slate-400">
