@@ -1,6 +1,7 @@
 'use client';
 
-import PhoneInput, { type Country } from 'react-phone-number-input';
+import { useState } from 'react';
+import PhoneInput, { type Country, parsePhoneNumber } from 'react-phone-number-input';
 import './phone-input.css';
 
 export interface PhoneInputFieldProps {
@@ -19,7 +20,6 @@ export interface PhoneInputFieldProps {
  * single canonical shape auth-api validates and stores. See
  * internal/httpapi/handlers/user_handler.go UpdateMyProfile and
  * auth_handler_contacts.go AddMyPhone for the matching server-side check.
- * An existing free-text value (legacy data) is shown as-is until re-saved.
  */
 export function PhoneInputField({
   value,
@@ -30,13 +30,34 @@ export function PhoneInputField({
   defaultCountry = 'KE',
   id,
 }: PhoneInputFieldProps) {
+  // A legacy free-text value with no leading "+" (e.g. "0743793901" from
+  // before this component existed) can't be attributed to any country by the
+  // library, so it renders as a generic "International" placeholder instead
+  // of the right flag. Try once, on mount, to reinterpret it as a NATIONAL
+  // number for defaultCountry and upgrade it to real E.164 — after that this
+  // is a normal controlled input, so it never fights the user's typing.
+  const [displayValue, setDisplayValue] = useState<string | undefined>(() => {
+    if (value && !value.startsWith('+')) {
+      try {
+        const parsed = parsePhoneNumber(value, defaultCountry);
+        if (parsed?.isValid()) return parsed.number;
+      } catch {
+        // fall through — show the raw value as-is
+      }
+    }
+    return value;
+  });
+
   return (
     <PhoneInput
       id={id}
       international
       defaultCountry={defaultCountry}
-      value={value}
-      onChange={(v) => onChange(v ?? '')}
+      value={displayValue}
+      onChange={(v) => {
+        setDisplayValue(v);
+        onChange(v ?? '');
+      }}
       placeholder={placeholder}
       disabled={disabled}
       className={className}
