@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight, Bell, Book, Clock, CreditCard, Key, Receipt } from 'lucide-react';
-import Link from 'next/link';
+import { Bell, Book, Clock, CreditCard, Key, Receipt } from 'lucide-react';
 import { fadeInUp } from './docs-components';
+import { DocsServiceCard } from '@/components/docs/DocsServiceCard';
 
 /**
  * API Docs hub (Phase 12) — rebuilt from a single, 100% auth-api-scoped page
@@ -78,22 +78,7 @@ export default function DocsHubPage() {
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Available now</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {LIVE_SERVICES.map((s, i) => (
-                <motion.div key={s.slug} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} transition={{ delay: i * 0.05 }}>
-                  <Link
-                    href={`/docs/${s.slug}`}
-                    className={`group block p-6 sm:p-7 rounded-2xl bg-gradient-to-br ${s.color} border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300`}
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="p-3 bg-white/70 dark:bg-slate-900/50 rounded-xl">
-                        <s.icon className={`w-6 h-6 ${s.iconColor}`} />
-                      </div>
-                      <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-1 transition-all" />
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{s.name}</h3>
-                    <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">{s.tagline}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 italic">{s.readme}</p>
-                  </Link>
-                </motion.div>
+                <DocsServiceCard key={s.slug} s={s} index={i} />
               ))}
             </div>
           </div>
