@@ -3,7 +3,6 @@
 import { useTenant } from '@/components/providers/tenant-provider';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { JoinOrganizationDialog } from '@/components/organizations/JoinOrganizationDialog';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,7 +11,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { useVisibleServices, type ServiceKey, AppSwitcherGrid } from '@bengo-hub/shared-ui-lib/app-switcher';
+import { useVisibleServices, type ServiceKey, AppSwitcherGrid, AppSwitcherTrigger } from '@bengo-hub/shared-ui-lib/app-switcher';
 import { AccountPanel } from '@bengo-hub/shared-ui-lib/account-panel';
 import {
   Bell,
@@ -21,7 +20,6 @@ import {
   Cpu,
   Database,
   ExternalLink,
-  Grid3x3,
   Home,
   Key,
   LayoutDashboard,
@@ -88,7 +86,6 @@ export function DashboardTopNav() {
   const { isPlatformOwner, isTenantAdmin } = useAuth();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [appsOpen, setAppsOpen] = useState(false);
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
 
   const displayTitle = getServiceTitle('SSO');
@@ -257,16 +254,7 @@ export function DashboardTopNav() {
         </div>
         <ThemeToggle />
 
-        <DropdownMenu open={appsOpen} onOpenChange={setAppsOpen}>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Codevertex apps">
-              <Grid3x3 className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 max-h-[70vh] overflow-y-auto rounded-[1.5rem] p-4 shadow-2xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <AppSwitcherGrid services={services} onNavigate={() => setAppsOpen(false)} />
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <AppSwitcherTrigger services={services} className="relative inline-flex size-10 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors" />
 
         <Button variant="ghost" size="icon" className="relative group rounded-xl">
           <Bell className="h-5 w-5 text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors" />
