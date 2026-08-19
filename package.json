@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@bengo-hub/shared-ui-lib": "github:Bengo-Hub/shared-ui-lib#v0.1.70",
-    "@ducanh2912/next-pwa": "^10.2.9",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-avatar": "^1.1.11",

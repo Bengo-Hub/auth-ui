@@ -1,7 +1,6 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Providers, ThemeProvider } from "@/components/providers";
 import { PWAInstallPrompt } from "@/components/pwa/pwa-install-prompt";
-import { PWAUpdateBanner } from "@/components/pwa/pwa-update-banner";
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono, Outfit } from "next/font/google";
@@ -25,19 +24,40 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+// iOS splash screens (Phase 14) — /svgs/logo.svg rasterized onto the brand
+// purple background at each standard device size. Media queries match
+// Apple's own documented device-width/device-height/dpr combinations.
+const APPLE_SPLASH_SCREENS: { url: string; media: string }[] = [
+  { url: "/icons/apple-splash-2048-2732.png", media: "(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+  { url: "/icons/apple-splash-1668-2388.png", media: "(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+  { url: "/icons/apple-splash-1536-2048.png", media: "(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+  { url: "/icons/apple-splash-1290-2796.png", media: "(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+  { url: "/icons/apple-splash-1179-2556.png", media: "(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+  { url: "/icons/apple-splash-1170-2532.png", media: "(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+  { url: "/icons/apple-splash-1125-2436.png", media: "(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+  { url: "/icons/apple-splash-828-1792.png", media: "(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+  { url: "/icons/apple-splash-750-1334.png", media: "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+  { url: "/icons/apple-splash-640-1136.png", media: "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+];
+
 export const metadata: Metadata = {
   title: "Codevertex SSO - Unified Identity",
   description: "The central identity and access management portal for the Codevertex ecosystem.",
   manifest: "/manifest.json",
   icons: {
-    icon: [{ url: "/svgs/logo.svg", type: "image/svg+xml" }, { url: "/images/logo/codevertex.png" }],
+    icon: [
+      { url: "/svgs/logo.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
     shortcut: "/svgs/logo.svg",
-    apple: "/images/logo/codevertex.png",
+    apple: "/icons/icon-192.png",
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Codevertex SSO",
+    startupImage: APPLE_SPLASH_SCREENS,
   },
 };
 
@@ -75,7 +95,6 @@ export default function RootLayout({
             </MainLayout>
             <Toaster />
             <PWAInstallPrompt />
-            <PWAUpdateBanner />
           </Providers>
         </ThemeProvider>
         <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 py-4 px-6 text-center text-xs text-slate-500 dark:text-slate-400">
