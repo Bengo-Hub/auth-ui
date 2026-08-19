@@ -1,14 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Database,
-  Download,
-  FileArchive,
   Loader2,
   RefreshCw,
   AlertTriangle,
-  Clock,
   Save,
   CalendarClock,
 } from 'lucide-react';
@@ -19,6 +16,12 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
+import {
+  buildBackupColumns,
+  type BackupManifest,
+  type DownloadProgress,
+} from './backups-columns';
 
 interface BackupSettings {
   auto_enabled: boolean;
@@ -38,48 +41,9 @@ function formatHourLabel(hour: number): string {
   return `${display}:00 ${period}`;
 }
 
-interface BackupEntry {
-  filename: string;
-  size: string;
-  created_at: number;
-}
-
-interface BackupManifest {
-  backups: BackupEntry[];
-}
-
-interface DownloadProgress {
-  loaded: number;
-  total: number;
-}
-
-function formatDate(unixTimestamp: number): string {
-  return new Date(unixTimestamp * 1000).toLocaleString();
-}
-
-function timeAgo(unixTimestamp: number): string {
-  const diff = Date.now() - unixTimestamp * 1000;
-  const hours = Math.floor(diff / 3600000);
-  if (hours < 1) return 'Less than an hour ago';
-  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  const days = Math.floor(hours / 24);
-  return `${days} day${days > 1 ? 's' : ''} ago`;
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)}M`;
-}
-
-const SIX_DAYS_SECS = 6 * 24 * 3600;
 const TWENTY_FIVE_HOURS_SECS = 25 * 3600;
 
-function isOveraged(unixTimestamp: number): boolean {
-  return (Date.now() / 1000 - unixTimestamp) > SIX_DAYS_SECS;
-}
-
-function isRecentBackupMissing(backups: BackupEntry[]): boolean {
+function isRecentBackupMissing(backups: { created_at: number }[]): boolean {
   if (backups.length === 0) return false;
   const newest = Math.max(...backups.map((b) => b.created_at));
   return (Date.now() / 1000 - newest) > TWENTY_FIVE_HOURS_SECS;
@@ -293,6 +257,12 @@ export default function BackupsPage() {
 
   const backups = manifest?.backups ?? [];
 
+  const columns = useMemo(
+    () => buildBackupColumns({ downloading, progress, onDownload: handleDownload }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [downloading, progress],
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -357,101 +327,21 @@ export default function BackupsPage() {
       )}
 
       {/* Backups list */}
-      <div className="rounded-lg border">
-        <div className="px-4 py-3 border-b bg-muted/30 flex items-center justify-between">
-          <h2 className="font-semibold text-sm">Available Backups</h2>
-          <Badge variant="outline">{backups.length} file{backups.length !== 1 ? 's' : ''}</Badge>
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-            <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
-            <p className="text-sm text-muted-foreground">
-              Failed to load backups. The backup service may not be running.
-            </p>
-            <Button variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>
-              Retry
-            </Button>
-          </div>
-        ) : backups.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <FileArchive className="h-8 w-8 text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">No backups available yet.</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              The next backup will be created at 2:00 AM UTC.
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y">
-            {backups.map((backup) => {
-              const isDownloading = downloading === backup.filename;
-              const pct = progress && progress.total > 0
-                ? Math.round((progress.loaded / progress.total) * 100)
-                : null;
-              const aged = isOveraged(backup.created_at);
-
-              return (
-                <div
-                  key={backup.filename}
-                  className="px-4 py-3 flex items-center justify-between hover:bg-muted/20 transition-colors"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <FileArchive className="h-5 w-5 text-muted-foreground shrink-0" />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium font-mono truncate">
-                          {backup.filename}
-                        </p>
-                        {aged && (
-                          <span className="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/30 px-2 py-0.5 text-xs font-semibold text-red-700 dark:text-red-400 shrink-0">
-                            Overdue
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                        <span>{backup.size}</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {timeAgo(backup.created_at)}
-                        </span>
-                        <span>{formatDate(backup.created_at)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {isDownloading && progress && (
-                      <span className="text-xs font-mono text-muted-foreground tabular-nums">
-                        {progress.total > 0
-                          ? `${formatBytes(progress.loaded)}/${formatBytes(progress.total)} (${pct}%)`
-                          : formatBytes(progress.loaded)}
-                      </span>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownload(backup.filename)}
-                      disabled={isDownloading}
-                    >
-                      {isDownloading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Download className="h-4 w-4" />
-                      )}
-                      <span className="ml-2 hidden sm:inline">
-                        {isDownloading && pct !== null ? `${pct}%` : 'Download'}
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold text-sm">Available Backups</h2>
+        <Badge variant="outline">{backups.length} file{backups.length !== 1 ? 's' : ''}</Badge>
       </div>
+
+      <DataTable
+        columns={columns}
+        rows={backups}
+        rowKey={(b) => b.filename}
+        loading={isLoading}
+        error={!!error}
+        onRetry={() => refetch()}
+        emptyText="No backups available yet. The next backup will be created at 2:00 AM UTC."
+        storageKey="platform-backups-col-prefs"
+      />
     </div>
   );
 }
