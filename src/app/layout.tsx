@@ -4,14 +4,25 @@ import { PWAInstallPrompt } from "@/components/pwa/pwa-install-prompt";
 import { PWAUpdateBanner } from "@/components/pwa/pwa-update-banner";
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata, Viewport } from "next";
-import { Poppins } from "next/font/google";
+import { DM_Sans, JetBrains_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 
-const poppins = Poppins({
-  variable: "--font-poppins",
+// Matches library-ui's exact font pairing (Phase 8b) — DM Sans is the
+// primary body/UI face, Outfit and JetBrains Mono are declared alongside it
+// in globals.css's --font-sans/--font-mono stacks.
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
+});
+
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -50,7 +61,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body
-        className={`${poppins.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}
+        className={`${dmSans.variable} ${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
         <ThemeProvider
           attribute="class"

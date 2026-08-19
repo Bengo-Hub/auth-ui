@@ -58,7 +58,8 @@
   --color-sidebar-hover: hsl(var(--sidebar-hover));
   --color-sidebar-section: hsl(var(--sidebar-section));
 
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), var(--font-outfit), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
