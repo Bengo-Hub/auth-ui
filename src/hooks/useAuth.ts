@@ -24,9 +24,11 @@ export interface User {
     subscription_plan?: string;
     subscription_status?: string;
   };
-  // /api/v1/auth/me currently returns `tenant` (singular primary). `tenants` is
-  // reserved for the future multi-tenant membership list endpoint; treat both
-  // as optional so consumers can fall back gracefully.
+  // /api/v1/auth/me returns BOTH `tenant` (the active session's tenant — singular,
+  // matches the minted token) and `tenants` (every membership the user has, each with its
+  // own roles) — the top-level `roles` field above is scoped to `tenant` only, so checking
+  // "does this user have role X anywhere" means walking `tenants[].roles`, not just `roles`.
+  // See hasAnyRole below. Both kept optional so callers still degrade gracefully.
   tenants?: Array<{
     id: string;
     name: string;
@@ -97,6 +99,19 @@ export function useAuth(enabled = true) {
     return user.roles?.includes(role) ?? false;
   };
 
+  // hasAnyRole checks a role list against BOTH the active-tenant roles (user.roles) and every
+  // other tenant the user belongs to (user.tenants[].roles). Roles are granted per-tenant
+  // membership, so a role held on a tenant that isn't the current active session (see /me's
+  // active-tenant scoping) would otherwise look "missing" even though it truthfully exists —
+  // use this for coarse UI nav-gates (e.g. "can this user reach the developer portal at all")
+  // where showing/hiding a page is fine to decide across all memberships; the actual data and
+  // actions on that page still resolve to whichever tenant is active, exactly as before.
+  const hasAnyRole = (roles: string[]) => {
+    if (!user) return false;
+    if (user.roles?.some((r) => roles.includes(r))) return true;
+    return !!user.tenants?.some((t) => t.roles?.some((r) => roles.includes(r)));
+  };
+
   const hasPermission = (permission: string) => {
     if (!user) return false;
     if (user.roles?.includes('superuser') || user.roles?.includes('admin') || user.roles?.includes('super_admin')) return true;
@@ -121,6 +136,7 @@ export function useAuth(enabled = true) {
     isError: query.isError,
     error: query.error,
     hasRole,
+    hasAnyRole,
     hasPermission,
     isPlatformOwner,
     isTenantAdmin,

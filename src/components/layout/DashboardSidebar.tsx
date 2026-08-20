@@ -59,13 +59,20 @@ const ACCOUNT_ITEMS: NavItem[] = [
 // entry — /docs already exists as a real page but had no dashboard nav link
 // at all before this. Pure re-categorization: role-gating (isPlatformOwner)
 // is unchanged from today.
+// Usable by any tenant "developer" (Apps is tenant-scoped server-side — see AppHandler.CreateApp).
 const DEVELOPER_ITEMS: NavItem[] = [
   { title: 'Overview', href: '/dashboard/developer', icon: Code2 },
   { title: 'Apps', href: '/dashboard/developer/apps', icon: Cpu },
+  { title: 'API Docs', href: '/docs', icon: BookOpen },
+];
+
+// Platform-wide surfaces (API Keys, OAuth Clients, Integrations are all platform-owner-gated
+// server-side) — appended only for isPlatformOwner, so a tenant developer never sees a nav link
+// that 403s the moment they click it.
+const PLATFORM_DEVELOPER_ITEMS: NavItem[] = [
   { title: 'API Keys', href: '/dashboard/developer/api-keys', icon: Terminal },
   { title: 'OAuth Clients', href: '/dashboard/developer/oauth-clients', icon: Key },
   { title: 'Integrations', href: '/dashboard/integrations', icon: Wrench },
-  { title: 'API Docs', href: '/docs', icon: BookOpen },
 ];
 
 const SECURITY_ITEMS: NavItem[] = [
@@ -192,7 +199,7 @@ export function DashboardSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const logout = useLogout();
   const { tenant } = useTenant();
-  const { isPlatformOwner, isTenantAdmin } = useAuth();
+  const { isPlatformOwner, isTenantAdmin, hasAnyRole } = useAuth();
 
   const accountGroup: NavGroup = {
     label: 'Account',
@@ -212,14 +219,15 @@ export function DashboardSidebar() {
         }
       : null;
 
-  // Developer/Security/Platform are all still platform-owner-only, exactly as
-  // today (PLATFORM_ADMIN_ITEMS was one flat isPlatformOwner-gated list) —
-  // this pass only re-categorizes those same links into labeled groups, it
-  // doesn't change who can see what. Fixing tenant-admin visibility into
-  // their own Developer/Apps area is Phase 11's job (unifying the two
-  // separate tenant-scoped vs platform-scoped Apps pages), not this one's.
-  const developerGroup: NavGroup | null = isPlatformOwner
-    ? { label: 'Developer', icon: Code2, items: DEVELOPER_ITEMS }
+  // Security/Platform stay platform-owner-only. Developer is shown to platform owners AND
+  // anyone holding the "developer" (or admin/superuser/owner) role on ANY of their tenant
+  // memberships — checked across all memberships, not just the active one, since a role
+  // granted on a different org than the current session would otherwise leave this nav item
+  // (and dashboard/layout.tsx's route guard) permanently hidden despite the role truthfully
+  // existing. Matches the same DEVELOPER_PORTAL_ROLES list dashboard/layout.tsx gates on.
+  const DEVELOPER_PORTAL_ROLES = ['admin', 'developer', 'superuser', 'owner'];
+  const developerGroup: NavGroup | null = isPlatformOwner || hasAnyRole(DEVELOPER_PORTAL_ROLES)
+    ? { label: 'Developer', icon: Code2, items: isPlatformOwner ? [...DEVELOPER_ITEMS, ...PLATFORM_DEVELOPER_ITEMS] : DEVELOPER_ITEMS }
     : null;
 
   const securityGroup: NavGroup | null = isPlatformOwner

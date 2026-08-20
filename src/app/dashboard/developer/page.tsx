@@ -29,14 +29,15 @@ export default function DeveloperPortalOverview() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      apiClient.get<unknown[]>('/api/v1/admin/apps').catch(() => ({ data: [] })),
-      apiClient.get<unknown[]>('/api/v1/admin/api-keys').catch(() => ({ data: [] })),
-    ]).then(([apps, keys]) => {
+    const requests: Promise<{ data: unknown[] }>[] = [apiClient.get<unknown[]>('/api/v1/admin/apps').catch(() => ({ data: [] }))];
+    // API Keys is a platform-owner-only surface (deprecated in favor of Apps) — skip the call
+    // entirely for a tenant developer rather than showing a stat card backed by a 403.
+    if (isPlatformOwner) requests.push(apiClient.get<unknown[]>('/api/v1/admin/api-keys').catch(() => ({ data: [] })));
+    Promise.all(requests).then(([apps, keys]) => {
       if (cancelled) return;
       const appList = Array.isArray(apps.data) ? apps.data : [];
       setAppCount(isPlatformOwner ? appList.length : appList.filter((a: any) => a.app_type === 'tenant').length);
-      setKeyCount(Array.isArray(keys.data) ? keys.data.length : 0);
+      if (keys) setKeyCount(Array.isArray(keys.data) ? keys.data.length : 0);
     });
     return () => { cancelled = true; };
   }, [isPlatformOwner]);
@@ -46,20 +47,22 @@ export default function DeveloperPortalOverview() {
       <header>
         <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-1">Developer Portal</h1>
         <p className="text-slate-500 dark:text-slate-400">
-          Manage your apps, API keys{isPlatformOwner ? ', and OAuth clients' : ''}.
+          Manage your apps{isPlatformOwner ? ', API keys, and OAuth clients' : ''}.
         </p>
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <StatCard label="Apps" value={appCount ?? '—'} icon={Cpu} color="purple" />
-        <StatCard label="API Keys" value={keyCount ?? '—'} icon={Key} color="blue" />
+        {isPlatformOwner && <StatCard label="API Keys" value={keyCount ?? '—'} icon={Key} color="blue" />}
         {isPlatformOwner && <StatCard label="OAuth Clients" value="—" icon={Globe} color="green" helper="See OAuth Clients" />}
       </div>
 
       <section className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <NavCard href="/dashboard/developer/apps" icon={Cpu} color="purple" title="Apps" desc="Service-to-service app tokens for integrations." />
-          <NavCard href="/dashboard/developer/api-keys" icon={Key} color="blue" title="API Keys" desc="Generate keys for service-to-service authentication." />
+          {isPlatformOwner && (
+            <NavCard href="/dashboard/developer/api-keys" icon={Key} color="blue" title="API Keys" desc="Generate keys for service-to-service authentication." />
+          )}
           {isPlatformOwner && (
             <NavCard href="/dashboard/developer/oauth-clients" icon={Globe} color="green" title="OAuth Clients" desc="Register and manage OAuth2 clients." />
           )}

@@ -16,7 +16,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { isAuthenticated, isLoading } = useAuthStore();
-  const { user, isLoading: meLoading, isPlatformOwner } = useAuth(true);
+  const { user, isLoading: meLoading, isPlatformOwner, hasAnyRole } = useAuth(true);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -41,6 +41,9 @@ export default function DashboardLayout({
   // (not role-scoped) server-side (see AppHandler.CreateApp), so this doesn't change who CAN
   // act, only who sees the page. Platform-only actions within it (OAuth clients, promoting an
   // app to production) are separately gated by isPlatformOwner, authoritatively on the backend.
+  // Checked via hasAnyRole (not the active-tenant-scoped user.roles) since the role may live on
+  // a tenant membership other than the session's current active tenant — a real, hit bug where a
+  // user granted "developer" on one org still got bounced because their active org was another.
   const DEVELOPER_PORTAL_ROUTES = ['/dashboard/developer', '/dashboard/api-keys'];
   const DEVELOPER_PORTAL_ROLES = ['admin', 'developer', 'superuser', 'owner'];
 
@@ -60,11 +63,11 @@ export default function DashboardLayout({
       user &&
       requiresDeveloperRole &&
       !isPlatformOwner &&
-      !user.roles?.some((r) => DEVELOPER_PORTAL_ROLES.includes(r))
+      !hasAnyRole(DEVELOPER_PORTAL_ROLES)
     ) {
       router.replace('/unauthorized');
     }
-  }, [user, pathname, router, isPlatformOwner, meLoading]);
+  }, [user, pathname, router, isPlatformOwner, meLoading, hasAnyRole]);
 
   // Admin-provisioned / reset accounts must set a new password before using the
   // dashboard. Gate everything except the Security tab where they change it.
