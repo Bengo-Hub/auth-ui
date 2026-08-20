@@ -14,8 +14,14 @@ const SCOPE_PRESETS = ['s2s:*', INTERNAL_SERVICE_KEY_SCOPE, 'etims:read', 'etims
 // A tenant app is tied to ONE service surface — never a platform-wide grant. Mirrors the
 // server-side allow-list in auth-api's validateTenantAppScopes (app_handler.go); s2s:*/
 // internal_service_key are platform-admin-only and deliberately excluded here.
+//
+// `value` becomes the scope prefix submitted as `${value}:${readWrite}` — it is NOT always the
+// same as the display label. "Treasury API" submits `etims:*`, not `treasury:*`: the only real,
+// scope-checking external credential consumer today is treasury-api's ExternalAPIKeyAuth on
+// /external/etims/*, which requires `etims:read`/`etims:write` specifically — a `treasury:*` scope
+// isn't checked by anything and would silently issue a non-functional credential.
 const TENANT_SERVICES = [
-  { value: 'treasury', label: 'Treasury API', hint: 'Invoicing, payments, KRA eTIMS' },
+  { value: 'etims', label: 'Treasury API', hint: 'Invoicing, payments, KRA eTIMS' },
   { value: 'notifications', label: 'Notifications API', hint: 'Email, SMS, push, WhatsApp' },
   { value: 'sso', label: 'SSO / Auth API', hint: 'Identity, tenant, user lookups' },
   { value: 'subscriptions', label: 'Subscriptions API', hint: 'Plans, pricing, entitlements' },
