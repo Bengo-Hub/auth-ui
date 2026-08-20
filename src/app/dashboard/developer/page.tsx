@@ -15,6 +15,7 @@ import {
   Globe,
   Key,
   Package,
+  Send,
   ShieldAlert,
   Terminal,
 } from 'lucide-react';
@@ -99,6 +100,7 @@ function NavCard({ href, icon: Icon, color, title, desc }: { href: string; icon:
 
 function ResourcesSection() {
   const links = [
+    { href: '/developer/apply', icon: Send, color: 'primary', title: 'Apply for API Access', desc: 'Request a scoped credential for a service you don’t have access to yet (treasury, notifications, SSO).' },
     { href: '/docs', icon: Code2, color: 'sky', title: 'API Documentation', desc: 'Complete API reference with endpoints, authentication, and code examples.' },
     { href: 'https://github.com/Bengo-Hub/auth-api', icon: BookOpen, color: 'violet', title: 'Auth API', desc: 'Backend authentication service source code and implementation details.', external: true },
     { href: 'https://github.com/Bengo-Hub/shared-auth-client', icon: Package, color: 'amber', title: 'Go SDK', desc: 'Shared Auth Client for Go services. JWT validation, middleware, and JWKS support.', external: true },
