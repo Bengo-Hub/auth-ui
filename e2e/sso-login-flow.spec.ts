@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-const DEMO_EMAIL = process.env.E2E_LOGIN_EMAIL || 'demo@bengobox.dev';
-const DEMO_PASSWORD = process.env.E2E_LOGIN_PASSWORD || 'DemoUser2024!';
+const DEMO_EMAIL = process.env.E2E_LOGIN_EMAIL || 'admin@demo.codevertexafrica.com';
+const DEMO_PASSWORD = process.env.E2E_LOGIN_PASSWORD || 'DemoAdmin2024!';
 
 test.describe('SSO login flow', () => {
   test('login page loads and shows email/password form', async ({ page }) => {

@@ -14,7 +14,7 @@ E2E tests validate the SSO login flow on `accounts.codevertexafrica.com`: login 
 
 - **Target:** `https://accounts.codevertexafrica.com` (override via `BASE_URL`)
 - **Seeded users:** From auth-api seed (`auth-api/cmd/seed/main.go`):
-  - Demo: `demo@bengobox.dev` / `DemoUser2024!`
+  - Demo: `admin@demo.codevertexafrica.com` / `DemoAdmin2024!`
   - Platform admin: `admin@codevertexafrica.com` / `ChangeMe123!` (or env)
   - Tenant admin: `admin@theurbanloftcafe.com` / `TenantAdmin2024!`
 - **OAuth clients:** Auth-ui client registered with redirect URIs for accounts and sso domains
@@ -35,7 +35,7 @@ E2E tests validate the SSO login flow on `accounts.codevertexafrica.com`: login 
 ### 2. Login with seeded demo user and reach dashboard
 
 - Navigate to `/login`
-- Fill email (default: `demo@bengobox.dev`) and password (default: `DemoUser2024!`)
+- Fill email (default: `admin@demo.codevertexafrica.com`) and password (default: `DemoAdmin2024!`)
 - Submit form
 - Assert URL is `/dashboard` or `/login` (within timeout)
 - If dashboard: assert welcome/dashboard text visible
@@ -62,8 +62,8 @@ E2E tests validate the SSO login flow on `accounts.codevertexafrica.com`: login 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `BASE_URL` | Auth-ui base URL | `https://accounts.codevertexafrica.com` |
-| `E2E_LOGIN_EMAIL` | Login email | `demo@bengobox.dev` |
-| `E2E_LOGIN_PASSWORD` | Login password | `DemoUser2024!` |
+| `E2E_LOGIN_EMAIL` | Login email | `admin@demo.codevertexafrica.com` |
+| `E2E_LOGIN_PASSWORD` | Login password | `DemoAdmin2024!` |
 
 ## Running
 
