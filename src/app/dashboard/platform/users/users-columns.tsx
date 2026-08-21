@@ -13,10 +13,18 @@ import {
 } from 'lucide-react';
 import {
   useAdminUserAction,
-  useDeleteAdminUser,
+  usePurgeAdminUser,
   type PlatformUser,
 } from '@/hooks/use-dashboard-api';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +32,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EditUserDialog, SetPinDialog } from './user-dialogs';
 
@@ -52,9 +61,10 @@ function StatusBadge({ status }: { status: string }) {
 function UserActionsCell({ user }: { user: PlatformUser }) {
   const { toast } = useToast();
   const action = useAdminUserAction();
-  const deleteUser = useDeleteAdminUser();
+  const purgeUser = usePurgeAdminUser();
   const [editing, setEditing] = useState(false);
   const [settingPin, setSettingPin] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const doAction = (act: 'suspend' | 'deactivate' | 'activate') => {
     action.mutate(
@@ -67,10 +77,18 @@ function UserActionsCell({ user }: { user: PlatformUser }) {
   };
 
   const doDelete = () => {
-    if (!confirm(`Soft-delete ${user.email}? The account will be marked as deleted but data is retained.`)) return;
-    deleteUser.mutate(user.id, {
-      onSuccess: () => toast({ title: 'Deleted', description: `${user.email} has been deleted.` }),
-      onError: () => toast({ title: 'Error', description: 'Failed to delete user.', variant: 'destructive' }),
+    purgeUser.mutate(user.id, {
+      onSuccess: () => {
+        toast({ title: 'Deleted', description: `${user.email} has been permanently deleted.` });
+        setDeleting(false);
+      },
+      onError: (err: any) => {
+        toast({
+          title: 'Error',
+          description: err?.response?.data?.error || 'Failed to delete user.',
+          variant: 'destructive',
+        });
+      },
     });
   };
 
@@ -78,6 +96,28 @@ function UserActionsCell({ user }: { user: PlatformUser }) {
     <>
       {editing && <EditUserDialog user={user} onClose={() => setEditing(false)} />}
       {settingPin && <SetPinDialog user={user} onClose={() => setSettingPin(false)} />}
+      <Dialog open={deleting} onOpenChange={setDeleting}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Permanently delete this user?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete <span className="font-semibold">{user.email}</span> from
+              auth and every service that holds a copy of their account (roles, PINs, staff/member
+              records). This cannot be undone — the account cannot be recovered or recreated with
+              its old history.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleting(false)} disabled={purgeUser.isPending}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={doDelete} disabled={purgeUser.isPending}>
+              {purgeUser.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Delete permanently
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -108,7 +148,7 @@ function UserActionsCell({ user }: { user: PlatformUser }) {
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={doDelete} className="text-destructive focus:text-destructive">
+          <DropdownMenuItem onClick={() => setDeleting(true)} className="text-destructive focus:text-destructive">
             <Trash2 className="h-4 w-4 mr-2" /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

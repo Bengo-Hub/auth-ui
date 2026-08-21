@@ -575,11 +575,16 @@ export function useAdminUserAction() {
   });
 }
 
-export function useDeleteAdminUser() {
+// usePurgeAdminUser calls auth-api's true hard-delete (POST .../purge), not the plain
+// DELETE endpoint (which only sets status="deleted" and retains every row) — the "Delete"
+// action on the platform Users page needs to actually remove the account and its identity
+// data, not just hide it. auth-api cascades its own tables in one transaction and then
+// publishes auth.user.deleted for every other service to clean up its own local copy.
+export function usePurgeAdminUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      await apiClient.delete(`/api/v1/admin/users/${id}`);
+      await apiClient.post(`/api/v1/admin/users/${id}/purge`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.all() });
