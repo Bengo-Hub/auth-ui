@@ -1,5 +1,6 @@
 'use client';
 
+import { AppSplash } from '@/components/layout/AppSplash';
 import { DashboardBottomNav } from '@/components/layout/DashboardBottomNav';
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 import { DashboardTopNav } from '@/components/layout/DashboardTopNav';
@@ -80,11 +81,7 @@ export default function DashboardLayout({
   }, [user?.must_change_password, pathname, router, meLoading]);
 
   if (isLoading || meLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <AppSplash />;
   }
 
   if (!isAuthenticated && !user) {

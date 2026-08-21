@@ -113,8 +113,8 @@ function CreateOrgDialog() {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           {error && <div className="p-3 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-bold">{error}</div>}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2 sm:col-span-2">
               <Label>Organization Name *</Label>
               <Input value={name} onChange={e => handleNameChange(e.target.value)} placeholder="Acme Corp" required />
             </div>
@@ -140,11 +140,11 @@ function CreateOrgDialog() {
                 <option value="other">Other</option>
               </select>
             </div>
-            <div className="space-y-2 col-span-2">
+            <div className="space-y-2 sm:col-span-2">
               <Label>Contact Email</Label>
               <Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="admin@acme.com" />
             </div>
-            <div className="space-y-2 col-span-2">
+            <div className="space-y-2 sm:col-span-2">
               <Label>App URL</Label>
               <Input value={appUrl} onChange={e => setAppUrl(e.target.value)} placeholder="https://app.yourdomain.com" />
               <p className="text-[11px] text-muted-foreground">Default deployed app URL for email links (e.g. welcome, password reset)</p>
@@ -202,8 +202,8 @@ function EditOrgDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: b
           <DialogDescription>Update organization details for {tenant.name}.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2 sm:col-span-2">
               <Label>Organization Name</Label>
               <Input value={name} onChange={e => setName(e.target.value)} />
             </div>
@@ -228,11 +228,11 @@ function EditOrgDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: b
                 <option value="other">Other</option>
               </select>
             </div>
-            <div className="space-y-2 col-span-2">
+            <div className="space-y-2 sm:col-span-2">
               <Label>Contact Email</Label>
               <Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="admin@acme.com" />
             </div>
-            <div className="space-y-2 col-span-2">
+            <div className="space-y-2 sm:col-span-2">
               <Label>App URL</Label>
               <Input value={appUrl} onChange={e => setAppUrl(e.target.value)} placeholder="https://app.yourdomain.com" />
               <p className="text-[11px] text-muted-foreground">Default deployed app URL for email links (welcome, password reset). Used when no per-service URL is set.</p>
@@ -513,22 +513,22 @@ export default function TenantsPage() {
       </Dialog>
 
       {/* Enterprise Banner */}
-      <section className="p-16 rounded-[4rem] bg-slate-900 dark:bg-slate-950 text-white relative overflow-hidden border border-slate-800 shadow-2xl">
+      <section className="p-8 sm:p-12 lg:p-16 rounded-[2rem] sm:rounded-[4rem] bg-slate-900 dark:bg-slate-950 text-white relative overflow-hidden border border-slate-800 shadow-2xl">
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-xs font-black uppercase tracking-widest mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-xs font-black uppercase tracking-widest mb-6 sm:mb-8">
             <ShieldCheck className="h-4 w-4" /> Enterprise Support
           </div>
-          <h2 className="text-4xl font-black mb-6">Scale without limits.</h2>
-          <p className="text-slate-400 text-xl font-light leading-relaxed mb-10">
-            Get dedicated infrastructure, 99.99% SLA, and custom audit trails 
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black mb-4 sm:mb-6">Scale without limits.</h2>
+          <p className="text-slate-400 text-base sm:text-lg lg:text-xl font-light leading-relaxed mb-8 sm:mb-10">
+            Get dedicated infrastructure, 99.99% SLA, and custom audit trails
             tailored for high-growth enterprises.
           </p>
-          <Button size="lg" className="h-16 px-10 rounded-2xl bg-white text-slate-900 hover:bg-slate-50 font-black text-lg transition-all shadow-xl">
+          <Button size="lg" className="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-10 rounded-2xl bg-white text-slate-900 hover:bg-slate-50 font-black text-base sm:text-lg transition-all shadow-xl">
             Upgrade to Enterprise <ArrowRight className="h-5 w-5 ml-2" />
           </Button>
         </div>
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[160px] -mr-48 -mt-48" />
-        <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[120px] -mb-32" />
+        <div className="absolute top-0 right-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-primary/20 rounded-full blur-[160px] -mr-48 -mt-48" />
+        <div className="absolute bottom-0 right-1/4 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-blue-600/10 rounded-full blur-[120px] -mb-32" />
       </section>
     </div>
   );
