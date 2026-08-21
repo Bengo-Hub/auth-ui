@@ -142,6 +142,52 @@ export function useDeleteTenant() {
   });
 }
 
+export const pendingTenantKeys = { all: () => ['admin', 'tenants', 'pending_approval'] as const };
+
+// usePendingTenants lists self-registered organisations still awaiting platform-admin
+// review (Tenant.status === "pending_approval") — kept as its own query key so approving/
+// rejecting one doesn't need to invalidate (and briefly flash-empty) the main active-tenants
+// table used by useTenants().
+export function usePendingTenants() {
+  return useQuery({
+    queryKey: pendingTenantKeys.all(),
+    queryFn: async () => {
+      const response = await apiClient.get('/api/v1/admin/tenants?status=pending_approval');
+      const body = (response as any).data;
+      const items = body?.data ?? body ?? [];
+      return Array.isArray(items) ? (items as Tenant[]) : [];
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+export function useApproveTenant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.post(`/api/v1/admin/tenants/${id}/approve`, {});
+      return (response as { data?: Tenant }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pendingTenantKeys.all() });
+      queryClient.invalidateQueries({ queryKey: tenantKeys.all() });
+    },
+  });
+}
+
+export function useRejectTenant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      const response = await apiClient.post(`/api/v1/admin/tenants/${id}/reject`, reason ? { reason } : {});
+      return (response as { data?: Tenant }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pendingTenantKeys.all() });
+    },
+  });
+}
+
 export function useProvisionTenantOAuthRedirects() {
   const queryClient = useQueryClient();
   return useMutation({

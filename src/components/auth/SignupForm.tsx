@@ -118,6 +118,10 @@ export function SignupForm() {
   const [step, setStep] = useState<Step>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set when registration succeeds but the new/joined org is awaiting platform-admin
+  // review (auth-api returns error code "tenant_pending_approval") — the account really
+  // was created, so this renders a calm confirmation instead of the red error banner.
+  const [pendingApproval, setPendingApproval] = useState<string | null>(null);
   const [tenantAutoResolved, setTenantAutoResolved] = useState(false);
 
   // Step 1 — Account
@@ -452,11 +456,31 @@ export function SignupForm() {
       router.push(loginUrl.pathname + loginUrl.search);
     } catch (err: any) {
       const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to create account';
-      setError(msg);
+      if (err.response?.data?.code === 'tenant_pending_approval') {
+        setPendingApproval(msg);
+      } else {
+        setError(msg);
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (pendingApproval) {
+    return (
+      <div className="space-y-5 text-center py-8">
+        <div className="mx-auto w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+          <CheckCircle2 className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Registration submitted</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto">
+            {pendingApproval}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (

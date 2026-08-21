@@ -6,8 +6,21 @@ import {
   Plus,
   ShieldCheck,
   ArrowRight,
+  Clock,
+  Check,
+  X,
 } from 'lucide-react';
-import { useTenants, useCreateTenant, useUpdateTenant, useDeleteTenant, useProvisionTenantOAuthRedirects, Tenant } from '@/hooks/use-dashboard-api';
+import {
+  useTenants,
+  useCreateTenant,
+  useUpdateTenant,
+  useDeleteTenant,
+  useProvisionTenantOAuthRedirects,
+  usePendingTenants,
+  useApproveTenant,
+  useRejectTenant,
+  Tenant,
+} from '@/hooks/use-dashboard-api';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -257,6 +270,136 @@ function EditOrgDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: b
   );
 }
 
+function RejectTenantDialog({ tenant, open, onOpenChange }: { tenant: Tenant; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { toast } = useToast();
+  const rejectTenant = useRejectTenant();
+  const [reason, setReason] = useState('');
+
+  const handleReject = () => {
+    rejectTenant.mutate({ id: tenant.id, reason: reason.trim() || undefined }, {
+      onSuccess: () => {
+        toast({ title: 'Registration declined', description: `${tenant.name} will not be able to sign in.` });
+        onOpenChange(false);
+        setReason('');
+      },
+      onError: () => {
+        toast({ title: 'Failed to decline registration', variant: 'destructive' });
+      },
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md rounded-3xl">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">Decline registration?</DialogTitle>
+          <DialogDescription>
+            <span className="font-bold text-slate-900 dark:text-white">{tenant.name}</span> will not be able to sign in.
+            You can optionally note why, for your own records.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2 pt-2">
+          <Label>Reason (optional)</Label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g. duplicate of an existing account, suspected fraud..."
+            rows={3}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-none"
+          />
+        </div>
+        <DialogFooter className="gap-2 mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-12 rounded-xl font-bold flex-1">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleReject}
+            disabled={rejectTenant.isPending}
+            className="h-12 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-lg shadow-rose-600/20 flex-1"
+          >
+            {rejectTenant.isPending ? <Loader2 className="animate-spin" /> : 'Decline Registration'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PendingApprovalsSection() {
+  const { data: pending, isLoading } = usePendingTenants();
+  const approveTenant = useApproveTenant();
+  const { toast } = useToast();
+  const [rejecting, setRejecting] = useState<Tenant | null>(null);
+
+  if (isLoading || !pending || pending.length === 0) return null;
+
+  const handleApprove = (tenant: Tenant) => {
+    approveTenant.mutate(tenant.id, {
+      onSuccess: () => {
+        toast({ title: 'Organization approved', description: `${tenant.name} can now sign in.` });
+      },
+      onError: () => {
+        toast({ title: 'Failed to approve organization', variant: 'destructive' });
+      },
+    });
+  };
+
+  return (
+    <section className="rounded-3xl border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/10 p-8">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+          <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+        </div>
+        <div>
+          <h2 className="text-lg font-black text-slate-900 dark:text-white">
+            Pending Approval ({pending.length})
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            New self-registered organizations awaiting your review before their team can sign in.
+          </p>
+        </div>
+      </div>
+      <div className="space-y-3">
+        {pending.map((t) => (
+          <div
+            key={t.id}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+          >
+            <div>
+              <p className="font-bold text-slate-900 dark:text-white">{t.name}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                /{t.slug} · registered {new Date(t.created_at).toLocaleDateString()}
+                {t.contact_email ? ` · ${t.contact_email}` : ''}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setRejecting(t)}
+                className="h-9 rounded-lg font-bold text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-900/20"
+              >
+                <X className="h-4 w-4 mr-1" /> Decline
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleApprove(t)}
+                disabled={approveTenant.isPending}
+                className="h-9 rounded-lg font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Check className="h-4 w-4 mr-1" /> Approve
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {rejecting && (
+        <RejectTenantDialog tenant={rejecting} open={!!rejecting} onOpenChange={(open) => !open && setRejecting(null)} />
+      )}
+    </section>
+  );
+}
+
 export default function TenantsPage() {
   const { data: tenants, isLoading, isError, refetch } = useTenants();
   const deleteTenant = useDeleteTenant();
@@ -323,6 +466,8 @@ export default function TenantsPage() {
         </div>
         <CreateOrgDialog />
       </header>
+
+      <PendingApprovalsSection />
 
       <DataTable
         columns={columns}
