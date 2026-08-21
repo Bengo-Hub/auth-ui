@@ -13,9 +13,11 @@ import {
   AlertTriangle,
   Bell,
   CheckCircle2,
+  KeyRound,
   Loader2,
   Mail,
   RefreshCw,
+  RotateCw,
   Server,
   XCircle,
 } from 'lucide-react';
@@ -276,6 +278,111 @@ function AlertSettingsCard() {
   );
 }
 
+interface SealedSecretsStatus {
+  configured: boolean;
+  message?: string;
+  backup_exists?: boolean;
+  backup_warning?: string;
+  backup_created?: string;
+  backup_updated?: string;
+}
+
+/**
+ * Sealed Secrets master-key disaster-recovery status + rotate/backup-refresh trigger. The key
+ * itself is never touched by auth-api or displayed here — this only shows GitHub-secret metadata
+ * (when it was last refreshed) and dispatches a devops-k8s GitHub Action to do the actual work.
+ * See gap-analysis-and-remediation-plan.md item 14 for why this exists.
+ */
+function SealedSecretsCard() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+
+  const { data: status, isLoading } = useQuery<SealedSecretsStatus>({
+    queryKey: ['sealed-secrets-status'],
+    queryFn: async () => {
+      const response = await apiClient.get<SealedSecretsStatus>('/api/v1/admin/infra/sealed-secrets/status');
+      return (response as any)?.data ?? response;
+    },
+    staleTime: 30_000,
+  });
+
+  const dispatch = useMutation({
+    mutationFn: async (action: 'refresh_backup' | 'rotate') => {
+      await apiClient.post('/api/v1/admin/infra/sealed-secrets/rotate', { action });
+    },
+    onSuccess: (_data, action) => {
+      toast({
+        title: 'Workflow dispatched',
+        description: `Sealed Secrets ${action === 'rotate' ? 'rotate' : 'backup refresh'} started — check devops-k8s Actions for progress (usually under a minute).`,
+      });
+      setTimeout(() => qc.invalidateQueries({ queryKey: ['sealed-secrets-status'] }), 15_000);
+    },
+    onError: () =>
+      toast({ title: 'Error', description: 'Failed to dispatch the workflow', variant: 'destructive' }),
+  });
+
+  return (
+    <div className="rounded-lg border p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <KeyRound className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Sealed Secrets Master Key</span>
+        </div>
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : !status?.configured ? (
+          <Badge variant="outline">not configured</Badge>
+        ) : status.backup_exists ? (
+          <Badge variant="outline">backed up</Badge>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/30 px-3 py-1 text-xs font-semibold text-red-700 dark:text-red-400">
+            no backup
+          </span>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Decrypts every SealedSecret in devops-k8s. Losing it without a backup makes every
+        migrated service's secrets permanently unrecoverable.
+      </p>
+      {!status?.configured ? (
+        <p className="text-xs text-muted-foreground">{status?.message}</p>
+      ) : status.backup_exists ? (
+        <p className="text-xs text-muted-foreground">
+          Backup last refreshed {timeAgo(status.backup_updated)}
+        </p>
+      ) : (
+        <p className="text-xs text-red-600 dark:text-red-400">{status.backup_warning}</p>
+      )}
+      <div className="flex gap-2 pt-1">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => dispatch.mutate('refresh_backup')}
+          disabled={!status?.configured || dispatch.isPending}
+        >
+          {dispatch.isPending && dispatch.variables === 'refresh_backup' && (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          )}
+          Refresh Backup
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => dispatch.mutate('rotate')}
+          disabled={!status?.configured || dispatch.isPending}
+        >
+          {dispatch.isPending && dispatch.variables === 'rotate' ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <RotateCw className="h-4 w-4 mr-2" />
+          )}
+          Rotate
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function timeAgo(iso?: string): string {
   if (!iso) return 'never';
   const diff = Date.now() - new Date(iso).getTime();
@@ -407,6 +514,8 @@ export default function PlatformMonitoringPage() {
           )}
 
           <AlertSettingsCard />
+
+          <SealedSecretsCard />
 
           {/* CronJob health — the highest-value signal: catches silently-failing */}
           {/* maintenance jobs before disk/resources become a crisis. */}
