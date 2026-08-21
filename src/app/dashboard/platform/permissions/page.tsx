@@ -33,10 +33,10 @@ export default function PermissionsPage() {
   );
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
             <KeySquare className="h-6 w-6" /> Permission Catalogue
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -44,7 +44,7 @@ export default function PermissionsPage() {
             ({total} total). Assign these to roles from the Roles page.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
+        <Button variant="outline" size="sm" onClick={() => refetch()} className="self-start sm:self-auto">
           <RefreshCw className="h-4 w-4 mr-1" /> Refresh
         </Button>
       </div>

@@ -312,7 +312,10 @@ export default function AboutUsPage() {
             </p>
           </div>
           <div className="rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden bg-white dark:bg-[#0f0f0f]">
-            <div className="grid grid-cols-3 bg-slate-50 dark:bg-[#1a1a1a] px-6 py-4 border-b border-slate-200 dark:border-white/5">
+            {/* Header row is a table on sm+; below that the labels move inline into each
+                stacked card instead (a 3-column grid of real sentences was unreadably
+                cramped on a ~375px phone). */}
+            <div className="hidden sm:grid sm:grid-cols-3 bg-slate-50 dark:bg-[#1a1a1a] px-6 py-4 border-b border-slate-200 dark:border-white/5">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Solution</p>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Industry Focus</p>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Key Value</p>
@@ -320,11 +323,17 @@ export default function AboutUsPage() {
             {POWER_SUITE.map(({ name, focus, value }, i) => (
               <div
                 key={name}
-                className={`grid grid-cols-3 px-6 py-5 gap-4 items-start ${i < POWER_SUITE.length - 1 ? 'border-b border-slate-100 dark:border-white/5' : ''}`}
+                className={`grid grid-cols-1 sm:grid-cols-3 px-6 py-5 gap-1.5 sm:gap-4 items-start ${i < POWER_SUITE.length - 1 ? 'border-b border-slate-100 dark:border-white/5' : ''}`}
               >
                 <p className="text-sm font-bold text-slate-900 dark:text-white">{name}</p>
-                <p className="text-sm text-primary font-medium">{focus}</p>
-                <p className="text-sm text-slate-500">{value}</p>
+                <p className="text-sm text-primary font-medium">
+                  <span className="sm:hidden text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Industry Focus</span>
+                  {focus}
+                </p>
+                <p className="text-sm text-slate-500">
+                  <span className="sm:hidden text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Key Value</span>
+                  {value}
+                </p>
               </div>
             ))}
           </div>
