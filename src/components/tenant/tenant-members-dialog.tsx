@@ -129,8 +129,12 @@ export function TenantMembersDialog({ tenantId, tenantName }: TenantMembersDialo
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="h-12 px-6 rounded-xl border-slate-200 dark:border-slate-700 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-white">
-          <Users className="h-4 w-4 mr-2" /> Members
+        {/* Icon-only on mobile (this trigger shares a tight shrink-0 slot with 3 other
+            action buttons in the DataTable's mobile card view — a full h-12 px-6 "Members"
+            button there squeezed the org-name column down to almost nothing) — full
+            icon+label from sm up, where the desktop table row has plenty of room. */}
+        <Button variant="outline" className="h-9 w-9 p-0 sm:h-12 sm:w-auto sm:px-6 rounded-xl border-slate-200 dark:border-slate-700 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-white">
+          <Users className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Members</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl rounded-3xl max-h-[80vh] overflow-y-auto">

@@ -76,10 +76,12 @@ export function buildTenantColumns(cb: TenantColumnCallbacks): DataTableColumn<T
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-0.5 text-xs">
-            <span className="text-muted-foreground font-mono">{t.id.slice(0, 8)}...</span>
-            <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-            <span className="text-primary font-semibold">{t.slug}</span>
+          <div className="flex items-center gap-2 mt-0.5 text-xs min-w-0">
+            <span className="text-muted-foreground font-mono shrink-0">{t.id.slice(0, 8)}...</span>
+            <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700 shrink-0" />
+            {/* truncate (not wrap) so a hyphenated slug never breaks mid-word when this
+                column gets squeezed narrow next to the actions column on mobile. */}
+            <span className="text-primary font-semibold truncate">{t.slug}</span>
           </div>
         </div>
       ),
@@ -128,15 +130,18 @@ export function buildTenantColumns(cb: TenantColumnCallbacks): DataTableColumn<T
       align: 'right',
       exportable: false,
       mobileAction: true,
+      // Icon-only on mobile (shrink-0 slot in the DataTable's mobile card view, alongside
+      // the primary org-name/slug column) — 4 full text+icon buttons there squeezed that
+      // column down to almost nothing / wrapped across lines. Full icon+label from sm up.
       render: (t) => (
-        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+        <div className="flex items-center justify-end gap-1 sm:gap-1.5 flex-wrap">
           <TenantMembersDialog tenantId={t.id} tenantName={t.name} />
-          <Button variant="outline" size="sm" className="rounded-xl font-bold">
-            <Settings className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
-            Dashboard
+          <Button variant="outline" size="sm" className="h-9 w-9 p-0 sm:h-9 sm:w-auto sm:px-3 rounded-xl font-bold">
+            <Settings className="h-3.5 w-3.5 sm:mr-1.5 text-slate-400" />
+            <span className="hidden sm:inline">Dashboard</span>
           </Button>
-          <Button size="sm" onClick={() => cb.onSwitch(t)} className="rounded-xl bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 text-white font-bold">
-            Switch <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+          <Button size="sm" onClick={() => cb.onSwitch(t)} className="h-9 w-9 p-0 sm:h-9 sm:w-auto sm:px-3 rounded-xl bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 text-white font-bold">
+            <span className="hidden sm:inline">Switch</span> <ArrowRight className="h-3.5 w-3.5 sm:ml-1.5" />
           </Button>
 
           <DropdownMenu>
