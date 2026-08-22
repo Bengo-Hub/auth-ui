@@ -10,12 +10,17 @@ export default function EquityTax() {
     const { payouts, isLoading } = useEquityCompletedPayouts(holderID, token);
 
     const totalTax = payouts.reduce((s, p) => s + Number(p.tax_amount), 0);
+    const totalGross = payouts.reduce((s, p) => s + Number(p.payout_amount), 0);
+    const effectiveRatePct = totalGross > 0 ? (totalTax / totalGross) * 100 : null;
 
     return (
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold">KRA Tax Certificates</h1>
-                <p className="text-muted-foreground text-sm mt-1">Withholding tax deducted per payout (KRA rates: 10% individual / 15% corporate)</p>
+                <p className="text-muted-foreground text-sm mt-1">
+                    Withholding tax deducted per payout at your applicable KRA rate (dividend, royalty, or
+                    commission — resident vs. non-resident){effectiveRatePct !== null ? ` — your YTD effective rate is ${effectiveRatePct.toFixed(1)}%` : ''}.
+                </p>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-5 inline-block">
