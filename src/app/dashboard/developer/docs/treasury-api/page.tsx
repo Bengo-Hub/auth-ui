@@ -18,9 +18,9 @@ const TREASURY_API_URL = process.env.NEXT_PUBLIC_TREASURY_API_URL || 'https://bo
 export default function TreasuryApiDocsPage() {
   return (
     <DocsAccessGate resourceKey="treasury-api" serviceName="Treasury API">
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+    <div className="-mx-6 -mt-6 lg:-mx-12 lg:-mt-12">
       <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" animate="visible" variants={fadeInUp} transition={{ duration: 0.5 }}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
               <div className="p-3 sm:p-4 bg-gradient-to-br from-emerald-500/20 to-primary/20 rounded-2xl">
@@ -72,7 +72,7 @@ export default function TreasuryApiDocsPage() {
       </section>
 
       <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-2 mb-8">
             <h3 className="font-bold text-slate-900 dark:text-white">Base URL</h3>
           </motion.div>
@@ -83,7 +83,7 @@ export default function TreasuryApiDocsPage() {
       </section>
 
       <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8 sm:mb-12">
             <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
               <ScrollText className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />

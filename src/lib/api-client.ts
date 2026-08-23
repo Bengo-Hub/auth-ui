@@ -34,7 +34,6 @@ const PUBLIC_ROUTES = [
   '/forgot-password', // Forgot password page
   '/reset-password',  // Reset password page
   '/status',          // Status page
-  '/docs',            // Documentation
   '/pricing',         // Pricing page
   '/equity-holder',   // Equity portal — token-authenticated, no session cookie
   '/p',              // Short-link redirects

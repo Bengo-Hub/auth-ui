@@ -67,7 +67,7 @@ export default function DeveloperPortalOverview() {
           {isPlatformOwner && (
             <NavCard href="/dashboard/developer/oauth-clients" icon={Globe} color="green" title="OAuth Clients" desc="Register and manage OAuth2 clients." />
           )}
-          <NavCard href="/docs" icon={Code2} color="slate" title="API Docs" desc="Endpoints, authentication, and code examples." />
+          <NavCard href="/dashboard/developer/docs" icon={Code2} color="slate" title="API Docs" desc="Endpoints, authentication, and code examples." />
         </div>
       </section>
 
@@ -101,12 +101,12 @@ function NavCard({ href, icon: Icon, color, title, desc }: { href: string; icon:
 function ResourcesSection() {
   const links = [
     { href: '/developer/apply', icon: Send, color: 'primary', title: 'Apply for API Access', desc: 'Request a scoped credential for a service you don’t have access to yet (treasury, notifications, SSO).' },
-    { href: '/docs', icon: Code2, color: 'sky', title: 'API Documentation', desc: 'Complete API reference with endpoints, authentication, and code examples.' },
+    { href: '/dashboard/developer/docs', icon: Code2, color: 'sky', title: 'API Documentation', desc: 'Complete API reference with endpoints, authentication, and code examples.' },
     { href: 'https://github.com/Bengo-Hub/auth-api', icon: BookOpen, color: 'violet', title: 'Auth API', desc: 'Backend authentication service source code and implementation details.', external: true },
     { href: 'https://github.com/Bengo-Hub/shared-auth-client', icon: Package, color: 'amber', title: 'Go SDK', desc: 'Shared Auth Client for Go services. JWT validation, middleware, and JWKS support.', external: true },
     { href: 'https://github.com/Bengo-Hub/bengobox/blob/main/docs/RBAC_IMPLEMENTATION_GUIDE.md', icon: ShieldAlert, color: 'rose', title: 'RBAC Guide', desc: 'Role-based access control patterns and permission enforcement implementation.', external: true },
     { href: 'https://sso.codevertexafrica.com/v1/docs/', icon: Terminal, color: 'emerald', title: 'Swagger UI', desc: 'Interactive API explorer with try-it-out functionality for all endpoints.', external: true },
-    { href: '/docs#quick-start', icon: Code2, color: 'primary', title: 'Quick Start', desc: 'Get started with example requests, authentication, and SDK integration.' },
+    { href: '/dashboard/developer/docs#quick-start', icon: Code2, color: 'primary', title: 'Quick Start', desc: 'Get started with example requests, authentication, and SDK integration.' },
   ];
   const colorMap: Record<string, string> = {
     sky: 'bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400',

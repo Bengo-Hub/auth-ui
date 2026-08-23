@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { StatCard } from '@/components/dashboard/stat-card';
-import { useEquityCompletedPayouts } from '@/hooks/use-equity-portal';
+import { useEquityCompletedPayouts } from '../components/use-equity-portal';
 import { Inbox, Receipt } from 'lucide-react';
 import { usePortal } from '../components/equity-portal-context';
 import { formatKES } from '../components/utils';

@@ -37,6 +37,17 @@ export interface NavGroup {
   items: NavItem[];
 }
 
+// '/dashboard' and '/dashboard/developer' are each both a real page AND the "index" of a
+// group whose other items nest one level deeper (e.g. '/dashboard/developer/apps') — a plain
+// prefix match would highlight the index item on every one of its own sibling's pages too.
+// Shared by the desktop sidebar and the mobile drawer so this can't drift between them again.
+const EXACT_MATCH_ONLY_HREFS = ['/dashboard', '/dashboard/developer'];
+
+export function isNavItemActive(href: string, pathname: string | null): boolean {
+  if (EXACT_MATCH_ONLY_HREFS.includes(href)) return pathname === href;
+  return pathname === href || !!pathname?.startsWith(href + '/');
+}
+
 const ACCOUNT_ITEMS: NavItem[] = [
   { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Profile', href: '/dashboard/profile', icon: User },
@@ -47,7 +58,7 @@ const ACCOUNT_ITEMS: NavItem[] = [
 const DEVELOPER_ITEMS: NavItem[] = [
   { title: 'Overview', href: '/dashboard/developer', icon: Code2 },
   { title: 'Apps', href: '/dashboard/developer/apps', icon: Cpu },
-  { title: 'API Docs', href: '/docs', icon: BookOpen },
+  { title: 'API Docs', href: '/dashboard/developer/docs', icon: BookOpen },
 ];
 
 // Platform-wide surfaces (API Keys, OAuth Clients, Integrations are all platform-owner-gated
@@ -83,7 +94,13 @@ const PLATFORM_ITEMS: NavItem[] = [
 // Tenant-scoped roles entitled to the Developer Portal (Overview/Apps/API Docs) — must
 // stay in sync with auth-api's tenantDeveloperRoles (app_handler.go), which now
 // authoritatively enforces the same set server-side for tenant App CRUD.
-export const DEVELOPER_PORTAL_ROLES = ['admin', 'developer', 'superuser', 'owner'];
+//
+// Deliberately just "developer" — NOT admin/owner/superuser. Those are ordinary
+// TenantMembership role strings (e.g. the admin of Urban Loft Cafe), which must never be
+// confused with actual platform admin/superuser status (isPlatformOwner, below). A tenant
+// admin/owner does not automatically get Developer Portal access; they need the "developer"
+// role explicitly granted, same as anyone else on that tenant.
+export const DEVELOPER_PORTAL_ROLES = ['developer'];
 
 /**
  * Single source of truth for the dashboard's role-gated nav structure. Both the desktop
@@ -115,11 +132,11 @@ export function useDashboardNav() {
       : null;
 
   // Security/Platform stay platform-owner-only. Developer is shown to platform owners AND
-  // anyone holding the "developer" (or admin/superuser/owner) role on ANY of their tenant
-  // memberships — checked across all memberships, not just the active one, since a role
-  // granted on a different org than the current session would otherwise leave this nav item
-  // (and dashboard/layout.tsx's route guard) permanently hidden despite the role truthfully
-  // existing.
+  // anyone explicitly holding the "developer" role on ANY of their tenant memberships —
+  // checked across all memberships, not just the active one, since a role granted on a
+  // different org than the current session would otherwise leave this nav item (and
+  // dashboard/layout.tsx's route guard) permanently hidden despite the role truthfully
+  // existing. A bare tenant admin/owner/superuser role does NOT qualify on its own.
   const developerGroup: NavGroup | null = isPlatformOwner || hasAnyRole(DEVELOPER_PORTAL_ROLES)
     ? { label: 'Developer', icon: Code2, items: isPlatformOwner ? [...DEVELOPER_ITEMS, ...PLATFORM_DEVELOPER_ITEMS] : DEVELOPER_ITEMS }
     : null;

@@ -58,12 +58,6 @@ export default function Navbar() {
               Pricing
             </Link>
             <Link
-              href="/docs"
-              className="px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              Docs
-            </Link>
-            <Link
               href="/status"
               className="px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5"
             >
@@ -144,13 +138,6 @@ export default function Navbar() {
               onClick={() => setIsOpen(false)}
             >
               Developers
-            </Link>
-            <Link
-              href="/docs"
-              className="block px-4 py-3 text-base font-semibold text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              Documentation
             </Link>
             <Link
               href="/pricing"

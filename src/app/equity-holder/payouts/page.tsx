@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEquityPayouts } from '@/hooks/use-equity-portal';
+import { useEquityPayouts } from '../components/use-equity-portal';
 import { motion } from 'framer-motion';
 import { Inbox, Wallet } from 'lucide-react';
 import { StatusBadge } from '../components/StatusBadge';

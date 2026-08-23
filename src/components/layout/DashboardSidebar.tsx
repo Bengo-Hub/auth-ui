@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { useLogout } from '@/hooks/useLogout';
-import { useDashboardNav, type NavGroup, type NavItem } from '@/hooks/useDashboardNav';
+import { isNavItemActive, useDashboardNav, type NavGroup, type NavItem } from '@/hooks/useDashboardNav';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronLeft, ChevronUp, ExternalLink, LogOut, Menu } from 'lucide-react';
 import Link from 'next/link';
@@ -19,10 +19,7 @@ function NavLink({
   isCollapsed: boolean;
   pathname: string;
 }) {
-  const isActive =
-    item.href === '/dashboard'
-      ? pathname === '/dashboard'
-      : pathname === item.href || pathname.startsWith(item.href + '/');
+  const isActive = isNavItemActive(item.href, pathname);
 
   return (
     <Link

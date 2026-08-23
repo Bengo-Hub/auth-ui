@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Loader2, Lock, Clock, XCircle } from 'lucide-react';
 import { useDocsAccess } from '@/hooks/useDocsAccess';
 
@@ -14,6 +15,7 @@ interface DocsAccessGateProps {
 }
 
 export function DocsAccessGate({ resourceKey, serviceName, children }: DocsAccessGateProps) {
+  const pathname = usePathname();
   const { isLoggedIn, isLoading, status, requestAccess } = useDocsAccess(resourceKey);
   const [externalForm, setExternalForm] = useState({ name: '', email: '', company: '', notes: '' });
   const [externalSubmitted, setExternalSubmitted] = useState(false);
@@ -47,7 +49,7 @@ export function DocsAccessGate({ resourceKey, serviceName, children }: DocsAcces
           </div>
         </div>
 
-        <Link href="/auth/login" className="block w-full text-center mb-6 px-5 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors">
+        <Link href={`/login?return_to=${encodeURIComponent(pathname || '/dashboard/developer/docs')}`} className="block w-full text-center mb-6 px-5 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors">
           Sign in
         </Link>
 

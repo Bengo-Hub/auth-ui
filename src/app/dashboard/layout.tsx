@@ -7,6 +7,7 @@ import { DashboardTopNav } from '@/components/layout/DashboardTopNav';
 import { VeraWidget } from '@/components/vera/VeraWidget';
 import { VerifyEmailPrompt } from '@/components/auth/VerifyEmailPrompt';
 import { useAuth } from '@/hooks/useAuth';
+import { DEVELOPER_PORTAL_ROLES } from '@/hooks/useDashboardNav';
 import { useAuthStore } from '@/store/auth-store';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -44,18 +45,20 @@ export default function DashboardLayout({
     '/dashboard/developer/integrations',
   ];
   // /dashboard/developer (and /dashboard/api-keys, which just redirects there) needs the
-  // "admin" or new "developer" tenant role (or platform owner) — not just any authenticated
-  // member (a cashier/waiter shouldn't land on an integrations/API-credentials page). This
-  // list must stay in sync with auth-api's tenantDeveloperRoles (app_handler.go), which now
-  // enforces the same set server-side for tenant App CRUD — so this gate reflects who can
-  // actually act, not just who sees the page. Platform-only actions within it (OAuth clients,
-  // promoting an app to production) are separately gated by isPlatformOwner, authoritatively
-  // on the backend. Checked via hasAnyRole (not the active-tenant-scoped user.roles) since the
-  // role may live on a tenant membership other than the session's current active tenant — a
-  // real, hit bug where a user granted "developer" on one org still got bounced because their
-  // active org was another.
+  // explicit "developer" tenant role (or platform owner) — NOT a bare tenant admin/owner/
+  // superuser role string, and not just any authenticated member (a cashier/waiter shouldn't
+  // land on an integrations/API-credentials page either). DEVELOPER_PORTAL_ROLES is imported
+  // from useDashboardNav (not redeclared here) so the nav-visibility gate and this route guard
+  // can never drift apart again — they previously did, independently, in two different ways
+  // (see useDashboardNav's own history). It must also stay in sync with auth-api's
+  // tenantDeveloperRoles (app_handler.go), which enforces the same set server-side for tenant
+  // App CRUD — so this gate reflects who can actually act, not just who sees the page.
+  // Platform-only actions within it (OAuth clients, promoting an app to production) are
+  // separately gated by isPlatformOwner, authoritatively on the backend. Checked via
+  // hasAnyRole (not the active-tenant-scoped user.roles) since the role may live on a tenant
+  // membership other than the session's current active tenant — a real, hit bug where a user
+  // granted "developer" on one org still got bounced because their active org was another.
   const DEVELOPER_PORTAL_ROUTES = ['/dashboard/developer', '/dashboard/api-keys'];
-  const DEVELOPER_PORTAL_ROLES = ['admin', 'developer', 'superuser', 'owner'];
 
   useEffect(() => {
     if (meLoading) return;

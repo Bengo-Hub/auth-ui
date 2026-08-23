@@ -57,9 +57,9 @@ const COMING_SOON_SERVICES = [
 
 export default function DocsHubPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+    <div className="-mx-6 -mt-6 lg:-mx-12 lg:-mt-12">
       <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" animate="visible" variants={fadeInUp} transition={{ duration: 0.5 }} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
             <div className="p-3 sm:p-4 bg-gradient-to-br from-primary/20 to-sky-500/20 rounded-2xl">
               <Book className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />

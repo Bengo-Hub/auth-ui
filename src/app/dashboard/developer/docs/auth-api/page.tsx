@@ -29,9 +29,9 @@ const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codev
 export default function AuthApiDocsPage() {
   return (
     <DocsAccessGate resourceKey="auth-api" serviceName="Auth API">
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+    <div className="-mx-6 -mt-6 lg:-mx-12 lg:-mt-12">
       <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" animate="visible" variants={fadeInUp} transition={{ duration: 0.5 }}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
               <div className="p-3 sm:p-4 bg-gradient-to-br from-primary/20 to-sky-500/20 rounded-2xl">
@@ -95,7 +95,7 @@ export default function AuthApiDocsPage() {
       </section>
 
       <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8">
             <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
               <Zap className="w-6 h-6 text-primary" />
@@ -162,7 +162,7 @@ export default function AuthApiDocsPage() {
       </section>
 
       <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8 sm:mb-12">
             <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
               <Terminal className="w-6 h-6 text-primary" />
@@ -233,7 +233,7 @@ export default function AuthApiDocsPage() {
       </section>
 
       <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8">
             <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
               <Code2 className="w-6 h-6 text-primary" />
@@ -312,7 +312,7 @@ router.Get("/api/v1/protected", func(w http.ResponseWriter, r *http.Request) {
       </section>
 
       <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8 sm:mb-12">
             <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
               <Package className="w-6 h-6 text-primary" />

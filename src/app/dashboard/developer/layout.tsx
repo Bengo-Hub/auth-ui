@@ -11,7 +11,6 @@ interface DeveloperTab {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   platformOnly?: boolean;
-  external?: boolean;
 }
 
 const DEVELOPER_TABS: DeveloperTab[] = [
@@ -20,7 +19,7 @@ const DEVELOPER_TABS: DeveloperTab[] = [
   { title: 'API Keys', href: '/dashboard/developer/api-keys', icon: Terminal, platformOnly: true },
   { title: 'OAuth Clients', href: '/dashboard/developer/oauth-clients', icon: Globe, platformOnly: true },
   { title: 'Integrations', href: '/dashboard/developer/integrations', icon: Wrench, platformOnly: true },
-  { title: 'API Docs', href: '/docs', icon: BookOpen, external: true },
+  { title: 'API Docs', href: '/dashboard/developer/docs', icon: BookOpen },
 ];
 
 const TAB_CLS =
@@ -43,17 +42,14 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
       <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible">
         <nav className="inline-flex w-auto flex-nowrap items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-800 shadow-sm">
           {tabs.map((tab) => {
-            const isActive = tab.external
-              ? false
-              : tab.href === '/dashboard/developer'
+            const isActive =
+              tab.href === '/dashboard/developer'
                 ? pathname === tab.href
                 : pathname === tab.href || pathname?.startsWith(tab.href + '/');
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
-                target={tab.external ? '_blank' : undefined}
-                rel={tab.external ? 'noopener noreferrer' : undefined}
                 className={cn(
                   TAB_CLS,
                   isActive

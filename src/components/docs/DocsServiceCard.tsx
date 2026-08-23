@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useDocsAccess } from '@/hooks/useDocsAccess';
-import { fadeInUp } from '@/app/docs/docs-components';
+import { fadeInUp } from '@/app/dashboard/developer/docs/docs-components';
 
 export interface DocsServiceCardData {
   slug: string;
@@ -32,7 +32,7 @@ export function DocsServiceCard({ s, index }: { s: DocsServiceCardData; index: n
   return (
     <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} transition={{ delay: index * 0.05 }}>
       <Link
-        href={`/docs/${s.slug}`}
+        href={`/dashboard/developer/docs/${s.slug}`}
         className={`group block p-6 sm:p-7 rounded-2xl bg-gradient-to-br ${s.color} border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300`}
       >
         <div className="flex items-start justify-between mb-4">

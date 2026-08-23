@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { JoinOrganizationDialog } from '@/components/organizations/JoinOrganizationDialog';
 import { useAuth } from '@/hooks/useAuth';
-import { useDashboardNav, type NavGroup } from '@/hooks/useDashboardNav';
+import { isNavItemActive, useDashboardNav, type NavGroup } from '@/hooks/useDashboardNav';
 import { useLogout } from '@/hooks/useLogout';
 import { useAuthStore } from '@/store/auth-store';
 import { cn } from '@/lib/utils';
@@ -66,7 +66,7 @@ function MobileDrawerLink({
   pathname: string | null;
   onNavigate: () => void;
 }) {
-  const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+  const isActive = isNavItemActive(item.href, pathname);
   return (
     <Link
       href={item.href}

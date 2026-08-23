@@ -3,16 +3,14 @@
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
-  Bell,
   Code2,
+  CreditCard,
   ExternalLink,
   FileJson,
   KeyRound,
-  Mail,
-  MessageSquareText,
+  Layers,
   Package,
-  Send,
-  Smartphone,
+  Tag,
   Terminal,
   Zap,
 } from 'lucide-react';
@@ -20,25 +18,25 @@ import Link from 'next/link';
 import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
 import { DocsAccessGate } from '@/components/docs/DocsAccessGate';
 
-// notifications-api docs page — built from a direct read of notifications-service's
-// router.go and provider implementations (not the service's own internal docs, which
-// are stale on the send-message path — see the Quick Start note below).
-const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_NOTIFICATIONS_API_URL || 'https://notificationsapi.codevertexafrica.com';
+// subscriptions-api docs page — content sourced directly from the service's own real,
+// populated swagger.json (unlike auth-api's own stub spec). This is the first public
+// docs surface for this service; there is no prior internal-docs page to diff against.
+const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_SUBSCRIPTIONS_API_URL || 'https://pricingapi.codevertexafrica.com';
 
-export default function NotificationsApiDocsPage() {
+export default function SubscriptionsApiDocsPage() {
   return (
-    <DocsAccessGate resourceKey="notifications-api" serviceName="Notifications API">
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+    <DocsAccessGate resourceKey="subscriptions-api" serviceName="Subscriptions API">
+    <div className="-mx-6 -mt-6 lg:-mx-12 lg:-mt-12">
       <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" animate="visible" variants={fadeInUp} transition={{ duration: 0.5 }}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
               <div className="p-3 sm:p-4 bg-gradient-to-br from-primary/20 to-sky-500/20 rounded-2xl">
-                <Bell className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+                <CreditCard className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white">Notifications API</h1>
-                <p className="text-slate-600 dark:text-slate-400 mt-1">Email, SMS, push, and WhatsApp delivery for every Codevertex service</p>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white">Subscriptions API</h1>
+                <p className="text-slate-600 dark:text-slate-400 mt-1">Plan catalog, pricing, and entitlements for the Power Suite</p>
               </div>
             </div>
           </motion.div>
@@ -75,7 +73,7 @@ export default function NotificationsApiDocsPage() {
                 OpenAPI Spec
                 <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Download the OpenAPI spec for code generation</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Download the full, populated OpenAPI 3.0 spec</p>
             </a>
 
             <Link
@@ -94,7 +92,7 @@ export default function NotificationsApiDocsPage() {
       </section>
 
       <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8">
             <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
               <Zap className="w-6 h-6 text-primary" />
@@ -111,23 +109,12 @@ export default function NotificationsApiDocsPage() {
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-white mb-4">Authentication</h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
-                  Sending a message requires either a Bearer token (SSO JWT) <em>or</em> a service-to-service{' '}
-                  <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">X-API-Key</code> header. Every other endpoint below (templates,
-                  WhatsApp plans, docs, health) is public — no auth required.
+                  The plan catalog below is fully public — no auth required. A Bearer token (SSO JWT) is only needed for tenant-specific or platform-admin endpoints (e.g. current subscription status, platform stats).
                 </p>
                 <CodeBlock
-                  title="S2S Request"
+                  title="List public plans"
                   language="bash"
-                  code={`curl -X POST "${PRODUCTION_API_URL}/api/v1/notifications/messages" \\
-  -H "X-API-Key: YOUR_SERVICE_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "channel": "sms",
-    "tenant": "your-tenant-slug",
-    "template": "your/template_key",
-    "to": ["+254700000000"],
-    "data": { "amount": "1,500" }
-  }'`}
+                  code={`curl "${PRODUCTION_API_URL}/api/v1/plans?active=true"`}
                 />
               </div>
             </motion.div>
@@ -136,22 +123,36 @@ export default function NotificationsApiDocsPage() {
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-white mb-4">Response</h3>
                 <CodeBlock
-                  title="202 Accepted"
+                  title="200 OK"
                   language="json"
                   code={`{
-  "id": "msg_01HZY...",
-  "status": "queued",
-  "channel": "sms",
-  "tenant": "your-tenant-slug"
+  "data": [
+    {
+      "id": "bb5f7b97-...",
+      "planCode": "POWERSUITE_DUKA_BASIC",
+      "name": "PowerSuite Retail (Duka) — Basic",
+      "description": "...",
+      "planType": "TIERED",
+      "serviceTag": "pos",
+      "basePrice": 2500,
+      "setupFee": 0,
+      "currency": "KES",
+      "billingCycle": "MONTHLY",
+      "freeTrialDays": 14,
+      "tierOrder": 1,
+      "tierLimits": { "outlets": 1, "staff_accounts": 5 },
+      "isActive": true,
+      "isPublic": true
+    }
+  ]
 }`}
                 />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white mb-4">A note on the route shape</h3>
+                <h3 className="font-bold text-slate-900 dark:text-white mb-4">Billing cycle rule</h3>
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
-                  Older internal docs describe this as <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">/v1/&#123;tenantId&#125;/notifications/messages</code>.
-                  The real route has no tenant path segment — tenant is resolved from the JWT claim, the request body&apos;s <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">tenant</code> field, or an{' '}
-                  <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">X-Tenant-ID</code> header. Use the shape above.
+                  Billing cycles are <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">MONTHLY</code> (1 month), <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">SEMI_ANNUAL</code> (6 months), or{' '}
+                  <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">ANNUAL</code> (12 months) on the same monthly plan row — committing to 6+ months waives any one-time setup fee.
                 </p>
               </div>
             </motion.div>
@@ -160,7 +161,7 @@ export default function NotificationsApiDocsPage() {
       </section>
 
       <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8 sm:mb-12">
             <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
               <Terminal className="w-6 h-6 text-primary" />
@@ -169,73 +170,35 @@ export default function NotificationsApiDocsPage() {
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
-            <SectionHeader icon={Send} title="Sending messages" />
+            <SectionHeader icon={Tag} title="Plans" badge="Public — no auth" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <EndpointCard method="POST" path="/api/v1/notifications/messages" description="Send a templated message on any channel (email, sms, push, whatsapp)" />
+              <EndpointCard method="GET" path="/api/v1/plans" description="List plans — filter by ?active and ?service (pos, erp, inventory, ordering, truload, logistics, marketflow)" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/plans/code/{code}" description="Get a plan by code, e.g. ERP_STARTER, POWERSUITE_DUKA_BASIC" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/plans/{id}" description="Get a plan by UUID" auth={false} />
             </div>
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
-            <SectionHeader icon={FileJson} title="Templates" badge="Public — no auth" />
+            <SectionHeader icon={Layers} title="Service charges" badge="Admin scope required" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <EndpointCard method="GET" path="/api/v1/templates" description="List available message templates" auth={false} />
-              <EndpointCard method="GET" path="/api/v1/templates/{key}" description="Get a template's channel bodies and variables" auth={false} />
-              <EndpointCard method="POST" path="/api/v1/templates/{key}/test" description="Send a test render of a template" auth={false} />
-              <EndpointCard method="PUT" path="/api/v1/templates/{key}" description="Create or update a template's channel body" auth={false} />
-            </div>
-          </motion.div>
-
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
-            <SectionHeader icon={MessageSquareText} title="WhatsApp billing" badge="Public — no auth" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <EndpointCard method="GET" path="/api/v1/billing/whatsapp/plans" description="List WhatsApp conversation-pricing plans" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/service-charges/plans" description="List usage-based service-charge plans" />
+              <EndpointCard method="GET" path="/api/v1/service-charges/plans/{code}" description="Get a service-charge plan by code" />
             </div>
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
-            <SectionHeader icon={Zap} title="Service health" badge="Public — no auth" />
+            <SectionHeader icon={CreditCard} title="Platform administration" badge="Platform owner only" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <EndpointCard method="GET" path="/api/v1/healthz" description="Liveness probe" auth={false} />
-              <EndpointCard method="GET" path="/api/v1/readyz" description="Readiness probe" auth={false} />
-              <EndpointCard method="GET" path="/api/v1/metrics" description="Prometheus metrics" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/admin/plans" description="List all plans, including inactive/non-public ones" />
+              <EndpointCard method="GET" path="/api/v1/admin/plans/{id}" description="Get full admin detail for a plan" />
+              <EndpointCard method="GET" path="/api/v1/platform/stats" description="Aggregated platform stats — total plans, subscriptions, MRR" />
             </div>
           </motion.div>
         </div>
       </section>
 
       <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8 sm:mb-12">
-            <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
-              <Smartphone className="w-6 h-6 text-primary" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Channels</h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {[
-              { icon: Mail, name: 'Email', detail: 'SendGrid, Brevo, or SMTP' },
-              { icon: Smartphone, name: 'SMS', detail: "Africa's Talking, Twilio, Plivo, Vonage" },
-              { icon: Bell, name: 'Push', detail: 'Firebase Cloud Messaging' },
-              { icon: MessageSquareText, name: 'WhatsApp', detail: 'apiwap or Meta Cloud API' },
-            ].map((c) => (
-              <div key={c.name} className="p-5 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                <c.icon className="w-6 h-6 text-primary mb-3" />
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-1">{c.name}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{c.detail}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-6 max-w-2xl">
-            Auth today is a single shared service key (S2S), not a per-tenant developer key. Auth API&apos;s scoped{' '}
-            <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">bng_*</code> API-key system (already reused by Treasury API&apos;s external
-            routes) is the natural upgrade path if third-party developer access is ever needed here.
-          </p>
-        </div>
-      </section>
-
-      <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8">
             <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
               <Code2 className="w-6 h-6 text-primary" />
@@ -246,32 +209,25 @@ export default function NotificationsApiDocsPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} transition={{ delay: 0.1 }}>
             <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-500" />
-              JavaScript / TypeScript
+              JavaScript / TypeScript &mdash; a public pricing page
             </h3>
             <CodeBlock
-              title="Server-side send (Next.js API route or Node service)"
+              title="Fetch live plans for a pricing page"
               language="typescript"
-              code={`const res = await fetch('${PRODUCTION_API_URL}/api/v1/notifications/messages', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-API-Key': process.env.INTERNAL_SERVICE_KEY!,
-  },
-  body: JSON.stringify({
-    channel: 'sms',
-    tenant: 'your-tenant-slug',
-    template: 'your/template_key',
-    to: ['+254700000000'],
-    data: { amount: '1,500' },
-  }),
-});`}
+              code={`const res = await fetch('${PRODUCTION_API_URL}/api/v1/plans?active=true');
+const { data: plans } = await res.json();
+
+// plans[].basePrice, .currency, .billingCycle, .tierLimits, .freeTrialDays
+// are all safe to render directly — this endpoint is public, no key needed.
+// Fetch this server-side (not from the browser) unless your domain is on
+// subscriptions-api's CORS allowlist.`}
             />
           </motion.div>
         </div>
       </section>
 
       <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex items-center gap-3 mb-8 sm:mb-12">
             <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
               <Package className="w-6 h-6 text-primary" />
@@ -283,9 +239,9 @@ export default function NotificationsApiDocsPage() {
             <div className="p-3 bg-sky-100 dark:bg-sky-900/30 rounded-xl w-fit mb-4">
               <Code2 className="w-6 h-6 text-sky-600 dark:text-sky-400" />
             </div>
-            <h3 className="font-bold text-slate-900 dark:text-white mb-2">Notifications API</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">Go backend for templated email, SMS, push, and WhatsApp delivery across the Power Suite.</p>
-            <a href="https://github.com/Bengo-Hub/notifications-api" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-semibold text-sm transition-colors">
+            <h3 className="font-bold text-slate-900 dark:text-white mb-2">Subscriptions API</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">Go backend for the Power Suite&apos;s plan catalog, billing cycles, tier limits, and usage-based service charges.</p>
+            <a href="https://github.com/Bengo-Hub/subscription-service" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-semibold text-sm transition-colors">
               View on GitHub
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -303,9 +259,9 @@ export default function NotificationsApiDocsPage() {
             className="relative p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-primary/10 via-sky-500/5 to-violet-500/10 dark:from-primary/20 dark:via-sky-500/10 dark:to-violet-500/20 border border-primary/20 text-center overflow-hidden"
           >
             <div className="relative z-10">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mb-4">Ready to send your first message?</h2>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mb-4">Build a live pricing page</h2>
               <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-xl mx-auto leading-relaxed">
-                Request a service key from the platform team, then try the endpoint above against the sandbox tenant.
+                The plan catalog is public — pull real prices and tier limits straight into any storefront or quote tool.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
