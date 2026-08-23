@@ -1,6 +1,6 @@
 'use client';
 
-import IntegrationsClient from '@/app/dashboard/integrations/client';
+import IntegrationsClient from '@/app/dashboard/developer/integrations/client';
 
 // Reuse the main integrations page component to avoid duplicate/broken implementation.
 // The Settings > Integrations tab was previously a separate implementation that sent

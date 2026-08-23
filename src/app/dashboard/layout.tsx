@@ -33,18 +33,27 @@ export default function DashboardLayout({
   const PLATFORM_OWNER_ROUTES = [
     '/dashboard/platform',
     '/dashboard/tenants',
-    '/dashboard/integrations',
+    // Apps & Keys / OAuth Clients / Integrations under Developer are platform-owner-only
+    // surfaces server-side (isPlatformOrS2SAdmin in apikey_handler.go / AdminCreateClient /
+    // AdminListIntegrationConfigs) — a tenant admin who holds a DEVELOPER_PORTAL_ROLE below
+    // can reach /dashboard/developer itself, but must not be able to land on these three
+    // subpages (every call there would 403 anyway; better to redirect before rendering a
+    // broken page). Integrations moved here from the old top-level /dashboard/integrations.
+    '/dashboard/developer/api-keys',
+    '/dashboard/developer/oauth-clients',
+    '/dashboard/developer/integrations',
   ];
   // /dashboard/developer (and /dashboard/api-keys, which just redirects there) needs the
   // "admin" or new "developer" tenant role (or platform owner) — not just any authenticated
-  // member (a cashier/waiter shouldn't land on an integrations/API-credentials page). This is
-  // a UX/discoverability gate only: App/API-key management itself is already tenant-scoped
-  // (not role-scoped) server-side (see AppHandler.CreateApp), so this doesn't change who CAN
-  // act, only who sees the page. Platform-only actions within it (OAuth clients, promoting an
-  // app to production) are separately gated by isPlatformOwner, authoritatively on the backend.
-  // Checked via hasAnyRole (not the active-tenant-scoped user.roles) since the role may live on
-  // a tenant membership other than the session's current active tenant — a real, hit bug where a
-  // user granted "developer" on one org still got bounced because their active org was another.
+  // member (a cashier/waiter shouldn't land on an integrations/API-credentials page). This
+  // list must stay in sync with auth-api's tenantDeveloperRoles (app_handler.go), which now
+  // enforces the same set server-side for tenant App CRUD — so this gate reflects who can
+  // actually act, not just who sees the page. Platform-only actions within it (OAuth clients,
+  // promoting an app to production) are separately gated by isPlatformOwner, authoritatively
+  // on the backend. Checked via hasAnyRole (not the active-tenant-scoped user.roles) since the
+  // role may live on a tenant membership other than the session's current active tenant — a
+  // real, hit bug where a user granted "developer" on one org still got bounced because their
+  // active org was another.
   const DEVELOPER_PORTAL_ROUTES = ['/dashboard/developer', '/dashboard/api-keys'];
   const DEVELOPER_PORTAL_ROLES = ['admin', 'developer', 'superuser', 'owner'];
 

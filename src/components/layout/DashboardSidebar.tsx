@@ -2,99 +2,13 @@
 
 import { Button } from '@/components/ui/button';
 import { useTenant } from '@/components/providers/tenant-provider';
-import { useAuth } from '@/hooks/useAuth';
 import { useLogout } from '@/hooks/useLogout';
+import { useDashboardNav, type NavGroup, type NavItem } from '@/hooks/useDashboardNav';
 import { cn } from '@/lib/utils';
-import {
-  Activity,
-  BookOpen,
-  Building2,
-  ChevronDown,
-  ChevronLeft,
-  ChevronUp,
-  Code2,
-  Cpu,
-  Database,
-  ExternalLink,
-  Inbox,
-  Key,
-  KeyRound,
-  KeySquare,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  ScrollText,
-  ShieldCheck,
-  Store,
-  Terminal,
-  User,
-  Users,
-  Wrench,
-} from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronUp, ExternalLink, LogOut, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-
-interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  newTab?: boolean;
-}
-
-interface NavGroup {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  items: NavItem[];
-}
-
-const ACCOUNT_ITEMS: NavItem[] = [
-  { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Profile', href: '/dashboard/profile', icon: User },
-];
-
-// Consolidates what were 4 flat, un-nested entries (Developer/Apps & Keys/
-// OAuth Clients/Integrations) into one categorized group, matching the Zoho
-// Mail Admin reference's grouped left-nav pattern. Docs is a net-new sidebar
-// entry — /docs already exists as a real page but had no dashboard nav link
-// at all before this. Pure re-categorization: role-gating (isPlatformOwner)
-// is unchanged from today.
-// Usable by any tenant "developer" (Apps is tenant-scoped server-side — see AppHandler.CreateApp).
-const DEVELOPER_ITEMS: NavItem[] = [
-  { title: 'Overview', href: '/dashboard/developer', icon: Code2 },
-  { title: 'Apps', href: '/dashboard/developer/apps', icon: Cpu },
-  { title: 'API Docs', href: '/docs', icon: BookOpen },
-];
-
-// Platform-wide surfaces (API Keys, OAuth Clients, Integrations are all platform-owner-gated
-// server-side) — appended only for isPlatformOwner, so a tenant developer never sees a nav link
-// that 403s the moment they click it.
-const PLATFORM_DEVELOPER_ITEMS: NavItem[] = [
-  { title: 'API Keys', href: '/dashboard/developer/api-keys', icon: Terminal },
-  { title: 'OAuth Clients', href: '/dashboard/developer/oauth-clients', icon: Key },
-  { title: 'Integrations', href: '/dashboard/integrations', icon: Wrench },
-];
-
-const SECURITY_ITEMS: NavItem[] = [
-  { title: 'Roles', href: '/dashboard/platform/roles', icon: ShieldCheck },
-  { title: 'Permissions', href: '/dashboard/platform/permissions', icon: KeySquare },
-  { title: 'Password Policy', href: '/dashboard/platform/security/password-policy', icon: KeyRound },
-  { title: 'Audit Log', href: '/dashboard/platform/audit', icon: ScrollText },
-];
-
-const PLATFORM_ITEMS: NavItem[] = [
-  { title: 'Organizations', href: '/dashboard/tenants', icon: Building2 },
-  { title: 'Users', href: '/dashboard/platform/users', icon: Users },
-  { title: 'Integration Requests', href: '/dashboard/platform/integration-requests', icon: Inbox },
-  { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
-  { title: 'Infra Monitor', href: '/dashboard/platform/monitoring', icon: Activity },
-  {
-    title: 'Membership Tiers',
-    href: 'https://pricing.codevertexafrica.com/codevertex/platform/plans',
-    icon: ExternalLink,
-    newTab: true,
-  },
-];
 
 function NavLink({
   item,
@@ -199,44 +113,7 @@ export function DashboardSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const logout = useLogout();
   const { tenant } = useTenant();
-  const { isPlatformOwner, isTenantAdmin, hasAnyRole } = useAuth();
-
-  const accountGroup: NavGroup = {
-    label: 'Account',
-    icon: User,
-    items: ACCOUNT_ITEMS,
-  };
-
-  // "My Organization" administers the whole tenant, so it is limited to tenant
-  // admins/owners/superusers. All other tenant roles see only the Account section
-  // (profile, security) — which every SSO user can manage for themselves.
-  const orgGroup: NavGroup | null =
-    !isPlatformOwner && !!tenant && isTenantAdmin
-      ? {
-          label: 'Organization',
-          icon: Store,
-          items: [{ title: 'My Organization', href: '/dashboard/my-tenant', icon: Store }],
-        }
-      : null;
-
-  // Security/Platform stay platform-owner-only. Developer is shown to platform owners AND
-  // anyone holding the "developer" (or admin/superuser/owner) role on ANY of their tenant
-  // memberships — checked across all memberships, not just the active one, since a role
-  // granted on a different org than the current session would otherwise leave this nav item
-  // (and dashboard/layout.tsx's route guard) permanently hidden despite the role truthfully
-  // existing. Matches the same DEVELOPER_PORTAL_ROLES list dashboard/layout.tsx gates on.
-  const DEVELOPER_PORTAL_ROLES = ['admin', 'developer', 'superuser', 'owner'];
-  const developerGroup: NavGroup | null = isPlatformOwner || hasAnyRole(DEVELOPER_PORTAL_ROLES)
-    ? { label: 'Developer', icon: Code2, items: isPlatformOwner ? [...DEVELOPER_ITEMS, ...PLATFORM_DEVELOPER_ITEMS] : DEVELOPER_ITEMS }
-    : null;
-
-  const securityGroup: NavGroup | null = isPlatformOwner
-    ? { label: 'Security & Compliance', icon: ShieldCheck, items: SECURITY_ITEMS }
-    : null;
-
-  const platformGroup: NavGroup | null = isPlatformOwner
-    ? { label: 'Platform', icon: Wrench, items: PLATFORM_ITEMS }
-    : null;
+  const { accountGroup, orgGroup, developerGroup, securityGroup, platformGroup } = useDashboardNav();
 
   return (
     <aside
@@ -322,7 +199,7 @@ export function DashboardSidebar() {
           />
         )}
 
-        {/* Developer group (platform owners only, for now — see Phase 11) */}
+        {/* Developer group (platform owners + tenant admin/owner/superuser/developer roles) */}
         {developerGroup && (
           <SectionGroup
             group={developerGroup}

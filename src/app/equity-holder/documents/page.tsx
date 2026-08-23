@@ -2,42 +2,80 @@
 
 export const dynamic = 'force-dynamic';
 
-import api from '@/lib/api-client';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    fetchEquityDocumentDownloadURL,
+    fetchEquityDocuments,
+    signEquityDocument,
+    type GeneratedDocumentType,
+} from '@/lib/api/equity';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Banknote, CheckCircle2, Clock3, ExternalLink, FileSignature, FileText, ScrollText, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
-import { usePortal } from '../equity-portal-context';
+import { usePortal } from '../components/equity-portal-context';
 
-const DOC_TYPES = ['EPA', 'MSA', 'DPA'] as const;
-type DocType = typeof DOC_TYPES[number];
+const TYPE_ICONS: Record<string, typeof FileText> = {
+    epa_agreement: FileText,
+    dividend_certificate: Banknote,
+    share_certificate: ShieldCheck,
+    terms: ScrollText,
+};
 
 export default function EquityDocuments() {
     const { token } = usePortal();
-    const [signing, setSigning] = useState<DocType | null>(null);
-    const [docVersion, setDocVersion] = useState('v1.0');
+    const queryClient = useQueryClient();
+    const [signing, setSigning] = useState<GeneratedDocumentType | null>(null);
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
-    const [success, setSuccess] = useState<DocType | null>(null);
+    const [opening, setOpening] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    // These are treasury-api's real, personalized generated documents (EPA/dividend
+    // certificate/share certificate/terms) rendered from the holder's actual entitlement and
+    // tax data — not a generic shared template. An admin must "generate" (finalize) one
+    // before a holder can view or sign it; until then it shows as Unavailable here.
+    const { data, isLoading } = useQuery({
+        queryKey: ['equity-documents', token],
+        queryFn: () => fetchEquityDocuments(token),
+        enabled: !!token,
+    });
+    const generatedTypes = data?.generated_types ?? [];
+
+    const handleView = async (docType: GeneratedDocumentType) => {
+        if (!docType.document_id) return;
+        setOpening(docType.document_type);
+        try {
+            const { url } = await fetchEquityDocumentDownloadURL(token, docType.document_id);
+            window.open(url, '_blank', 'noopener,noreferrer');
+        } catch {
+            setError('Failed to open the document. Please try again.');
+        } finally {
+            setOpening(null);
+        }
+    };
 
     const handleSign = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!signing || !file) return;
+        if (!signing?.document_id || !file) return;
         setUploading(true);
         setError(null);
-
-        const form = new FormData();
-        form.append('doc_type', signing);
-        form.append('doc_version', docVersion);
-        form.append('signature_image', file);
-
         try {
-            await api.post('/api/v1/auth/legal/sign', form, {
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
-            });
-            setSuccess(signing);
+            await signEquityDocument(token, signing.document_id, file);
+            await queryClient.invalidateQueries({ queryKey: ['equity-documents', token] });
             setSigning(null);
             setFile(null);
         } catch (err: any) {
-            setError(err?.response?.data?.message || 'Failed to upload signature. Please try again.');
+            setError(err?.message || 'Failed to upload signature. Please try again.');
         } finally {
             setUploading(false);
         }
@@ -45,76 +83,121 @@ export default function EquityDocuments() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold">Legal Documents</h1>
-                <p className="text-muted-foreground text-sm mt-1">Review and sign your equity agreements</p>
-            </div>
+            <header className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <FileSignature className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Legal Documents</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Review and sign your equity agreements.</p>
+                </div>
+            </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {DOC_TYPES.map((type) => (
-                    <div key={type} className="rounded-xl border border-border bg-card p-5 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold">{type}</span>
-                            {success === type ? (
-                                <span className="text-xs bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full font-medium">Signed</span>
-                            ) : (
-                                <span className="text-xs bg-yellow-500/10 text-yellow-600 px-2 py-0.5 rounded-full font-medium">Pending</span>
-                            )}
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            {type === 'EPA' ? 'Equity Participation Agreement' : type === 'MSA' ? 'Master Services Agreement' : 'Data Processing Agreement'}
-                        </p>
-                        {success !== type && (
-                            <button
-                                type="button"
-                                onClick={() => setSigning(type)}
-                                className="w-full rounded-lg border border-border text-xs font-medium py-2 hover:bg-accent transition-colors"
+            {isLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-40 rounded-2xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />
+                    ))}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {generatedTypes.map((docType) => {
+                        const Icon = TYPE_ICONS[docType.document_type] ?? FileText;
+                        const isSigned = docType.status === 'signed';
+
+                        return (
+                            <div
+                                key={docType.document_type}
+                                className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 space-y-4 hover:border-primary/20 hover:shadow-lg transition-all"
                             >
-                                Sign with Image
-                            </button>
-                        )}
-                    </div>
-                ))}
-            </div>
-
-            {signing && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-card rounded-xl border border-border shadow-xl max-w-md w-full p-6 space-y-4">
-                        <h2 className="text-lg font-bold">Sign {signing}</h2>
-                        <p className="text-sm text-muted-foreground">Upload a clear image of your handwritten signature (JPG or PNG, max 2MB).</p>
-                        <form onSubmit={handleSign} className="space-y-4">
-                            <div>
-                                <label className="text-xs font-medium block mb-1">Document Version</label>
-                                <input
-                                    type="text"
-                                    value={docVersion}
-                                    onChange={(e) => setDocVersion(e.target.value)}
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                                    required
-                                />
+                                <div className="flex items-start justify-between">
+                                    <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-105 transition-transform">
+                                        <Icon className="h-5 w-5" />
+                                    </div>
+                                    {isSigned ? (
+                                        <span className="inline-flex items-center gap-1 text-xs bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full font-bold">
+                                            <CheckCircle2 className="h-3 w-3" /> Signed
+                                        </span>
+                                    ) : docType.finalized ? (
+                                        <span className="text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded-full font-bold">
+                                            Pending
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 text-xs bg-slate-500/10 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full font-bold">
+                                            <Clock3 className="h-3 w-3" /> Unavailable
+                                        </span>
+                                    )}
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-black text-slate-900 dark:text-white">{docType.title}</h3>
+                                    {!docType.finalized && (
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                            Not yet issued — check back soon.
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        disabled={!docType.finalized || opening === docType.document_type}
+                                        onClick={() => handleView(docType)}
+                                        className="rounded-xl gap-1.5 flex-1"
+                                    >
+                                        <ExternalLink className="h-4 w-4" /> {opening === docType.document_type ? 'Opening...' : 'View'}
+                                    </Button>
+                                    {!isSigned && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={!docType.finalized}
+                                            onClick={() => setSigning(docType)}
+                                            className="rounded-xl gap-1.5 flex-1"
+                                        >
+                                            <FileSignature className="h-4 w-4" /> Sign
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-xs font-medium block mb-1">Signature Image</label>
-                                <input
-                                    type="file"
-                                    accept="image/jpeg,image/jpg,image/png"
-                                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                                    className="w-full text-sm"
-                                    required
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">JPG or PNG, max 2MB</p>
-                            </div>
-                            {error && <p className="text-xs text-destructive">{error}</p>}
-                            <div className="flex gap-2 justify-end">
-                                <button type="button" onClick={() => { setSigning(null); setFile(null); setError(null); }} className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-accent transition-colors">Cancel</button>
-                                <button type="submit" disabled={uploading || !file} className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors">
-                                    {uploading ? 'Uploading...' : 'Submit Signature'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        );
+                    })}
                 </div>
             )}
+
+            <Dialog open={!!signing} onOpenChange={(open) => { if (!open) { setSigning(null); setFile(null); setError(null); } }}>
+                <DialogContent className="rounded-2xl sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Sign {signing?.title}</DialogTitle>
+                        <DialogDescription>
+                            Upload a clear image of your handwritten signature (JPG or PNG, max 2MB).
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSign} className="space-y-4">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="signature-file">Signature Image</Label>
+                            <Input
+                                id="signature-file"
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png"
+                                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                                required
+                            />
+                            <p className="text-xs text-muted-foreground">JPG or PNG, max 2MB</p>
+                        </div>
+                        {error && <p className="text-xs text-destructive">{error}</p>}
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => { setSigning(null); setFile(null); setError(null); }}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={uploading || !file}>
+                                {uploading ? 'Uploading...' : 'Submit Signature'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

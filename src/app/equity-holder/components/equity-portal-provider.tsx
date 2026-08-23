@@ -1,8 +1,11 @@
 'use client';
 
+import { AppSplash } from '@/components/layout/AppSplash';
 import api from '@/lib/api-client';
+import { AlertTriangle } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { EquityPortalHeader } from './EquityPortalHeader';
 import { PortalCtx } from './equity-portal-context';
 
 interface PortalContext {
@@ -41,17 +44,16 @@ export function EquityPortalProvider({ children }: EquityPortalProviderProps) {
     }, [searchParams]);
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin h-8 w-8 rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-        );
+        return <AppSplash />;
     }
 
     if (error || !ctx) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center">
-                <h1 className="text-2xl font-bold">Access Denied</h1>
+            <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center bg-background">
+                <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center">
+                    <AlertTriangle className="h-7 w-7 text-red-500" />
+                </div>
+                <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Access Denied</h1>
                 <p className="text-muted-foreground max-w-sm">{error}</p>
             </div>
         );
@@ -60,10 +62,8 @@ export function EquityPortalProvider({ children }: EquityPortalProviderProps) {
     return (
         <PortalCtx.Provider value={ctx}>
             <div className="min-h-screen bg-background">
-                <header className="border-b border-border px-6 py-4 flex items-center justify-between">
-                    <span className="font-bold text-lg tracking-tight">Codevertex Equity Portal</span>
-                </header>
-                <main className="max-w-4xl mx-auto px-4 py-8">{children}</main>
+                <EquityPortalHeader />
+                <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">{children}</main>
             </div>
         </PortalCtx.Provider>
     );

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { JoinOrganizationDialog } from '@/components/organizations/JoinOrganizationDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { useDashboardNav, type NavGroup } from '@/hooks/useDashboardNav';
 import { useLogout } from '@/hooks/useLogout';
 import { useAuthStore } from '@/store/auth-store';
 import { cn } from '@/lib/utils';
@@ -15,22 +16,12 @@ import { useVisibleServices, type ServiceKey, AppSwitcherGrid, AppSwitcherTrigge
 import { AccountPanel } from '@bengo-hub/shared-ui-lib/account-panel';
 import {
   Bell,
-  Building2,
-  Code2,
-  Cpu,
-  Database,
-  ExternalLink,
   Home,
-  Key,
-  LayoutDashboard,
   LogOut,
   Menu,
   Search,
   Settings,
-  Store,
   User,
-  Users,
-  Wrench,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -61,29 +52,53 @@ const SERVICE_URLS: Partial<Record<ServiceKey, string>> = {
   truload: process.env.NEXT_PUBLIC_TRULOAD_UI_URL ?? 'https://truload.codevertexafrica.com',
 };
 
-const MOBILE_NAV_ITEMS = [
-  { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Profile', href: '/dashboard/profile', icon: User },
-  { title: 'Settings', href: '/dashboard/settings', icon: Settings },
-  { title: 'My Organization', href: '/dashboard/my-tenant', icon: Store, tenantOnly: true },
-];
+// A mobile-only shortcut alongside the shared Account group's Overview/Profile items —
+// Settings is also reachable via the AccountPanel's "Preferences" link, but a direct
+// drawer entry matches this section's prior UX.
+const MOBILE_EXTRA_ACCOUNT_ITEMS = [{ title: 'Settings', href: '/dashboard/settings', icon: Settings }];
 
-const MOBILE_PLATFORM_ITEMS = [
-  { title: 'Organizations', href: '/dashboard/tenants', icon: Building2 },
-  { title: 'OAuth Clients', href: '/dashboard/developer/oauth-clients', icon: Key },
-  { title: 'Integrations', href: '/dashboard/integrations', icon: Wrench },
-  { title: 'Developer', href: '/dashboard/developer', icon: Code2 },
-  { title: 'Apps & Keys', href: '/dashboard/developer/apps', icon: Cpu },
-  { title: 'Users', href: '/dashboard/platform/users', icon: Users },
-  { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
-  { title: 'Membership Tiers', href: 'https://pricing.codevertexafrica.com/codevertex/platform/plans', icon: ExternalLink, newTab: true },
-];
+function MobileDrawerLink({
+  item,
+  pathname,
+  onNavigate,
+}: {
+  item: { title: string; href: string; icon: React.ComponentType<{ className?: string }>; newTab?: boolean };
+  pathname: string | null;
+  onNavigate: () => void;
+}) {
+  const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+  return (
+    <Link
+      href={item.href}
+      target={item.newTab ? '_blank' : undefined}
+      rel={item.newTab ? 'noopener noreferrer' : undefined}
+      onClick={onNavigate}
+      className={cn(
+        'flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm',
+        isActive
+          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800',
+      )}
+    >
+      <item.icon className="h-4 w-4" />
+      {item.title}
+    </Link>
+  );
+}
 
 export function DashboardTopNav() {
   const user = useAuthStore((state) => state.user);
   const logout = useLogout();
   const { getServiceTitle } = useTenant();
   const { isPlatformOwner, isTenantAdmin } = useAuth();
+  const { accountGroup, orgGroup, developerGroup, securityGroup, platformGroup } = useDashboardNav();
+  // Single source of truth shared with DashboardSidebar (see useDashboardNav) — previously
+  // this drawer kept its own hard-coded MOBILE_PLATFORM_ITEMS gated on isPlatformOwner only,
+  // which hid Developer/Apps from legitimate tenant admins/developers that the desktop
+  // sidebar correctly showed them to (and vice versa for a couple of platform-only items).
+  const secondaryGroups = [orgGroup, developerGroup, securityGroup, platformGroup].filter(
+    (g): g is NavGroup => g !== null,
+  );
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
@@ -141,63 +156,29 @@ export function DashboardTopNav() {
               </button>
             </div>
 
-            {/* Nav links */}
+            {/* Nav links — sourced from the same useDashboardNav groups as the desktop
+                sidebar, so mobile and desktop can never again show different sets of
+                items to the same role. */}
             <nav className="flex-1 px-4 py-4 space-y-1">
-              {/* "My Organization" is tenant-admin only — hidden from the platform owner
-                  (who has the Platform section) and from non-admin tenant roles, who get
-                  the Account/Profile section instead. */}
-              {MOBILE_NAV_ITEMS.filter((item) =>
-                !('tenantOnly' in item && item.tenantOnly && (isPlatformOwner || !isTenantAdmin)),
-              ).map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      'flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm',
-                      isActive
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800',
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.title}
-                  </Link>
-                );
-              })}
+              {accountGroup.items.map((item) => (
+                <MobileDrawerLink key={item.href} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+              ))}
+              {MOBILE_EXTRA_ACCOUNT_ITEMS.map((item) => (
+                <MobileDrawerLink key={item.href} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+              ))}
 
-              {isPlatformOwner && (
-                <>
+              {secondaryGroups.map((group) => (
+                <div key={group.label}>
                   <div className="pt-4 pb-2 px-4">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-1.5">
-                      <Wrench className="h-3 w-3" /> Platform
+                      <group.icon className="h-3 w-3" /> {group.label}
                     </p>
                   </div>
-                  {MOBILE_PLATFORM_ITEMS.map((item) => {
-                    const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        target={item.newTab ? '_blank' : undefined}
-                        rel={item.newTab ? 'noopener noreferrer' : undefined}
-                        onClick={() => setMobileOpen(false)}
-                        className={cn(
-                          'flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm',
-                          isActive
-                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800',
-                        )}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.title}
-                      </Link>
-                    );
-                  })}
-                </>
-              )}
+                  {group.items.map((item) => (
+                    <MobileDrawerLink key={item.href} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+                  ))}
+                </div>
+              ))}
 
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
