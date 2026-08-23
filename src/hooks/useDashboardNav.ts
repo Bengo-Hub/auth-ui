@@ -10,6 +10,7 @@ import {
   Cpu,
   Database,
   ExternalLink,
+  Handshake,
   Inbox,
   Key,
   KeyRound,
@@ -79,6 +80,7 @@ const SECURITY_ITEMS: NavItem[] = [
 
 const PLATFORM_ITEMS: NavItem[] = [
   { title: 'Organizations', href: '/dashboard/tenants', icon: Building2 },
+  { title: 'Certified Resellers', href: '/dashboard/resellers', icon: Handshake },
   { title: 'Users', href: '/dashboard/platform/users', icon: Users },
   { title: 'Integration Requests', href: '/dashboard/platform/integration-requests', icon: Inbox },
   { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },

@@ -34,6 +34,7 @@ export default function DashboardLayout({
   const PLATFORM_OWNER_ROUTES = [
     '/dashboard/platform',
     '/dashboard/tenants',
+    '/dashboard/resellers',
     // Apps & Keys / OAuth Clients / Integrations under Developer are platform-owner-only
     // surfaces server-side (isPlatformOrS2SAdmin in apikey_handler.go / AdminCreateClient /
     // AdminListIntegrationConfigs) — a tenant admin who holds a DEVELOPER_PORTAL_ROLE below

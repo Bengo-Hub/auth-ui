@@ -206,6 +206,82 @@ export function useProvisionTenantOAuthRedirects() {
 
 // Payment gateways are owned by treasury-api/ui; auth-ui no longer exposes gateway CRUD.
 
+// ── Certified Reseller & Partner Program applications ───────────────────────────
+// Admin approval queue for ResellerApplication (see reseller_handler.go, shipped 2026-08-23),
+// mirroring usePendingTenants/useApproveTenant/useRejectTenant's shape above — same
+// separate-query-key-so-approving-one-doesn't-flash-empty-the-list pattern — adapted for the
+// multi-stage pending → kyb_pending → kyb_approved → agreement_pending → approved|rejected
+// state machine (vs. tenant approval's simple pending/approved/rejected).
+
+export interface ResellerApplication {
+  id: string;
+  business_name: string;
+  contact_email: string;
+  requested_tier: string;
+  status: 'pending' | 'kyb_pending' | 'kyb_approved' | 'agreement_pending' | 'approved' | 'rejected';
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  tenant_id?: string;
+  business_registration_no?: string;
+  tax_pin?: string;
+  contact_phone?: string;
+  country?: string;
+  kyb_reference?: string;
+  kyb_result?: string;
+  agreement_acceptance_id?: string;
+}
+
+const RESELLER_TERMINAL_STATUSES = new Set(['approved', 'rejected']);
+
+export const resellerApplicationKeys = { all: () => ['admin', 'reseller_applications'] as const };
+
+// useResellerApplications fetches every application (the backend's ?status= filter only
+// accepts one exact value, not a set) — non-terminal filtering happens client-side via
+// usePendingResellerApplications below.
+export function useResellerApplications() {
+  return useQuery({
+    queryKey: resellerApplicationKeys.all(),
+    queryFn: async () => {
+      const response = await apiClient.get('/api/v1/admin/reseller/applications');
+      const body = (response as any).data;
+      const items = body?.applications ?? [];
+      return Array.isArray(items) ? (items as ResellerApplication[]) : [];
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+// usePendingResellerApplications narrows to applications still awaiting some admin action —
+// the direct analog of usePendingTenants, just spanning 4 non-terminal stages instead of 1.
+export function usePendingResellerApplications() {
+  const query = useResellerApplications();
+  return {
+    ...query,
+    data: query.data?.filter((a) => !RESELLER_TERMINAL_STATUSES.has(a.status)),
+  };
+}
+
+// useAdvanceResellerApplication moves an application to the next legal stage (or to
+// "rejected" from any non-terminal stage) via the single generic PUT the backend exposes —
+// unlike tenant approval's dedicated /approve and /reject endpoints, reseller applications
+// have one endpoint and the target status is just a body field.
+export function useAdvanceResellerApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status, notes }: { id: string; status: string; notes?: string }) => {
+      const response = await apiClient.put(`/api/v1/admin/reseller/applications/${id}`, {
+        status,
+        ...(notes ? { notes } : {}),
+      });
+      return (response as { data?: ResellerApplication }).data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: resellerApplicationKeys.all() });
+    },
+  });
+}
+
 // ── Tenant Member Management ─────────────────────────────────────────────────
 
 export interface TenantMember {
