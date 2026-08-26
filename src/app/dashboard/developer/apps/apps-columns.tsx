@@ -2,7 +2,8 @@
 
 import type { DataTableColumn } from '@bengo-hub/shared-ui-lib/data-table';
 import { Button } from '@/components/ui/button';
-import { KeyRound, Pause, Play, RefreshCw, ShieldOff, Trash2 } from 'lucide-react';
+import { Coins, KeyRound, Pause, Play, RefreshCw, ShieldOff, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 
 export interface App {
   id: string;
@@ -23,6 +24,23 @@ export interface App {
 
 export const INTERNAL_SERVICE_KEY_SCOPE = 'internal_service_key';
 
+// Maps an App scope prefix to the ApiTokenWallet service_tag it draws from — mirrors
+// subscriptions-api's consumers/app_promotion.go scopePrefixToServiceTag. Extend this
+// alongside that map as more external APIs get their own token-metered product.
+const SCOPE_PREFIX_TO_SERVICE_TAG: Record<string, string> = { etims: 'etims_api' };
+
+/** The token-wallet service_tag this App draws from, or null if it isn't scoped to a
+ * metered external API at all (most Apps aren't — only ones with e.g. `etims:*` scopes). */
+export function appTokenServiceTag(a: Pick<App, 'scopes'>): string | null {
+  for (const s of a.scopes ?? []) {
+    const prefix = s.split(':')[0];
+    if (SCOPE_PREFIX_TO_SERVICE_TAG[prefix]) return SCOPE_PREFIX_TO_SERVICE_TAG[prefix];
+  }
+  return null;
+}
+
+const SUBSCRIPTIONS_UI_URL = process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL || 'https://pricing.codevertexafrica.com';
+
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
@@ -37,6 +55,9 @@ export interface AppColumnCallbacks {
   isPlatformOwner: boolean;
   goLiveRequested: Set<string>;
   revokeTarget: string | null;
+  /** app.id -> current token balance, for Apps scoped to a metered external API. Undefined
+   * while still loading; absent entirely for Apps with no matching scope. */
+  tokenBalances: Record<string, number | undefined>;
   onSetRevokeTarget: (id: string | null) => void;
   onRotate: (app: App) => void;
   onRevoke: (id: string) => void;
@@ -53,6 +74,32 @@ export interface AppColumnCallbacks {
  * rather than two separate column-def files, since every other column is identical. */
 export function buildAppColumns(cb: AppColumnCallbacks): DataTableColumn<App>[] {
   return [
+    {
+      key: 'token_balance',
+      header: 'API Tokens',
+      hideBelow: 'md',
+      align: 'right',
+      render: (a) => {
+        const serviceTag = appTokenServiceTag(a);
+        if (!serviceTag) return <span className="text-muted-foreground text-xs">—</span>;
+        const balance = cb.tokenBalances[a.id];
+        return (
+          <div className="flex items-center justify-end gap-2">
+            {balance === undefined ? (
+              <span className="h-4 w-10 bg-slate-100 dark:bg-slate-800 rounded animate-pulse inline-block" />
+            ) : (
+              <span className="inline-flex items-center gap-1 text-sm font-bold text-slate-700 dark:text-slate-300">
+                <Coins className="h-3.5 w-3.5 text-amber-500" />
+                {balance.toLocaleString()}
+              </span>
+            )}
+            <Link href={`${SUBSCRIPTIONS_UI_URL}/usage`} target="_blank" className="text-xs text-primary hover:underline">
+              Top up
+            </Link>
+          </div>
+        );
+      },
+    },
     {
       key: 'name',
       header: 'App',

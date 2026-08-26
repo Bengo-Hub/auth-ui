@@ -8,7 +8,7 @@ import apiClient from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Check, ClipboardCopy, Plus } from 'lucide-react';
-import { buildAppColumns, type App } from './apps-columns';
+import { appTokenServiceTag, buildAppColumns, type App } from './apps-columns';
 import { CreateAppForm, type CreateAppPayload } from './create-app-form';
 
 /**
@@ -31,6 +31,7 @@ export default function AppsPage() {
   const [tokenCopied, setTokenCopied] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
   const [goLiveRequested, setGoLiveRequested] = useState<Set<string>>(new Set());
+  const [tokenBalances, setTokenBalances] = useState<Record<string, number | undefined>>({});
 
   const fetchApps = useCallback(async () => {
     try {
@@ -45,6 +46,32 @@ export default function AppsPage() {
   }, [isPlatformOwner]);
 
   useEffect(() => { fetchApps(); }, [fetchApps]);
+
+  // Token wallet balances, for Apps scoped to a metered external API (e.g. etims:*). Fetched
+  // separately from the App list itself, since auth-api has no notion of subscriptions-api's
+  // wallet — one request per (tenant, service_tag) pair actually present among loaded apps.
+  useEffect(() => {
+    const targets = apps
+      .filter((a) => a.tenant_id && appTokenServiceTag(a))
+      .map((a) => ({ appId: a.id, tenantId: a.tenant_id as string, serviceTag: appTokenServiceTag(a) as string }));
+    if (targets.length === 0) return;
+
+    let cancelled = false;
+    targets.forEach(async ({ appId, tenantId, serviceTag }) => {
+      try {
+        const res = await fetch(`/api/tokens/balance?tenant_id=${tenantId}&service_tag=${serviceTag}`);
+        const body = await res.json();
+        if (!cancelled && res.ok && typeof body?.balance === 'number') {
+          setTokenBalances((prev) => ({ ...prev, [appId]: body.balance }));
+        }
+      } catch {
+        // leave undefined — the column shows a placeholder, not an error, since a missing
+        // balance for one app must never block the rest of the table from rendering
+      }
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apps]);
 
   const handleCreate = async (payload: CreateAppPayload) => {
     setCreating(true);
@@ -156,6 +183,7 @@ export default function AppsPage() {
       isPlatformOwner,
       goLiveRequested,
       revokeTarget,
+      tokenBalances,
       onSetRevokeTarget: setRevokeTarget,
       onRotate: handleRotate,
       onRevoke: handleRevoke,
@@ -166,7 +194,7 @@ export default function AppsPage() {
       onRequestGoLive: handleRequestGoLive,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isPlatformOwner, goLiveRequested, revokeTarget],
+    [isPlatformOwner, goLiveRequested, revokeTarget, tokenBalances],
   );
 
   return (
