@@ -89,17 +89,67 @@ export interface Tenant {
 
 export const tenantKeys = { all: () => ['admin', 'tenants'] as const };
 
+// Unpaginated list for dropdowns/selectors (app-creation tenant picker, user
+// tenant-assignment) that need to search/select across every tenant rather
+// than a paged table. Backend default page size is 20 -- bumped to the
+// backend's own MaxLimit (100) here so these pickers don't silently start
+// dropping tenants once the platform passes 20, without pulling every
+// dropdown consumer into full pagination. Still finite: a platform that
+// grows past 100 tenants needs these converted to a real search-as-you-type
+// combobox (the pattern already used elsewhere, e.g. supplier/vendor
+// pickers) -- not attempted here since it touches 3 separate call sites'
+// own UI, out of scope for the admin-table pagination bug this was found
+// alongside.
 export function useTenants() {
   return useQuery({
     queryKey: tenantKeys.all(),
     queryFn: async () => {
-      const response = await apiClient.get('/api/v1/admin/tenants');
-      // API returns pagination wrapper: { data: Tenant[], total, limit, page, hasMore }
+      const response = await apiClient.get('/api/v1/admin/tenants?limit=100');
       const body = (response as any).data;
       const items = body?.data ?? body ?? [];
       return Array.isArray(items) ? (items as Tenant[]) : [];
     },
     staleTime: STALE_MS,
+  });
+}
+
+export interface TenantsPage {
+  data: Tenant[];
+  total: number;
+  limit: number;
+  page: number;
+  hasMore: boolean;
+}
+
+// Real server pagination for the admin Organizations table. The backend
+// already fully supports page/limit/search (pagination.Parse + a real
+// Count()/Limit()/Offset() query) -- useTenants() above previously fetched
+// with NO params at all and rendered whatever the default 20-row page
+// happened to return as if it were the complete list, silently hiding
+// anything beyond it with zero indication to the admin. Same bug class
+// already fixed elsewhere in the platform (inventory/treasury list pages)
+// for exactly this reason: it doesn't show up until the row count crosses
+// the default limit, then quietly starts hiding real records.
+export function useTenantsPage(params: { page?: number; limit?: number; search?: string } = {}) {
+  const { page = 1, limit = 20, search = '' } = params;
+  return useQuery({
+    queryKey: [...tenantKeys.all(), { page, limit, search }] as const,
+    queryFn: async () => {
+      const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (search) qs.set('search', search);
+      const response = await apiClient.get(`/api/v1/admin/tenants?${qs.toString()}`);
+      const body = (response as any).data;
+      const items = body?.data ?? body ?? [];
+      return {
+        data: Array.isArray(items) ? (items as Tenant[]) : [],
+        total: body?.total ?? (Array.isArray(items) ? items.length : 0),
+        limit: body?.limit ?? limit,
+        page: body?.page ?? page,
+        hasMore: body?.hasMore ?? false,
+      } satisfies TenantsPage;
+    },
+    staleTime: STALE_MS,
+    placeholderData: (prev) => prev,
   });
 }
 

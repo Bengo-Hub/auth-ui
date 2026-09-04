@@ -37,11 +37,18 @@ export function BrandingTab() {
     staleTime: 30_000,
   });
 
+  // Re-syncs whenever the query actually resolves NEW data (a fresh load, or
+  // switching to a different organisation via the tenant switcher) rather
+  // than only once ever -- the previous `!tenantData` guard meant switching
+  // tenants kept showing the PREVIOUS tenant's branding data indefinitely,
+  // since tenantData was already truthy from the first load and never
+  // re-synced. User edits since the last sync are intentionally not
+  // preserved across a tenant switch (they belong to the old tenant).
   useEffect(() => {
-    if (tenantQuery.data && !tenantData) {
+    if (tenantQuery.data) {
       setTenantData(tenantQuery.data);
     }
-  }, [tenantQuery.data, tenantData]);
+  }, [tenantQuery.data]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

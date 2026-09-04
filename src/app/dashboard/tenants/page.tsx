@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import {
-  useTenants,
+  useTenantsPage,
   useCreateTenant,
   useUpdateTenant,
   useDeleteTenant,
@@ -402,7 +402,12 @@ function PendingApprovalsSection() {
 }
 
 export default function TenantsPage() {
-  const { data: tenants, isLoading, isError, refetch } = useTenants();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [search, setSearch] = useState('');
+  const { data: tenantsPage, isLoading, isError, refetch } = useTenantsPage({ page, limit: pageSize, search });
+  const tenants = tenantsPage?.data ?? [];
+  const totalPages = tenantsPage ? Math.max(1, Math.ceil(tenantsPage.total / tenantsPage.limit)) : 1;
   const deleteTenant = useDeleteTenant();
   const provisionRedirects = useProvisionTenantOAuthRedirects();
   const { toast } = useToast();
@@ -472,13 +477,28 @@ export default function TenantsPage() {
 
       <DataTable
         columns={columns}
-        rows={tenants ?? []}
+        rows={tenants}
         rowKey={(t) => t.id}
         loading={isLoading}
         error={isError}
         onRetry={() => refetch()}
-        emptyText="You haven't added any organizations yet. Create one to get started."
+        emptyText={search ? `No organizations match "${search}".` : "You haven't added any organizations yet. Create one to get started."}
         storageKey="dashboard-tenants-col-prefs"
+        toolbar={
+          <Input
+            placeholder="Search by name or slug..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            className="h-10 max-w-xs rounded-xl"
+          />
+        }
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        total={tenantsPage?.total}
+        pageSize={pageSize}
+        onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
+        pageSizeOptions={[20, 50, 100]}
       />
 
       {editingTenant && (
