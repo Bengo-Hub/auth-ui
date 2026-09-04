@@ -37,6 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth-store';
 import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
 import { buildTenantColumns } from './tenants-columns';
+import { suggestTenantSlug } from '@/lib/tenant-slug';
 
 function slugify(text: string): string {
   return text
@@ -72,7 +73,7 @@ function CreateOrgDialog() {
   const handleNameChange = (value: string) => {
     setName(value);
     if (!slugManuallyEdited) {
-      setSlug(slugify(value));
+      setSlug(suggestTenantSlug(value));
     }
   };
 

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { PhoneInputField } from '@bengo-hub/shared-ui-lib/contact';
 import apiClient from '@/lib/api-client';
 import { isValidReturnUrl } from '@/lib/utils';
+import { suggestTenantSlug, sanitizeSlugInput } from '@/lib/tenant-slug';
 import { useQuery } from '@tanstack/react-query';
 import {
     AlertCircle,
@@ -145,6 +146,9 @@ export function SignupForm() {
   const [isSearching, setIsSearching] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
   const [newOrgSlug, setNewOrgSlug] = useState('');
+  // Tracks whether the org creator has typed their own slug so the
+  // auto-suggestion (derived from the org name below) stops overwriting it.
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [orgSize, setOrgSize] = useState('');
   const [useCases, setUseCases] = useState<string[]>([]);
   const [hqBranchName, setHqBranchName] = useState('Main/HQ');
@@ -222,21 +226,19 @@ export function SignupForm() {
     })();
   }, [defaultTenant, tenantAutoResolved]);
 
-  // Auto-generate slug: FBO uses distributor ID as slug; others use org name
+  // Auto-generate slug: FBO uses distributor ID as slug (fixed, not
+  // editable); others get a suggestion from the org name -- shortened to
+  // initials once the plain slugified name gets unwieldy (e.g. "Migori
+  // County Community Library" -> "mccl") -- that the org creator can still
+  // freely override below once they've typed their own.
   useEffect(() => {
     if (isFBO && distribId.trim()) {
       // FBO: slug = distributor ID (numeric, no transformation)
       setNewOrgSlug(distribId.trim());
-    } else {
-      setNewOrgSlug(
-        newOrgName
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-|-$/g, '')
-          .slice(0, 64)
-      );
+    } else if (!slugManuallyEdited) {
+      setNewOrgSlug(suggestTenantSlug(newOrgName));
     }
-  }, [newOrgName, isFBO, distribId]);
+  }, [newOrgName, isFBO, distribId, slugManuallyEdited]);
 
   // FBO: auto-fill org name from Step 1 name
   useEffect(() => {
@@ -554,6 +556,8 @@ export function SignupForm() {
           setNewOrgName={setNewOrgName}
           newOrgSlug={newOrgSlug}
           setNewOrgSlug={setNewOrgSlug}
+          slugManuallyEdited={slugManuallyEdited}
+          setSlugManuallyEdited={setSlugManuallyEdited}
           orgSize={orgSize}
           setOrgSize={setOrgSize}
           useCases={useCases}
@@ -939,7 +943,7 @@ function Step0({
 function Step1({
   orgAction, setOrgAction, orgSearch, setOrgSearch, searchResults,
   selectedTenant, setSelectedTenant, isSearching, newOrgName, setNewOrgName,
-  newOrgSlug, setNewOrgSlug, orgSize, setOrgSize, useCases, toggleUseCase,
+  newOrgSlug, setNewOrgSlug, slugManuallyEdited, setSlugManuallyEdited, orgSize, setOrgSize, useCases, toggleUseCase,
   hqBranchName, setHqBranchName, distribId, setDistribId, isFBO,
   phoneNumber, setPhoneNumber,
   isISP, isHotspot, ispProviderName, setIspProviderName, ispLicenceNumber, setIspLicenceNumber,
@@ -1069,9 +1073,19 @@ function Step1({
             <Label>URL Slug</Label>
             <div className="relative font-mono text-sm">
               <span className="absolute left-3 top-3 text-slate-400">@</span>
-              <Input value={newOrgSlug} readOnly disabled className="pl-8 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-70" />
+              {isFBO ? (
+                <Input value={newOrgSlug} readOnly disabled className="pl-8 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-70" />
+              ) : (
+                <Input
+                  value={newOrgSlug}
+                  onChange={(e) => { setSlugManuallyEdited(true); setNewOrgSlug(sanitizeSlugInput(e.target.value)); }}
+                  className="pl-8 h-11 rounded-xl"
+                />
+              )}
             </div>
-            <p className="text-[10px] text-slate-500">{isFBO ? 'Set from your distributor ID' : 'Auto-generated from organisation name'}</p>
+            <p className="text-[10px] text-slate-500">
+              {isFBO ? 'Set from your distributor ID' : 'Auto-suggested from your organisation name — edit it to use your own'}
+            </p>
           </div>
           <div className="space-y-2">
             <Label>Primary Branch Name</Label>
