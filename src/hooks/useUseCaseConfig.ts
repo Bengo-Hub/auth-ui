@@ -9,22 +9,25 @@ export interface UseCaseConfig {
   features: string[];
   settings: Record<string, any>;
   display_name: string;
+  /** Downstream services this use case applies to, e.g. ["pos-api", "inventory-api"]. */
+  applicable_services?: string[];
 }
 
 /**
- * useUseCaseConfig fetches the configuration for a specific use case
- * or the current tenant's use case if none is provided.
+ * useUseCaseConfig fetches the configuration for a specific use case, or — when
+ * called with no argument — the CURRENT TENANT's use case(s), resolved server-side
+ * from the session (GetUseCaseConfig reads claims.TenantSlug and unions every
+ * use_case a multi-vertical tenant has selected). Never read `user.profile.use_case`
+ * here: that's a user-level field, not the tenant's, and would silently bypass the
+ * backend's own correct resolution for the (common) no-argument call.
  */
 export function useUseCaseConfig(useCase?: string) {
-  const { user, isAuthenticated } = useAuth();
-  
-  // Try to determine the use case from the user profile if not provided
-  const resolvedUseCase = useCase || (user?.profile as any)?.use_case;
+  const { isAuthenticated } = useAuth();
 
   return useQuery({
-    queryKey: ['use_case_config', resolvedUseCase],
+    queryKey: ['use_case_config', useCase ?? 'session-tenant'],
     queryFn: async () => {
-      const params = resolvedUseCase ? { use_case: resolvedUseCase } : {};
+      const params = useCase ? { use_case: useCase } : {};
       const response = await apiClient.get<UseCaseConfig>('/api/v1/auth/use-case/config', {
         params,
       });
@@ -32,7 +35,7 @@ export function useUseCaseConfig(useCase?: string) {
     },
     // Only fetch if resolving config specifically or if we are authenticated
     // Note: The backend also handles unauthenticated requests by defaulting or resolving via context
-    enabled: !!resolvedUseCase || isAuthenticated,
+    enabled: !!useCase || isAuthenticated,
     staleTime: 30 * 60 * 1000, // 30 minutes
   });
 }

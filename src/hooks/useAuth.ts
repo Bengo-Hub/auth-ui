@@ -23,6 +23,12 @@ export interface User {
     // the pricing API; these are the denormalized auth-api cache values.
     subscription_plan?: string;
     subscription_status?: string;
+    // Business vertical(s) — e.g. "retail", "hospitality". use_case is the legacy
+    // single value; use_cases (multi-select) is the current source of truth when
+    // present. The Billing tab uses these to only show services/plans relevant to
+    // what this tenant actually is.
+    use_case?: string | null;
+    use_cases?: string[];
   };
   // /api/v1/auth/me returns BOTH `tenant` (the active session's tenant — singular,
   // matches the minted token) and `tenants` (every membership the user has, each with its

@@ -1,11 +1,12 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useUseCaseConfig } from '@/hooks/useUseCaseConfig';
 import { useServiceSubscriptions } from '@/hooks/use-dashboard-api';
 import { subscriptionApi, type ServiceSubscriptionEntry } from '@/lib/subscription-api';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { SUBSCRIPTIONS_BASE } from './shared';
 import { PlanSection, ServiceChargePlanCard } from './billing-plan-card';
@@ -26,17 +27,56 @@ const SERVICE_TAG_LABELS: Record<string, string> = {
 
 const ALL_SERVICE_TAGS = Object.keys(SERVICE_TAG_LABELS);
 
+// Tags that are vertical-specific — auth-api's usecase.Resolver actually maps these to
+// particular business use cases (retail/hospitality/pharmacy/etc). Cross-cutting
+// back-office services (erp, treasury, marketflow, projects) have no use_case mapping
+// of their own in the resolver — every tenant sees those regardless of vertical, so
+// they're deliberately never hidden here.
+const VERTICAL_SERVICE_TAGS = new Set(['pos', 'ordering', 'inventory', 'hospital', 'truload', 'isp_billing', 'logistics']);
+
+// Converts auth-api's ApplicableServices() service names (e.g. "pos-api",
+// "ordering-backend", "isp-billing") to this page's own tag keys (e.g. "pos",
+// "ordering", "isp_billing") — same normalization, just applied here instead of
+// duplicating the use_case→services table itself (that stays server-side, single
+// source of truth in auth-api's usecase.Resolver).
+function toServiceTag(name: string): string {
+  return name.replace(/-api$/, '').replace(/-backend$/, '').replace(/-/g, '_');
+}
+
 // ── Billing ───────────────────────────────────────────────────────────────────
 
 export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: ReturnType<typeof useAuth>['user'] }) {
   const tenantId = user?.tenant?.id ?? '';
+
+  // Resolves the CURRENT tenant's use case(s) server-side (auth-api unions every
+  // use_case a multi-vertical tenant has selected) — used to hide vertical tabs/plans
+  // that don't apply to this tenant, e.g. a retail tenant seeing Hospital/Afya plans.
+  const { data: useCaseConfig } = useUseCaseConfig();
+  const visibleServiceTags = useMemo(() => {
+    const applicable = useCaseConfig?.applicable_services;
+    if (!applicable || applicable.length === 0) return ALL_SERVICE_TAGS;
+    const allowed = new Set(applicable.map(toServiceTag));
+    return ALL_SERVICE_TAGS.filter((tag) => !VERTICAL_SERVICE_TAGS.has(tag) || allowed.has(tag));
+  }, [useCaseConfig]);
+
   const [activeService, setActiveService] = useState(ALL_SERVICE_TAGS[0]);
+  // If the previously-active (or default) tab isn't actually visible for this tenant's
+  // use case, fall back to the first tab that is — never leave a hidden tab selected.
+  const effectiveActiveService = visibleServiceTags.includes(activeService) ? activeService : (visibleServiceTags[0] ?? activeService);
 
   const { data: serviceData, isLoading: serviceLoading } = useServiceSubscriptions(tenantId);
 
+  // Only pass use_case through to the plans query when the tenant has exactly ONE
+  // (the overwhelmingly common case) — MergeConfigs comma-joins several use cases for
+  // a genuinely multi-vertical tenant, which wouldn't exact-match the plan column;
+  // the tab-level filter above already scopes to relevant services either way.
+  const singleUseCase = useCaseConfig?.use_case && !useCaseConfig.use_case.includes(',')
+    ? useCaseConfig.use_case
+    : undefined;
+
   const { data: allPlans = [], isLoading: plansLoading } = useQuery({
-    queryKey: ['plans-by-service', activeService],
-    queryFn: () => subscriptionApi.getPlansByService(activeService),
+    queryKey: ['plans-by-service', effectiveActiveService, singleUseCase],
+    queryFn: () => subscriptionApi.getPlansByService(effectiveActiveService, singleUseCase),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -50,7 +90,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
     (serviceData?.services ?? []).map((s) => [s.service_tag, s])
   );
 
-  const current = serviceMap.get(activeService);
+  const current = serviceMap.get(effectiveActiveService);
   const isActiveService = current?.status === 'ACTIVE' || current?.status === 'TRIAL';
   const isExpiredService = current?.status === 'EXPIRED';
   const isCancelledService = current?.status === 'CANCELLED';
@@ -63,14 +103,14 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
   const annualPlans = allPlans.filter((p) => p.billing_cycle === 'ANNUAL');
   const oneTimePlans = allPlans.filter((p) => p.billing_cycle === 'ONE_TIME');
   const serviceCharges = allServiceCharges.filter((sc) =>
-    sc.applicable_services?.includes(activeService)
+    sc.applicable_services?.includes(effectiveActiveService)
   );
 
   return (
     <div className="space-y-6">
-      {/* Service tabs */}
+      {/* Service tabs — only the ones applicable to this tenant's own use case(s) */}
       <div className="flex flex-wrap gap-2">
-        {ALL_SERVICE_TAGS.map((tag) => {
+        {visibleServiceTags.map((tag) => {
           const entry = serviceMap.get(tag);
           const hasActive = entry?.status === 'ACTIVE' || entry?.status === 'TRIAL';
           const isExpired = entry?.status === 'EXPIRED';
@@ -79,7 +119,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
               key={tag}
               onClick={() => setActiveService(tag)}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
-                activeService === tag
+                effectiveActiveService === tag
                   ? 'bg-primary text-white border-primary shadow-sm'
                   : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-primary/50'
               }`}
@@ -113,7 +153,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
                   ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
                   : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
               }`}>{current?.status}</span>
-              <a href={`${SUBSCRIPTIONS_BASE}/plans?service=${activeService}&plan=${current?.plan_code}`} target="_blank" rel="noopener noreferrer">
+              <a href={`${SUBSCRIPTIONS_BASE}/plans?service=${effectiveActiveService}&plan=${current?.plan_code}`} target="_blank" rel="noopener noreferrer">
                 <Button size="sm" variant="outline" className="rounded-xl gap-1 h-8 text-xs">
                   Manage <ExternalLink className="h-3 w-3" />
                 </Button>
@@ -185,7 +225,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
       ) : (
         <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-700">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            No active subscription for <strong>{SERVICE_TAG_LABELS[activeService]}</strong>. Choose a plan below.
+            No active subscription for <strong>{SERVICE_TAG_LABELS[effectiveActiveService]}</strong>. Choose a plan below.
           </p>
         </div>
       )}
@@ -193,14 +233,14 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
       {/* Monthly Plans */}
       {(plansLoading || monthlyPlans.length > 0) && (
         <PlanSection
-          title={`Monthly Plans — ${SERVICE_TAG_LABELS[activeService]}`}
+          title={`Monthly Plans — ${SERVICE_TAG_LABELS[effectiveActiveService]}`}
           plans={monthlyPlans}
           isLoading={plansLoading}
           currentEntry={current}
           currentPlanTierOrder={currentPlanObj?.tier_order}
           hasEverSubscribed={hasEverSubscribed}
           billingLabel="/mo"
-          serviceTag={activeService}
+          serviceTag={effectiveActiveService}
           tenantSlug={tenantSlug}
         />
       )}
@@ -208,7 +248,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
       {/* Annual Plans */}
       {(plansLoading || annualPlans.length > 0) && (
         <PlanSection
-          title={`Annual Plans — ${SERVICE_TAG_LABELS[activeService]}`}
+          title={`Annual Plans — ${SERVICE_TAG_LABELS[effectiveActiveService]}`}
           subtitle="Save up to 10% vs monthly billing"
           plans={annualPlans}
           isLoading={plansLoading}
@@ -216,7 +256,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
           currentPlanTierOrder={currentPlanObj?.tier_order}
           hasEverSubscribed={hasEverSubscribed}
           billingLabel="/yr"
-          serviceTag={activeService}
+          serviceTag={effectiveActiveService}
           tenantSlug={tenantSlug}
           monthlyPlans={monthlyPlans}
         />
@@ -225,7 +265,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
       {/* One-Time Plans */}
       {oneTimePlans.length > 0 && (
         <PlanSection
-          title={`One-Time Licence — ${SERVICE_TAG_LABELS[activeService]}`}
+          title={`One-Time Licence — ${SERVICE_TAG_LABELS[effectiveActiveService]}`}
           subtitle="Pay once, use forever. No recurring fees."
           plans={oneTimePlans}
           isLoading={false}
@@ -233,7 +273,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
           currentPlanTierOrder={currentPlanObj?.tier_order}
           hasEverSubscribed={hasEverSubscribed}
           billingLabel="one-time"
-          serviceTag={activeService}
+          serviceTag={effectiveActiveService}
           tenantSlug={tenantSlug}
         />
       )}
@@ -243,7 +283,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
         <div>
           <div className="flex items-baseline gap-2 mb-4">
             <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">
-              Service Charge Plans — {SERVICE_TAG_LABELS[activeService]}
+              Service Charge Plans — {SERVICE_TAG_LABELS[effectiveActiveService]}
             </h3>
             <span className="text-xs text-slate-400">Commission-based, no monthly fee</span>
           </div>
@@ -258,7 +298,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
       {/* All sections empty */}
       {!plansLoading && monthlyPlans.length === 0 && annualPlans.length === 0 && oneTimePlans.length === 0 && serviceCharges.length === 0 && (
         <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-700 text-center">
-          <p className="text-sm text-slate-400">No plans available for {SERVICE_TAG_LABELS[activeService]} yet.</p>
+          <p className="text-sm text-slate-400">No plans available for {SERVICE_TAG_LABELS[effectiveActiveService]} yet.</p>
         </div>
       )}
 
@@ -266,7 +306,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
         <p className="text-sm text-slate-500 dark:text-slate-400">
           For invoices, payment history, and upgrade options, visit the{' '}
           <a
-            href={`${SUBSCRIPTIONS_BASE}/plans?service=${activeService}`}
+            href={`${SUBSCRIPTIONS_BASE}/plans?service=${effectiveActiveService}`}
             target="_blank" rel="noopener noreferrer"
             className="text-primary underline font-medium"
           >

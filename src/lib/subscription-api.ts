@@ -119,9 +119,9 @@ export const subscriptionApi = {
     return normalizePlan(data.plan ?? data);
   },
 
-  getPlansByService: async (serviceTag: string): Promise<Plan[]> => {
+  getPlansByService: async (serviceTag: string, useCase?: string): Promise<Plan[]> => {
     const response = await axios.get(`${SUBSCRIPTION_API_BASE}/plans`, {
-      params: { service: serviceTag, active: 'true' },
+      params: { service: serviceTag, active: 'true', ...(useCase ? { use_case: useCase } : {}) },
     });
     const raw = response.data;
     const arr: any[] = Array.isArray(raw) ? raw : (raw.data ?? raw.plans ?? []);
