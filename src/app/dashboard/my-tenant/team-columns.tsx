@@ -3,7 +3,7 @@
 import type { DataTableColumn } from '@bengo-hub/shared-ui-lib/data-table';
 import type { TenantMember } from '@/hooks/use-dashboard-api';
 import { Button } from '@/components/ui/button';
-import { Ban, CheckCircle2, KeyRound, MapPin, Trash2 } from 'lucide-react';
+import { Ban, CheckCircle2, KeyRound, Lock, MapPin, Trash2 } from 'lucide-react';
 import type { TenantOutlet } from './shared';
 
 // Standard global roles as seeded by auth-api. Service-specific roles (e.g. inventory_admin,
@@ -34,6 +34,7 @@ export interface TeamColumnCallbacks {
   onStatusChange: (m: TenantMember, status: string) => void;
   onAssignOutlet: (m: TenantMember) => void;
   onSetPin: (m: TenantMember) => void;
+  onResetPassword: (m: TenantMember) => void;
   onRemove: (userId: string) => void;
 }
 
@@ -111,6 +112,12 @@ export function buildTeamColumns(cb: TeamColumnCallbacks): DataTableColumn<Tenan
             className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
             onClick={() => cb.onSetPin(m)}>
             <KeyRound className="h-3 w-3" /> Set PIN
+          </Button>
+          <Button variant="outline" size="icon"
+            className="h-8 w-8 rounded-xl border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+            title="Reset password"
+            onClick={() => cb.onResetPassword(m)}>
+            <Lock className="h-3.5 w-3.5" />
           </Button>
           <Button variant="ghost" size="icon"
             className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl"

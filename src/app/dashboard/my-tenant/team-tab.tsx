@@ -12,6 +12,8 @@ import {
   useRemoveTenantMember,
   useSetTenantMemberStatus,
   useSetMemberPin,
+  useAdminResetPassword,
+  useAdminSendResetEmail,
   type TenantMember,
 } from '@/hooks/use-dashboard-api';
 import { useQuery } from '@tanstack/react-query';
@@ -20,7 +22,7 @@ import { Loader2, Plus, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { outletsPath, type TenantOutlet } from './shared';
 import { TEAM_ROLES, buildTeamColumns } from './team-columns';
-import { AssignOutletDialog, SetPinDialog, TempPasswordRevealDialog } from './team-dialogs';
+import { AssignOutletDialog, ResetPasswordDialog, SetPinDialog, TempPasswordRevealDialog } from './team-dialogs';
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 
@@ -42,14 +44,19 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
   const [pinService, setPinService] = useState('pos');
   const [outletTarget, setOutletTarget] = useState<TenantMember | null>(null);
   const [outletAssignId, setOutletAssignId] = useState('');
-  // One-time temp-password reveal after a brand-new account is created.
-  const [tempPwInfo, setTempPwInfo] = useState<{ email: string; password: string } | null>(null);
+  // One-time temp-password reveal — after a brand-new account is created, OR after
+  // generating a temp password via the Reset Password dialog below (different copy
+  // for each: only the invite path actually sends a welcome email).
+  const [tempPwInfo, setTempPwInfo] = useState<{ email: string; password: string; context: 'invite' | 'reset' } | null>(null);
+  const [resetPwTarget, setResetPwTarget] = useState<TenantMember | null>(null);
 
   const addMember = useAddTenantMember(tenantId);
   const updateMember = useUpdateTenantMember(tenantId);
   const removeMember = useRemoveTenantMember(tenantId);
   const setMemberStatus = useSetTenantMemberStatus(tenantId);
   const setMemberPin = useSetMemberPin(tenantId);
+  const resetPassword = useAdminResetPassword();
+  const sendResetEmail = useAdminSendResetEmail();
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -101,7 +108,7 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
         ...(invitePin.length === 4 ? { pin: invitePin, service: 'pos' } : {}),
       });
       if (result?.temp_password) {
-        setTempPwInfo({ email: inviteEmail, password: result.temp_password });
+        setTempPwInfo({ email: inviteEmail, password: result.temp_password, context: 'invite' });
       } else {
         toast({ title: 'Member added' });
       }
@@ -153,6 +160,33 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
     }
   };
 
+  const handleSendResetEmail = () => {
+    if (!resetPwTarget) return;
+    sendResetEmail.mutate(resetPwTarget.user_id, {
+      onSuccess: () => { toast({ title: `Reset email sent to ${resetPwTarget.name ?? resetPwTarget.email}` }); setResetPwTarget(null); },
+      onError: () => toast({ title: 'Failed to send reset email', variant: 'destructive' }),
+    });
+  };
+
+  const handleSetPassword = (password: string) => {
+    if (!resetPwTarget) return;
+    resetPassword.mutate({ id: resetPwTarget.user_id, new_password: password }, {
+      onSuccess: () => { toast({ title: `Password updated for ${resetPwTarget.name ?? resetPwTarget.email}` }); setResetPwTarget(null); },
+      onError: () => toast({ title: 'Failed to set password', variant: 'destructive' }),
+    });
+  };
+
+  const handleGeneratePassword = () => {
+    if (!resetPwTarget) return;
+    resetPassword.mutate({ id: resetPwTarget.user_id }, {
+      onSuccess: (res) => {
+        if (res?.temp_password) setTempPwInfo({ email: resetPwTarget.email, password: res.temp_password, context: 'reset' });
+        setResetPwTarget(null);
+      },
+      onError: () => toast({ title: 'Failed to generate password', variant: 'destructive' }),
+    });
+  };
+
   const handleSetPin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pinTarget || pin.length !== 4) return;
@@ -173,6 +207,7 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
         onStatusChange: handleStatusChange,
         onAssignOutlet: (m) => { setOutletTarget(m); setOutletAssignId(m.outlet_id ?? ''); },
         onSetPin: (m) => { setPinTarget(m); setPin(''); },
+        onResetPassword: setResetPwTarget,
         onRemove: handleRemove,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -320,12 +355,28 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
         />
       )}
 
-      {/* Temporary password reveal (shown once after a new account is created) */}
+      {/* Reset Password Modal */}
+      {resetPwTarget && (
+        <ResetPasswordDialog
+          target={resetPwTarget}
+          onCancel={() => setResetPwTarget(null)}
+          onSendEmail={handleSendResetEmail}
+          onSetPassword={handleSetPassword}
+          onGenerate={handleGeneratePassword}
+          sending={resetPassword.isPending || sendResetEmail.isPending}
+        />
+      )}
+
+      {/* Temporary password reveal (new account created, or a generated password reset) */}
       {tempPwInfo && (
         <TempPasswordRevealDialog
           info={tempPwInfo}
           onCopy={() => { navigator.clipboard?.writeText(tempPwInfo.password); toast({ title: 'Copied' }); }}
           onDone={() => setTempPwInfo(null)}
+          {...(tempPwInfo.context === 'reset' ? {
+            title: 'Password reset',
+            description: "Share this temporary password securely — it won't be shown again. The user must change it on next sign-in.",
+          } : {})}
         />
       )}
     </div>
