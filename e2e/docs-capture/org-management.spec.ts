@@ -132,6 +132,41 @@ test.describe('Docs capture: Managing Your Organisation', () => {
     }
   });
 
+  test('Team tab — Reset Password dialog', async ({ page }) => {
+    await login(page);
+    await page.goto('/dashboard/my-tenant');
+    await page.getByRole('button', { name: 'Team', exact: true }).click();
+    await expect(page.getByText('Add Member')).toBeVisible({ timeout: 10_000 });
+    await page.waitForTimeout(600);
+
+    const resetBtn = page.getByRole('button', { name: 'Reset password' }).first();
+    if (await resetBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await resetBtn.click();
+      const dialogTitle = page.getByRole('heading', { name: 'Reset Password' });
+      await expect(dialogTitle).toBeVisible({ timeout: 5_000 });
+      await page.waitForTimeout(400);
+      const sendEmail = page.getByRole('button', { name: /send reset email/i });
+      const setNew = page.getByRole('button', { name: /set a new password/i });
+      await screenshotWithCallouts(page, OUT('managing-your-organisation/10-reset-password-choose.png'), [
+        { locator: sendEmail, number: 1 },
+        { locator: setNew, number: 2 },
+      ]);
+
+      // Second screenshot: the "set a new password" form, filled but not submitted.
+      await setNew.click();
+      await page.waitForTimeout(400);
+      const newPassword = page.getByPlaceholder('At least 8 characters');
+      await newPassword.fill('DocsExample2026!');
+      await page.waitForTimeout(300);
+      await screenshotWithCallouts(page, OUT('managing-your-organisation/11-reset-password-set-new.png'), [
+        { locator: newPassword, number: 1 },
+      ]);
+      await page.getByRole('button', { name: 'Back' }).click().catch(() => {});
+      await page.waitForTimeout(300);
+      await page.getByRole('button', { name: 'Cancel' }).click().catch(() => {});
+    }
+  });
+
   test('Billing tab', async ({ page }) => {
     await login(page);
     await page.goto('/dashboard/my-tenant');
