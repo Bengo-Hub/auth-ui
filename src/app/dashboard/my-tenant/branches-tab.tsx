@@ -43,7 +43,7 @@ const OUTLET_USE_CASES: { value: string; label: string }[] = [
 
 const emptyBranchForm = {
   code: '', name: '', use_case: 'retail', address: '', is_hq: false, status: 'active',
-  contact_phone: '', contact_email: '',
+  contact_phone: '', contact_email: '', etims_branch_id: '',
 };
 type BranchForm = typeof emptyBranchForm;
 
@@ -88,6 +88,7 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
       status: o.status ?? 'active',
       contact_phone: phone,
       contact_email: email,
+      etims_branch_id: typeof o.metadata?.etims_branch_id === 'string' ? o.metadata.etims_branch_id : '',
     });
     setFormOpen(true);
   };
@@ -111,6 +112,7 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
         ...(editing?.metadata ?? {}),
         contact_phones: form.contact_phone.trim() ? [{ label: 'Branch', value: form.contact_phone.trim() }] : [],
         contact_email: form.contact_email.trim() || undefined,
+        etims_branch_id: form.etims_branch_id.trim() || undefined,
       };
       if (editing) {
         // Backend UpdateOutlet ignores code (immutable) — send the editable fields only.
@@ -218,6 +220,9 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
                   </div>
                   <p className="text-xs font-mono text-slate-400 mt-0.5">{o.code}</p>
                   <p className="text-xs text-slate-500 mt-2">{useCaseLabel(o.use_case)}</p>
+                  {typeof o.metadata?.etims_branch_id === 'string' && o.metadata.etims_branch_id && (
+                    <p className="text-xs text-slate-400 mt-1 font-mono">KRA branch {o.metadata.etims_branch_id}</p>
+                  )}
                   {o.address && <p className="text-xs text-slate-400 mt-1 flex items-center gap-1"><MapPin className="h-3 w-3" /> {o.address}</p>}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
@@ -306,6 +311,17 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
                     placeholder="branch@example.com"
                     className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
                 </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">KRA eTIMS Branch ID (optional)</Label>
+                <Input value={form.etims_branch_id} onChange={(e) => setForm({ ...form, etims_branch_id: e.target.value })}
+                  placeholder="00"
+                  className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono" />
+                <p className="text-[11px] text-slate-400">
+                  The KRA bhfId this branch fiscalises under (e.g. &quot;00&quot;, &quot;01&quot;). Once a real
+                  eTIMS device is registered for this branch in Treasury, its actual branch stays
+                  authoritative and keeps this label in sync automatically.
+                </p>
               </div>
               {editing && (
                 <div className="space-y-1">
