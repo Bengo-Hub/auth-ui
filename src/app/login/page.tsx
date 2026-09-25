@@ -13,6 +13,7 @@ import { ProviderLogo } from '@/components/oauth/provider-logo';
 import { oauthProviders, type OAuthProviderDef } from '@/lib/oauth/catalog';
 import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl } from '@/lib/utils';
+import { BRANDABLE_SERVICES, getPublicTenant, getServiceBranding } from '@/lib/tenant-api';
 
 type ActiveIntegration = {
   name: string;
@@ -187,6 +188,46 @@ function OAuthErrorBanner() {
   );
 }
 
+/** client_id of the app that sent the user here, read from the authorize URL in return_to. */
+function clientIdFromReturnTo(returnTo: string | null): string | null {
+  if (!returnTo) return null;
+  try {
+    return new URL(returnTo, 'https://accounts.invalid').searchParams.get('client_id');
+  } catch {
+    return null;
+  }
+}
+
+// Tells the user which app they are signing in to, using the tenant's own
+// name for it (e.g. "Urban Eats") when one is set in service branding.
+function ContinueToAppNote() {
+  const searchParams = useSearchParams();
+  const tenantSlug = searchParams.get('tenant') ?? '';
+  const clientId = clientIdFromReturnTo(searchParams.get('return_to'));
+  const service = BRANDABLE_SERVICES.find((s) => s.clientId === clientId);
+  const { data: tenant } = useQuery({
+    queryKey: ['public_tenant', tenantSlug],
+    queryFn: () => getPublicTenant(tenantSlug),
+    enabled: !!tenantSlug && !!service,
+    staleTime: 5 * 60_000,
+  });
+  if (!service || !tenant) return null;
+  const branding = getServiceBranding(tenant.metadata, service.key);
+  const appName = branding?.name || tenant.name;
+  if (!appName) return null;
+  return (
+    <div className="mb-6 flex items-center justify-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-3">
+      {branding?.icon_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={branding.icon_url} alt="" className="h-8 w-8 rounded-lg object-contain" />
+      )}
+      <p className="text-sm text-slate-600 dark:text-slate-300">
+        Continue to <span className="font-bold text-slate-900 dark:text-white">{appName}</span>
+      </p>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex bg-background overflow-hidden">
@@ -259,6 +300,10 @@ export default function LoginPage() {
               Sign in to your enterprise account
             </p>
           </div>
+
+          <Suspense fallback={null}>
+            <ContinueToAppNote />
+          </Suspense>
 
           {/* OAuth error banner (shown when redirected back from a failed/cancelled flow) */}
           <Suspense fallback={null}>

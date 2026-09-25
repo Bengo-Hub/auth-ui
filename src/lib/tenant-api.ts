@@ -69,6 +69,82 @@ export async function getTenantBySlug(slug: string): Promise<TenantBrand | null>
   }
 }
 
+/**
+ * Per-service app name and icon a tenant can set (tenant metadata
+ * `service_branding`, validated by auth-api). Frontends fall back to the
+ * platform default when a service has no entry.
+ */
+export interface ServiceBrandingEntry {
+  name?: string;
+  short_name?: string;
+  tagline?: string;
+  theme_color?: string;
+  icon_url?: string;
+}
+
+export interface BrandableService {
+  key: string;
+  label: string;
+  defaultName: string;
+  description: string;
+  clientId: string;
+}
+
+export const BRANDABLE_SERVICES: BrandableService[] = [
+  {
+    key: 'ordering',
+    label: 'Online ordering app',
+    defaultName: 'Codevertex Ordering',
+    description: 'The storefront your customers order from and install on their phones.',
+    clientId: 'ordering-ui',
+  },
+  {
+    key: 'rider',
+    label: 'Rider app',
+    defaultName: 'Codevertex Rider',
+    description: 'The delivery app your riders install.',
+    clientId: 'rider-app',
+  },
+  {
+    key: 'pos',
+    label: 'Point of sale',
+    defaultName: 'Codevertex POS',
+    description: 'The till and kitchen screens your staff use.',
+    clientId: 'pos-ui',
+  },
+  {
+    key: 'logistics',
+    label: 'Dispatch and logistics',
+    defaultName: 'Codevertex Logistics',
+    description: 'The dispatch console for assigning deliveries.',
+    clientId: 'logistics-ui',
+  },
+];
+
+export function getServiceBranding(
+  metadata: Record<string, unknown> | undefined,
+  service: string,
+): ServiceBrandingEntry | null {
+  const all = metadata?.service_branding;
+  if (!all || typeof all !== 'object') return null;
+  const entry = (all as Record<string, unknown>)[service];
+  return entry && typeof entry === 'object' ? (entry as ServiceBrandingEntry) : null;
+}
+
+/** Public tenant record (metadata included) for pages that need more than the brand. */
+export async function getPublicTenant(slug: string): Promise<PublicTenant | null> {
+  if (!slug) return null;
+  try {
+    const res = await fetch(`${AUTH_API_BASE}/api/v1/tenants/by-slug/${encodeURIComponent(slug)}`, {
+      credentials: 'omit',
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as PublicTenant;
+  } catch {
+    return null;
+  }
+}
+
 /** Brand-related keys in tenant metadata (align with notifications branding). */
 export function getBrandFromMetadata(metadata?: Record<string, unknown>) {
   const m = (metadata || {}) as TenantBrandMetadata;
