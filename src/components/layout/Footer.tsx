@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { openCookieSettings } from '@bengo-hub/shared-ui-lib/legal';
 import { useAuthStore } from '@/store/auth-store';
 
 export default function Footer() {
@@ -75,6 +76,22 @@ export default function Footer() {
                 >
                   Terms of Service
                 </Link>
+                <Link href="/cookies" className="text-slate-600 transition-colors hover:text-primary dark:text-slate-300">
+                  Cookie Policy
+                </Link>
+                <Link href="/refund-policy" className="text-slate-600 transition-colors hover:text-primary dark:text-slate-300">
+                  Refund Policy
+                </Link>
+                <Link href="/data-requests" className="text-slate-600 transition-colors hover:text-primary dark:text-slate-300">
+                  Your data
+                </Link>
+                <button
+                  type="button"
+                  onClick={openCookieSettings}
+                  className="text-left text-slate-600 transition-colors hover:text-primary dark:text-slate-300"
+                >
+                  Cookie settings
+                </button>
               </div>
               <div className="flex flex-col gap-2">
                 <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
@@ -87,7 +104,7 @@ export default function Footer() {
                   Support
                 </a>
                 <a
-                  href="mailto:privacy@codevertexafrica.com"
+                  href="mailto:info@codevertexafrica.com?subject=Data%20request"
                   className="text-slate-600 transition-colors hover:text-primary dark:text-slate-300"
                 >
                   Privacy inquiries

@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     'Privacy Policy for Codevertex Africa Limited and the Codevertex SSO / accounts identity platform. Learn how we collect, use, and protect your personal data.',
 };
 
-const LAST_UPDATED = 'April 27, 2026';
+const LAST_UPDATED = 'October 6, 2026';
 const EFFECTIVE_DATE = 'Jan 01, 2022';
 
 const TOC = [
@@ -222,7 +222,7 @@ export default function PrivacyPolicyPage() {
                 processing agreements:
               </p>
               <ul>
-                <li><strong>Infrastructure Hosting:</strong> Our services run on a self-managed Kubernetes cluster hosted on a dedicated Contabo VPS server located in their European data centre (Grand Est, France, EU). No customer data is shared with the hosting provider beyond what is inherent in running workloads on their hardware. Data is encrypted in transit (TLS 1.2+) and at rest (AES-256-GCM).</li>
+                <li><strong>Infrastructure Hosting:</strong> Our services run on a self-managed Kubernetes cluster hosted on a dedicated Contabo VPS server located in their European data centre (Grand Est, France, EU). No customer data is shared with the hosting provider beyond what is inherent in running workloads on their hardware. Data is encrypted in transit (TLS 1.2+), and credentials, tokens and API secrets are encrypted at rest (AES-256-GCM).</li>
                 <li><strong>Payment Processing:</strong> Paystack and other PCI-DSS certified payment gateways process card transactions. We receive only a tokenized reference, not raw card data.</li>
                 <li><strong>Email Delivery:</strong> Transactional emails (password resets, security alerts) are sent via our Notifications Engine, which may relay to an SMTP provider.</li>
                 <li><strong>Error Monitoring:</strong> Aggregated, anonymised crash reports may be sent to internal monitoring tools (Prometheus, Grafana Loki) with PII stripped at log time.</li>
@@ -303,10 +303,10 @@ export default function PrivacyPolicyPage() {
                   </thead>
                   <tbody>
                     {[
-                      ['Essential / Session', 'Authentication session tokens, CSRF protection, theme preference.', 'Session or up to 30 days'],
-                      ['Functional', 'Remember your language and UI preferences.', 'Up to 1 year'],
-                      ['Analytics (Internal)', 'Aggregate usage metrics (no third-party analytics tools). Anonymised page-view counts only.', 'Up to 90 days'],
-                      ['Security', 'IP-based rate-limiting and abuse prevention tokens.', 'Up to 24 hours'],
+                      ['Strictly necessary: bb_session', 'Your signed-in session across Codevertex apps (secure, not readable by scripts).', '24 hours'],
+                      ['Strictly necessary: cv_cookie_consent', 'Remembers your cookie choice.', '1 year'],
+                      ['Browser storage', 'Sign-in tokens, selected organisation and branch, theme, offline data.', 'Until you sign out or clear it'],
+                      ['Optional (functional, analytics)', 'Off unless you turn them on. We run no analytics or advertising tracking today.', 'Only with your consent'],
                     ].map(([type, purpose, duration]) => (
                       <tr key={type as string} className="border-b border-slate-100 dark:border-white/5">
                         <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/10">{type}</td>
@@ -319,8 +319,9 @@ export default function PrivacyPolicyPage() {
               </div>
               <p>
                 We do <strong>not</strong> use third-party tracking pixels, social media tracking widgets, or
-                behavioural advertising cookies. You can configure cookie preferences in your browser settings;
-                disabling essential cookies will prevent authentication from functioning.
+                behavioural advertising cookies. Full details and your settings are in our{' '}
+                <Link href="/cookies" className="text-primary underline">Cookie Policy</Link>; blocking the strictly
+                necessary cookies in your browser stops sign-in from working.
               </p>
             </section>
 
@@ -343,7 +344,7 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Access Controls:</strong> Role-based access control (RBAC) with a <code>platform_owner</code> claim required for all administrative operations. Tenant users cannot access other tenants&apos; data by design.</li>
                 <li><strong>Audit Logging:</strong> All administrative actions, authentication events, and provider setting changes are recorded in an append-only <code>audit_logs</code> table. Audit entries cannot be modified or deleted by users.</li>
                 <li><strong>Vulnerability Management:</strong> Regular dependency scanning and security reviews. We have a documented incident response procedure.</li>
-                <li><strong>No-Log Policy for Secrets:</strong> Bearer tokens, refresh tokens, and passwords are never written to application logs. Structured logs (zap) strip PII at emit time.</li>
+                <li><strong>No-Log Policy for Secrets:</strong> Bearer tokens, refresh tokens, and passwords are never written to application logs, and we are reducing contact details in operational logs to masked forms.</li>
               </ul>
               <p>
                 While we apply industry-leading security practices, no system is 100% secure. If you discover
@@ -416,11 +417,14 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Right to Disconnect Integrations:</strong> You may revoke access to any third-party integration (Google Ads, Meta, GitHub) at any time from your account settings. Revocation takes effect immediately.</li>
               </ul>
               <p>
-                To exercise any of these rights, contact our Data Protection at{' '}
+                How to exercise these rights, and what deletion means, is explained on{' '}
+                <Link href="/data-requests" className="text-primary underline">Your data and your rights</Link>. You
+                can also email{' '}
                 <a href="mailto:info@codevertexafrica.com" className="text-primary">
                   info@codevertexafrica.com
                 </a>{' '}
-                with the subject line <strong>&quot;Data Rights Request — [Your Name]&quot;</strong>.
+                with the subject line <strong>&quot;Data Rights Request: [Your Name]&quot;</strong>. You may also
+                complain to the Office of the Data Protection Commissioner (odpc.go.ke).
               </p>
             </section>
 
@@ -530,7 +534,7 @@ export default function PrivacyPolicyPage() {
                     'Google Ads API Required Minimum Functionality',
                     'OAuth 2.0 / OpenID Connect Security Standards',
                     'Kenya Data Protection Act, 2019',
-                    'AES-256-GCM Encryption at Rest',
+                    'AES-256-GCM encryption of stored credentials and secrets',
                     'TLS 1.2+ Encryption in Transit',
                   ].map((item) => (
                     <div key={item} className="flex items-center gap-3">

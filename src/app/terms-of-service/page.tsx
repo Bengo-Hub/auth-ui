@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 const EFFECTIVE_DATE = 'April 27, 2026';
-const LAST_UPDATED = 'Jan 01, 2022';
+const LAST_UPDATED = 'Oct 06, 2026';
 
 const TOC = [
   { id: 'overview', label: '1. Overview & Parties' },
@@ -302,7 +302,7 @@ export default function TermsOfServicePage() {
               <p>
                 All rights, title, and interest in the Codevertex services, including all software, designs,
                 trademarks, logos, and documentation, are and shall remain the exclusive property of Codevertex
-                IT Solutions or its licensors. These Terms grant you a limited, non-exclusive, non-transferable,
+                Africa Limited or its licensors. These Terms grant you a limited, non-exclusive, non-transferable,
                 revocable licence to use the services for their intended purpose during your active subscription.
               </p>
               <h3>8.2 Your Content</h3>
@@ -336,9 +336,12 @@ export default function TermsOfServicePage() {
               <ul>
                 <li>We collect only the data necessary to provide the contracted services.</li>
                 <li>We do not sell your personal data to third parties.</li>
-                <li>All sensitive data is encrypted at rest (AES-256-GCM) and in transit (TLS 1.2+).</li>
+                <li>Data travels encrypted (TLS 1.2+), and stored credentials and API secrets are encrypted at rest.</li>
                 <li>Third-party API credentials (Google Ads, Meta) are encrypted and never accessible to our staff.</li>
-                <li>You may request data deletion at any time; see the Privacy Policy for retention obligations.</li>
+                <li>
+                  You may request data deletion at any time; see{' '}
+                  <Link href="/data-requests" className="text-primary underline">Your data and your rights</Link>.
+                </li>
               </ul>
             </section>
 
@@ -354,22 +357,23 @@ export default function TermsOfServicePage() {
               <p>
                 Certain services are available on a paid subscription basis. Fees are as described on our{' '}
                 <Link href="/pricing" className="text-primary underline">Pricing page</Link>. All prices are
-                in USD unless otherwise specified and are exclusive of applicable taxes.
+                in Kenya Shillings (KES) unless otherwise specified and are exclusive of applicable taxes.
+                Any one-time setup fee is shown next to the plan price before you pay.
               </p>
-              <h3>10.2 Billing Cycle</h3>
+              <h3>10.2 Billing Period</h3>
               <p>
-                Subscriptions are billed monthly or annually, in advance. Your subscription automatically
-                renews at the end of each billing cycle unless you cancel before the renewal date.
+                Subscriptions are paid in advance for one month, six months or twelve months, chosen at
+                checkout. At the end of a period you receive an invoice to pay; if you turned on automatic
+                renewal with a saved card or M-Pesa standing order, it is charged instead. You can turn
+                automatic renewal off, or cancel, at any time before the renewal date.
               </p>
               <h3>10.3 Refunds</h3>
               <p>
                 Payments for completed billing periods are generally non-refundable. Exceptions apply where
                 required by Kenyan consumer protection law or where we have materially failed to deliver the
-                contracted service. Refund requests should be directed to{' '}
-                <a href="mailto:support@codevertexafrica.com" className="text-primary">
-                  support@codevertexafrica.com
-                </a>
-                .
+                contracted service. See our{' '}
+                <Link href="/refund-policy" className="text-primary underline">Refund Policy</Link> for details
+                and how to ask for a refund.
               </p>
               <h3>10.4 Suspension for Non-Payment</h3>
               <p>
@@ -430,7 +434,7 @@ export default function TermsOfServicePage() {
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white">13. Limitation of Liability</h2>
               </div>
               <p>
-                TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, CODEVERTEX IT SOLUTIONS, ITS DIRECTORS,
+                TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, CODEVERTEX AFRICA LIMITED, ITS DIRECTORS,
                 EMPLOYEES, PARTNERS, AND SUPPLIERS SHALL NOT BE LIABLE FOR ANY:
               </p>
               <ul>
@@ -473,9 +477,10 @@ export default function TermsOfServicePage() {
               </div>
               <h3>15.1 By You</h3>
               <p>
-                You may close your account at any time from your account settings or by contacting support.
-                Paid subscriptions that are cancelled will remain active until the end of the current billing
-                period; no refund is issued for the remainder of that period.
+                You may close your account at any time (see{' '}
+                <Link href="/data-requests" className="text-primary underline">Your data and your rights</Link>).
+                Paid subscriptions you cancel from the Billing page stay active until the end of the current
+                billing period; no refund is issued for the remainder of that period.
               </p>
               <h3>15.2 By Codevertex</h3>
               <p>

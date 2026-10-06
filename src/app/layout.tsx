@@ -2,6 +2,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Providers, ThemeProvider } from "@/components/providers";
 import { PWAInstallPrompt } from "@/components/pwa/pwa-install-prompt";
 import { Toaster } from "@/components/ui/toaster";
+import { CookieNoticeMount } from "@/components/legal/CookieNoticeMount";
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono, Outfit } from "next/font/google";
 import "./globals.css";
@@ -101,14 +102,17 @@ export default function RootLayout({
             </MainLayout>
             <Toaster />
             <PWAInstallPrompt />
+            <CookieNoticeMount />
           </Providers>
         </ThemeProvider>
         <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 py-4 px-6 text-center text-xs text-slate-500 dark:text-slate-400">
-          <span>Codevertex SSO &mdash; Codevertex Africa Limited</span>
+          <span>Codevertex SSO &middot; Codevertex Africa Limited</span>
           <span className="mx-2">&middot;</span>
           <a href="/privacy" className="underline hover:text-slate-700 dark:hover:text-slate-300">Privacy Policy</a>
           <span className="mx-2">&middot;</span>
           <a href="/terms-of-service" className="underline hover:text-slate-700 dark:hover:text-slate-300">Terms of Service</a>
+          <span className="mx-2">&middot;</span>
+          <a href="/cookies" className="underline hover:text-slate-700 dark:hover:text-slate-300">Cookies</a>
         </footer>
       </body>
     </html>

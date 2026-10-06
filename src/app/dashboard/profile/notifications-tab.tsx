@@ -16,7 +16,8 @@ export function NotificationsTab() {
   const { toast } = useToast();
 
   const [settings, setSettings] = useState({
-    email_marketing: notifSettings.email_marketing ?? true,
+    // Marketing is opt-in only (Kenya DPA s.37): off unless the person turned it on.
+    email_marketing: notifSettings.email_marketing ?? false,
     email_security: notifSettings.email_security ?? true,
     email_account: notifSettings.email_account ?? true,
     sms_alerts: notifSettings.sms_alerts ?? false,
