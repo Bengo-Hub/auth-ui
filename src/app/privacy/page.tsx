@@ -19,7 +19,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Codevertex Africa Limited',
+  title: 'Privacy Policy | Codevertex Africa Limited',
   description:
     'Privacy Policy for Codevertex Africa Limited and the Codevertex SSO / accounts identity platform. Learn how we collect, use, and protect your personal data.',
 };
@@ -122,9 +122,9 @@ export default function PrivacyPolicyPage() {
                 The services covered include, but are not limited to:
               </p>
               <ul>
-                <li><strong>Codevertex SSO</strong> — accounts.codevertexafrica.com (identity and authentication gateway)</li>
-                <li><strong>MarketFlow CRM</strong> — marketflow.codevertexafrica.com (AI marketing automation)</li>
-                <li><strong>Codevertex ERP, POS, ISP Billing, TruLoad, Books, Projects, Ordering App</strong> — all *.codevertexafrica.com subdomains</li>
+                <li><strong>Codevertex SSO:</strong> accounts.codevertexafrica.com (identity and authentication gateway)</li>
+                <li><strong>MarketFlow CRM:</strong> marketflow.codevertexafrica.com (AI marketing automation)</li>
+                <li><strong>Codevertex ERP, POS, ISP Billing, TruLoad, Books, Projects, Ordering App:</strong> all *.codevertexafrica.com subdomains</li>
                 <li>Any mobile application, API endpoint, or service that links to this Privacy Policy</li>
               </ul>
               <p>
@@ -234,7 +234,7 @@ export default function PrivacyPolicyPage() {
                 solely to fulfil the features the tenant has requested:
               </p>
               <ul>
-                <li><strong>Google Ads API:</strong> Campaign metrics are fetched for the tenant&apos;s own account. Offline conversion events are uploaded with the tenant&apos;s Google Click ID (gclid), monetary value, and conversion timestamp — no PII is attached.</li>
+                <li><strong>Google Ads API:</strong> Campaign metrics are fetched for the tenant&apos;s own account. Offline conversion events are uploaded with the tenant&apos;s Google Click ID (gclid), monetary value, and conversion timestamp. No personal data is attached.</li>
                 <li><strong>Meta Graph API:</strong> Lead and ad performance data for the tenant&apos;s own Meta Business account. No cross-tenant data sharing occurs.</li>
               </ul>
 
@@ -273,7 +273,7 @@ export default function PrivacyPolicyPage() {
                 <li><strong>We do not sell Google Ads data.</strong> Data retrieved via the Google Ads API is never shared with third parties for advertising or any commercial purpose beyond providing the contracted MarketFlow features.</li>
                 <li><strong>Refresh tokens are encrypted.</strong> Google OAuth refresh tokens are encrypted with AES-256-GCM and stored in a private PostgreSQL database with no public ingress. They are never logged and never accessible to Codevertex staff.</li>
                 <li><strong>Revocation is immediate.</strong> When a tenant disconnects their Google Ads account, the refresh token is deleted and the row is marked inactive within the same request. No further API calls are made.</li>
-                <li><strong>Conversion Uploads contain no PII.</strong> Offline conversion uploads include only the Google Click ID (gclid), a conversion timestamp, a monetary value, and a currency code — all provided or approved by the tenant.</li>
+                <li><strong>Conversion Uploads contain no PII.</strong> Offline conversion uploads include only the Google Click ID (gclid), a conversion timestamp, a monetary value, and a currency code, all provided or approved by the tenant.</li>
               </ul>
               <p>
                 MarketFlow&apos;s use of Google Ads API data conforms to the{' '}

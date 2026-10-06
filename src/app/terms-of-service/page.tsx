@@ -18,7 +18,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — Codevertex Africa Limited',
+  title: 'Terms of Service | Codevertex Africa Limited',
   description:
     'Terms of Service governing the use of Codevertex Africa Limited services, including the Codevertex SSO identity platform and the MarketFlow CRM SaaS platform.',
 };
@@ -122,9 +122,9 @@ export default function TermsOfServicePage() {
                 including:
               </p>
               <ul>
-                <li><strong>Codevertex SSO</strong> — the unified identity and authentication platform at <code>accounts.codevertexafrica.com</code></li>
-                <li><strong>MarketFlow CRM</strong> — the AI-powered marketing automation SaaS at <code>marketflow.codevertexafrica.com</code></li>
-                <li><strong>Codevertex Power Suite</strong> — ERP, POS, ISP Billing, TruLoad, Books, Projects, Ordering, and Notifications services at <code>*.codevertexafrica.com</code></li>
+                <li><strong>Codevertex SSO:</strong> the unified identity and authentication platform at <code>accounts.codevertexafrica.com</code></li>
+                <li><strong>MarketFlow CRM:</strong> the AI-powered marketing automation service at <code>marketflow.codevertexafrica.com</code></li>
+                <li><strong>Codevertex Power Suite:</strong> ERP, POS, ISP Billing, TruLoad, Books, Projects, Ordering, and Notifications services at <code>*.codevertexafrica.com</code></li>
                 <li>Any associated APIs, mobile applications, or integrations that reference these Terms</li>
               </ul>
               <p>
@@ -445,7 +445,7 @@ export default function TermsOfServicePage() {
               <p>
                 WHETHER ARISING IN CONTRACT, TORT, OR OTHERWISE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
                 DAMAGES. IN NO EVENT SHALL OUR AGGREGATE LIABILITY TO YOU EXCEED THE GREATER OF: (A) THE
-                TOTAL FEES PAID BY YOU IN THE 12 MONTHS PRECEDING THE CLAIM, OR (B) USD $100.
+                TOTAL FEES PAID BY YOU IN THE 12 MONTHS PRECEDING THE CLAIM, OR (B) KES 10,000.
               </p>
             </section>
 
