@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ImageUploadField } from '@/components/ui/image-upload-field';
 import { useToast } from '@/hooks/use-toast';
 import { AppWindow, RotateCcw } from 'lucide-react';
-import { serviceAppName, serviceShortName } from '@bengo-hub/shared-ui-lib/branding';
+import { serviceAppName, serviceBrandingMap, serviceShortName } from '@bengo-hub/shared-ui-lib/branding';
 import {
   BRANDABLE_SERVICES,
   getServiceBranding,
@@ -24,8 +24,7 @@ export function ServiceBrandingSection({
   updateMetadata: (key: string, value: any) => void;
 }) {
   const { toast } = useToast();
-  const current: Record<string, ServiceBrandingEntry | null> =
-    (tenantData?.metadata?.service_branding as Record<string, ServiceBrandingEntry | null>) || {};
+  const current: Record<string, ServiceBrandingEntry | null> = serviceBrandingMap(tenantData?.metadata) || {};
   // What each app is called when left blank, by the same shared rule the apps use.
   const tenantName: string = tenantData?.metadata?.org_name || tenantData?.name || '';
 
