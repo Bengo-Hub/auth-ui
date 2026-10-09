@@ -7,7 +7,7 @@ import { PhoneInputField } from '@bengo-hub/shared-ui-lib/contact';
 import { useToast } from '@/hooks/use-toast';
 import apiClient from '@/lib/api-client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Archive, Loader2, MapPin, Pencil, Plus, Store, X } from 'lucide-react';
+import { Archive, Loader2, LocateFixed, MapPin, Pencil, Plus, Store, X } from 'lucide-react';
 import { useState } from 'react';
 import { outletsPath, type TenantOutlet } from './shared';
 
@@ -44,6 +44,7 @@ const OUTLET_USE_CASES: { value: string; label: string }[] = [
 const emptyBranchForm = {
   code: '', name: '', use_case: 'retail', address: '', is_hq: false, status: 'active',
   contact_phone: '', contact_email: '', etims_branch_id: '',
+  latitude: '', longitude: '',
 };
 type BranchForm = typeof emptyBranchForm;
 
@@ -89,8 +90,22 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
       contact_phone: phone,
       contact_email: email,
       etims_branch_id: typeof o.metadata?.etims_branch_id === 'string' ? o.metadata.etims_branch_id : '',
+      latitude: typeof o.metadata?.latitude === 'number' ? String(o.metadata.latitude) : '',
+      longitude: typeof o.metadata?.longitude === 'number' ? String(o.metadata.longitude) : '',
     });
     setFormOpen(true);
+  };
+
+  const fillMyLocation = () => {
+    if (!navigator.geolocation) {
+      toast({ title: 'This browser cannot share its location', variant: 'destructive' });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setForm((f) => ({ ...f, latitude: pos.coords.latitude.toFixed(6), longitude: pos.coords.longitude.toFixed(6) })),
+      () => toast({ title: 'Location permission was denied', variant: 'destructive' }),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
   };
 
   const closeForm = () => {
@@ -102,6 +117,12 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
     e.preventDefault();
     if (!form.code.trim() || !form.name.trim()) {
       toast({ title: 'Code and name are required', variant: 'destructive' });
+      return;
+    }
+    // The map pin anchors delivery pricing and rider dispatch for this branch.
+    const pin = parsePin(form.latitude, form.longitude);
+    if (pin === 'invalid') {
+      toast({ title: 'Enter both latitude and longitude, or leave both empty', variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -123,6 +144,7 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
           status: form.status,
           is_hq: form.is_hq,
           metadata,
+          ...(pin ?? {}),
         });
         toast({ title: `Branch "${form.name}" updated` });
       } else {
@@ -133,6 +155,7 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
           address: form.address.trim(),
           is_hq: form.is_hq,
           metadata,
+          ...(pin ?? {}),
         });
         toast({ title: `Branch "${form.name}" created` });
       }
@@ -299,6 +322,27 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
                   placeholder="Waiyaki Way, Nairobi"
                   className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
               </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Map location (for deliveries)</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+                  <Input inputMode="decimal" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+                    placeholder="Latitude, e.g. 0.4546"
+                    className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+                  <Input inputMode="decimal" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+                    placeholder="Longitude, e.g. 34.1273"
+                    className="h-12 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+                  <Button type="button" variant="outline" className="h-12 rounded-2xl" onClick={fillMyLocation}>
+                    <LocateFixed className="h-4 w-4 mr-1" /> Use my location
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Delivery fees and rider dispatch start from this pin.
+                  {parsePin(form.latitude, form.longitude) && parsePin(form.latitude, form.longitude) !== 'invalid' && (
+                    <> <a className="underline" target="_blank" rel="noreferrer"
+                      href={`https://www.openstreetmap.org/?mlat=${form.latitude}&mlon=${form.longitude}#map=16/${form.latitude}/${form.longitude}`}>Check it on the map</a></>
+                  )}
+                </p>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Contact Phone (optional)</Label>
@@ -353,4 +397,13 @@ export function BranchesTab({ tenantSlug }: { tenantSlug: string }) {
       )}
     </div>
   );
+}
+
+/** Reads the form's pin: null when both fields are empty, 'invalid' when half filled or out of range. */
+function parsePin(lat: string, lng: string): { latitude: number; longitude: number } | null | 'invalid' {
+  if (!lat.trim() && !lng.trim()) return null;
+  const la = Number(lat), lo = Number(lng);
+  if (!lat.trim() || !lng.trim() || !Number.isFinite(la) || !Number.isFinite(lo)) return 'invalid';
+  if (la < -90 || la > 90 || lo < -180 || lo > 180 || (la === 0 && lo === 0)) return 'invalid';
+  return { latitude: la, longitude: lo };
 }
