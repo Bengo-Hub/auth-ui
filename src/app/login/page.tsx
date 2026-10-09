@@ -14,6 +14,7 @@ import { oauthProviders, type OAuthProviderDef } from '@/lib/oauth/catalog';
 import apiClient from '@/lib/api-client';
 import { getSafeReturnUrl } from '@/lib/utils';
 import { BRANDABLE_SERVICES, getPublicTenant, getServiceBranding } from '@/lib/tenant-api';
+import { serviceAppName } from '@bengo-hub/shared-ui-lib/branding';
 
 type ActiveIntegration = {
   name: string;
@@ -204,7 +205,7 @@ function ContinueToAppNote() {
   const searchParams = useSearchParams();
   const tenantSlug = searchParams.get('tenant') ?? '';
   const clientId = clientIdFromReturnTo(searchParams.get('return_to'));
-  const service = BRANDABLE_SERVICES.find((s) => s.clientId === clientId);
+  const service = clientId ? BRANDABLE_SERVICES.find((s) => s.clientId === clientId) : undefined;
   const { data: tenant } = useQuery({
     queryKey: ['public_tenant', tenantSlug],
     queryFn: () => getPublicTenant(tenantSlug),
@@ -213,7 +214,8 @@ function ContinueToAppNote() {
   });
   if (!service || !tenant) return null;
   const branding = getServiceBranding(tenant.metadata, service.key);
-  const appName = branding?.name || tenant.name;
+  // The same name the app itself shows: its custom name, else "<brand word> <app>".
+  const appName = serviceAppName(tenant.name, service.appLabel, undefined, branding);
   if (!appName) return null;
   return (
     <div className="mb-6 flex items-center justify-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-3">

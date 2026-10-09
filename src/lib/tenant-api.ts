@@ -70,66 +70,51 @@ export async function getTenantBySlug(slug: string): Promise<TenantBrand | null>
 }
 
 /**
- * Per-service app name and icon a tenant can set (tenant metadata
- * `service_branding`, validated by auth-api). Frontends fall back to the
- * platform default when a service has no entry.
+ * Per-service app name and icon a tenant can set (tenant metadata `service_branding`, validated
+ * by auth-api). The type and parser are shared-ui-lib's (branding), the same ones every app uses
+ * to read the entry; without one an app is "<brand word> <appLabel>" ("The Urban POS").
  */
-export interface ServiceBrandingEntry {
-  name?: string;
-  short_name?: string;
-  tagline?: string;
-  theme_color?: string;
-  icon_url?: string;
-}
+export type { ServiceBrandingEntry } from '@bengo-hub/shared-ui-lib/branding';
+export { serviceBrandingEntry as getServiceBranding } from '@bengo-hub/shared-ui-lib/branding';
 
 export interface BrandableService {
+  /** Key in metadata service_branding; the app-switcher registry key the app reads. */
   key: string;
   label: string;
-  defaultName: string;
+  /** Word the app appends to the tenant's brand word by default ("POS" gives "The Urban POS"). */
+  appLabel: string;
   description: string;
-  clientId: string;
+  /** SSO client id, so the sign-in page can say "Continue to <app name>". */
+  clientId?: string;
 }
 
+/** Every app that shows the tenant's own name for it (header, install prompt, manifest). */
 export const BRANDABLE_SERVICES: BrandableService[] = [
-  {
-    key: 'ordering',
-    label: 'Online ordering app',
-    defaultName: 'Codevertex Ordering',
-    description: 'The storefront your customers order from and install on their phones.',
-    clientId: 'ordering-ui',
-  },
-  {
-    key: 'rider',
-    label: 'Rider app',
-    defaultName: 'Codevertex Rider',
-    description: 'The delivery app your riders install.',
-    clientId: 'rider-app',
-  },
-  {
-    key: 'pos',
-    label: 'Point of sale',
-    defaultName: 'Codevertex POS',
-    description: 'The till and kitchen screens your staff use.',
-    clientId: 'pos-ui',
-  },
-  {
-    key: 'logistics',
-    label: 'Dispatch and logistics',
-    defaultName: 'Codevertex Logistics',
-    description: 'The dispatch console for assigning deliveries.',
-    clientId: 'logistics-ui',
-  },
+  { key: 'ordering', label: 'Online ordering app', appLabel: 'Ordering', clientId: 'ordering-ui',
+    description: 'The storefront your customers order from and install on their phones.' },
+  { key: 'rider', label: 'Rider app', appLabel: 'Rider', clientId: 'rider-app',
+    description: 'The delivery app your riders install.' },
+  { key: 'pos', label: 'Point of sale', appLabel: 'POS', clientId: 'pos-ui',
+    description: 'The till and kitchen screens your staff use.' },
+  { key: 'logistics', label: 'Dispatch and logistics', appLabel: 'Logistics', clientId: 'logistics-ui',
+    description: 'The dispatch console for assigning deliveries.' },
+  { key: 'inventory', label: 'Inventory', appLabel: 'Inventory', clientId: 'inventory-ui',
+    description: 'Stock, purchasing and stock counts.' },
+  { key: 'treasury', label: 'Treasury (books)', appLabel: 'Treasury', clientId: 'treasury-ui',
+    description: 'Invoices, payments, expenses and accounts.' },
+  { key: 'erp', label: 'HR and payroll', appLabel: 'HR', clientId: 'erp-ui',
+    description: 'Staff records, leave and payroll.' },
+  { key: 'subscriptions', label: 'Subscriptions', appLabel: 'Subscriptions', clientId: 'subscriptions-ui',
+    description: 'Your plan, billing and add-ons.' },
+  { key: 'ticketing', label: 'Ticketing', appLabel: 'Ticketing', clientId: 'ticketing-ui',
+    description: 'Events and ticket sales.' },
+  { key: 'afya', label: 'Afya (clinic)', appLabel: 'Afya', clientId: 'hospital-ui',
+    description: 'Patients, visits and the clinic front desk.' },
+  { key: 'maskani', label: 'Maskani (property)', appLabel: 'Maskani', clientId: 'maskani-ui',
+    description: 'Estate bills, payments, visitors and requests.' },
+  { key: 'library', label: 'Library', appLabel: 'Library',
+    description: 'Catalogue, loans, holds and fines.' },
 ];
-
-export function getServiceBranding(
-  metadata: Record<string, unknown> | undefined,
-  service: string,
-): ServiceBrandingEntry | null {
-  const all = metadata?.service_branding;
-  if (!all || typeof all !== 'object') return null;
-  const entry = (all as Record<string, unknown>)[service];
-  return entry && typeof entry === 'object' ? (entry as ServiceBrandingEntry) : null;
-}
 
 /** Public tenant record (metadata included) for pages that need more than the brand. */
 export async function getPublicTenant(slug: string): Promise<PublicTenant | null> {

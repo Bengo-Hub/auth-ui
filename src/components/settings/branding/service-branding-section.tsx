@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ImageUploadField } from '@/components/ui/image-upload-field';
 import { useToast } from '@/hooks/use-toast';
 import { AppWindow, RotateCcw } from 'lucide-react';
+import { serviceAppName, serviceShortName } from '@bengo-hub/shared-ui-lib/branding';
 import {
   BRANDABLE_SERVICES,
   getServiceBranding,
@@ -25,6 +26,8 @@ export function ServiceBrandingSection({
   const { toast } = useToast();
   const current: Record<string, ServiceBrandingEntry | null> =
     (tenantData?.metadata?.service_branding as Record<string, ServiceBrandingEntry | null>) || {};
+  // What each app is called when left blank, by the same shared rule the apps use.
+  const tenantName: string = tenantData?.metadata?.org_name || tenantData?.name || '';
 
   const setEntry = (service: string, patch: Partial<ServiceBrandingEntry> | null) => {
     const existing = getServiceBranding(tenantData?.metadata, service) || {};
@@ -40,8 +43,9 @@ export function ServiceBrandingSection({
         App Names and Icons
       </h3>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-        Give each app your own name and icon. Customers and staff see it in the browser tab, on the
-        sign-in page and on their home screen when they install the app. Leave blank to use the default.
+        Give each app your own name and icon. Customers and staff see it in the app header, the
+        browser tab, on the sign-in page and on their home screen when they install the app. Leave
+        blank to use the name shown.
       </p>
       <div className="space-y-6">
         {BRANDABLE_SERVICES.map((service) => {
@@ -79,7 +83,7 @@ export function ServiceBrandingSection({
                     value={entry.name || ''}
                     maxLength={60}
                     onChange={(e) => setEntry(service.key, { name: e.target.value })}
-                    placeholder={service.defaultName}
+                    placeholder={serviceAppName(tenantName, service.appLabel, 'Codevertex')}
                     className="rounded-xl h-12 bg-slate-50 dark:bg-slate-800 border-none font-bold"
                   />
                 </div>
@@ -91,7 +95,7 @@ export function ServiceBrandingSection({
                     value={entry.short_name || ''}
                     maxLength={24}
                     onChange={(e) => setEntry(service.key, { short_name: e.target.value })}
-                    placeholder={entry.name && entry.name.length <= 12 ? entry.name : 'Up to 12 letters fits best'}
+                    placeholder={serviceShortName(tenantName, service.appLabel, 'Codevertex', { name: entry.name })}
                     className="rounded-xl h-12 bg-slate-50 dark:bg-slate-800 border-none font-bold"
                   />
                 </div>
