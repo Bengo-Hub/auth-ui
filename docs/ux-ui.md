@@ -42,43 +42,53 @@ This document defines the user-facing flows, page layouts, and interaction patte
 
 ---
 
-## Login Flow UX
+## Sign-in pages (revamped 2026-10-13)
 
-### Step 1: Email/Password
+Login, sign-up, forgot password and reset password share one layout, `components/auth/AuthShell`:
+a single centred card on a muted background, modelled on hosted sign-in pages people trust
+(Auth0 Universal Login, Clerk, Google and Microsoft account sign-in). No split panel, no
+marketing copy, no Codevertex header or footer around it (`MainLayout` skips its chrome on
+auth routes).
 
-- Single-column centered card layout
-- Email input with validation
-- Password input with show/hide toggle
-- "Remember me" checkbox
-- "Forgot password?" link
-- Social login buttons below divider (Google, GitHub, Microsoft)
-- "Don't have an account? Sign up" link
+**Tenant branding.** The card shows the tenant's logo (or an initial on the brand colour), its
+name, and "to continue to <app>" using the tenant's own name for the app (shared-ui-lib
+`serviceAppName`). Colours come from the shared `TenantBrandingProvider` through
+`components/providers/tenant-brand-scope.tsx`; the platform tenant, or no tenant, keeps
+auth-ui's own tokens. "Secured by Codevertex" is the only platform mark on a tenant's card.
 
-### Step 2: MFA Challenge (conditional)
+**Where the tenant comes from.** `lib/auth-context.ts resolveAuthContext` reads, in order: the
+`tenant` param, the `tenant` inside the authorize URL in `return_to`, then the
+`/<slug>/auth/callback` path of either `redirect_uri`. The app (`client_id`) comes from the
+param or from inside `return_to`. Every link between auth pages is built with `authFlowHref`,
+which keeps `return_to`, `client_id`, `tenant` and the other flow params.
 
-If user has MFA enabled, after successful password verification:
+**Login** (`app/login`, `components/auth/LoginForm`):
+- social providers first (`components/auth/OAuthButtons`, only providers active in auth-api)
+- email and password, "Forgot password?" beside the password label
+- "Sign in with a passkey" as a secondary button
+- MFA code step, one-time terms step, passkey nudge (unchanged behaviour)
+- a temporary password (admin-added staff, Digitika students and parents) must be replaced in
+  the card before any redirect, so a service redirect cannot skip it
+- below the card: "New to <tenant>? Create an account" for customer apps and tenant flows,
+  "No account yet? Create one" on the platform
 
-- 6-digit TOTP code input (auto-focus, auto-submit on 6 digits)
-- "Use backup code" link as fallback
-- 30-second countdown timer showing code validity window
-- "Trouble signing in?" help link
+**Sign-up** (`app/signup`):
+- customer apps (`ordering-ui`, `rider-app`, `codevertex-website`, see `CUSTOMER_APPS`) get
+  `components/auth/CustomerSignupForm`: name, email, optional phone, password, terms, then an
+  email code. It registers into the tenant with the app's `client_id` (auth-api gives the role)
+  and signs the person straight back into the app. An email that already has an account gets
+  "Sign in and we will add you to <tenant>".
+- everything else gets the organisation wizard (`SignupForm`), in the wide card
 
-### Step 3: Redirect
+**Forgot and reset password** use the same card and keep the flow, so "Back to sign in" returns
+to the right app.
 
-On successful authentication:
-- If OIDC flow: redirect to requesting service with authorization code
-- If direct login: redirect to `/dashboard`
-- Toast notification: "Welcome back, {name}"
+The dashboard wears the active organisation's brand the same way (`TenantBrandScope` in
+`app/dashboard/layout.tsx`); platform owners keep the Codevertex look.
 
----
-
-## Signup Flow UX
-
-- Email, password, confirm password fields
-- Password strength indicator (weak/medium/strong)
-- Terms of service checkbox
-- On success: redirect to login with success toast
-- On conflict (email exists): inline error with "Sign in instead" link
+Fonts are declared in `@theme inline` in `globals.css`: next/font defines `--font-dm-sans` on
+`<body>`, and a plain `@theme` value resolved on `:root` made every page render in Times New
+Roman.
 
 ---
 
