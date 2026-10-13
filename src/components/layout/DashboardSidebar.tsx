@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { useTenant } from '@/components/providers/tenant-provider';
+import { PLATFORM_LOGO, useShellBrand } from '@/components/providers/tenant-brand-scope';
 import { useLogout } from '@/hooks/useLogout';
 import { isNavItemActive, useDashboardNav, type NavGroup, type NavItem } from '@/hooks/useDashboardNav';
 import { cn } from '@/lib/utils';
@@ -109,7 +109,7 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const logout = useLogout();
-  const { tenant } = useTenant();
+  const brand = useShellBrand();
   const { accountGroup, orgGroup, developerGroup, securityGroup, platformGroup } = useDashboardNav();
 
   return (
@@ -130,10 +130,10 @@ export function DashboardSidebar() {
           href="/"
           className="flex items-center justify-center transition-all hover:scale-105 duration-500 hover:drop-shadow-2xl"
         >
-          {tenant?.logoUrl ? (
+          {brand.logoUrl && !brand.isPlatform ? (
             <img
-              src={tenant.logoUrl}
-              alt={tenant.name}
+              src={brand.logoUrl}
+              alt={brand.name}
               className={cn(
                 'object-contain transition-all duration-500',
                 isCollapsed ? 'h-10 w-auto' : 'h-14 w-auto',
@@ -141,7 +141,7 @@ export function DashboardSidebar() {
             />
           ) : (
             <img
-              src="/images/logo/codevertex.png"
+              src={PLATFORM_LOGO}
               alt="Codevertex"
               className={cn(
                 'object-contain transition-all duration-500',

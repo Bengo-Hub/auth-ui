@@ -1,6 +1,6 @@
 'use client';
 
-import { useTenant } from '@/components/providers/tenant-provider';
+import { useShellBrand } from '@/components/providers/tenant-brand-scope';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,7 +89,7 @@ function MobileDrawerLink({
 export function DashboardTopNav() {
   const user = useAuthStore((state) => state.user);
   const logout = useLogout();
-  const { getServiceTitle } = useTenant();
+  const brand = useShellBrand();
   const { isPlatformOwner, isTenantAdmin } = useAuth();
   const { accountGroup, orgGroup, developerGroup, securityGroup, platformGroup } = useDashboardNav();
   // Single source of truth shared with DashboardSidebar (see useDashboardNav) — previously
@@ -103,7 +103,7 @@ export function DashboardTopNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
 
-  const displayTitle = getServiceTitle('SSO');
+  const displayTitle = brand.isPlatform ? 'Codevertex Accounts' : `${brand.name} Accounts`;
   const orgSlug = user?.tenant?.slug ?? user?.tenants?.[0]?.slug ?? '';
   const rawServices = useVisibleServices({
     orgSlug,

@@ -6,6 +6,7 @@ import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 import { DashboardTopNav } from '@/components/layout/DashboardTopNav';
 import { VeraWidget } from '@/components/vera/VeraWidget';
 import { VerifyEmailPrompt } from '@/components/auth/VerifyEmailPrompt';
+import { TenantBrandScope } from '@/components/providers/tenant-brand-scope';
 import { useAuth } from '@/hooks/useAuth';
 import { DEVELOPER_PORTAL_ROLES } from '@/hooks/useDashboardNav';
 import { useAuthStore } from '@/store/auth-store';
@@ -18,6 +19,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { isAuthenticated, isLoading } = useAuthStore();
+  // The dashboard wears the active organisation's brand (logo, name, colour); platform
+  // owners and Codevertex staff keep the Codevertex look.
+  const activeTenantSlug = useAuthStore((s) => s.activeTenant?.slug ?? null);
   const { user, isLoading: meLoading, isPlatformOwner, hasAnyRole } = useAuth(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -102,7 +106,8 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <TenantBrandScope slug={isPlatformOwner ? null : activeTenantSlug}>
+    <div className="flex h-screen bg-muted/40 overflow-hidden">
       <DashboardSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardTopNav />
@@ -118,5 +123,6 @@ export default function DashboardLayout({
       <VeraWidget />
       <DashboardBottomNav />
     </div>
+    </TenantBrandScope>
   );
 }

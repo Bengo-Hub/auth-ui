@@ -14,7 +14,7 @@ export async function login(page: Page, opts: { email?: string; password?: strin
   await page.getByRole('textbox', { name: /password/i }).fill(opts.password || DEMO_PASSWORD);
   // Exact match: an unanchored /sign in/i also matches the "Sign in with passkey" button below
   // the divider.
-  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
   // A successful password login with no registered WebAuthn credential shows a "Set up passkey"
   // interstitial modal BEFORE the redirect to /dashboard (PasskeySetupNudge.tsx) — the app defers

@@ -69,8 +69,17 @@ export function isValidReturnUrl(url: string | null | undefined): boolean {
   }
 
   // Fallback: sso authorize URL (avoids redirect loop when env or encoding differs on some browsers)
-  if (url.includes('/api/v1/authorize') && url.includes('codevertexafrica.com')) {
-    return true;
+  // Parsed, not substring-matched: "https://evil.example/?a=/api/v1/authorize&b=codevertexafrica.com"
+  // used to pass and made the login page an open redirect.
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    const onPlatform = host === 'codevertexafrica.com' || host.endsWith('.codevertexafrica.com');
+    if (parsed.protocol === 'https:' && onPlatform && parsed.pathname === '/api/v1/authorize') {
+      return true;
+    }
+  } catch {
+    // not an absolute URL
   }
 
   // Allow redirect to known app origins (e.g. after login from landing, go to ordersapp / books)

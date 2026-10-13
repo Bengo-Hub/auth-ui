@@ -1,6 +1,5 @@
 'use client';
 
-import { useTenant } from '@/components/providers/tenant-provider';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Activity,
@@ -112,7 +111,6 @@ export const DEVELOPER_PORTAL_ROLES = ['developer'];
  * them from legitimate tenant admins/developers that the desktop sidebar correctly showed).
  */
 export function useDashboardNav() {
-  const { tenant } = useTenant();
   const { isPlatformOwner, isTenantAdmin, hasAnyRole } = useAuth();
 
   const accountGroup: NavGroup = {
@@ -125,7 +123,7 @@ export function useDashboardNav() {
   // admins/owners/superusers. All other tenant roles see only the Account section
   // (profile, security) — which every SSO user can manage for themselves.
   const orgGroup: NavGroup | null =
-    !isPlatformOwner && !!tenant && isTenantAdmin
+    !isPlatformOwner && isTenantAdmin
       ? {
           label: 'Organization',
           icon: Store,

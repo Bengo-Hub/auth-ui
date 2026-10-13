@@ -7,16 +7,13 @@ import { PhoneInputField } from '@bengo-hub/shared-ui-lib/contact';
 import apiClient from '@/lib/api-client';
 import { isValidReturnUrl } from '@/lib/utils';
 import { suggestTenantSlug, sanitizeSlugInput } from '@/lib/tenant-slug';
-import { useQuery } from '@tanstack/react-query';
 import {
     AlertCircle,
     Building2,
     CheckCircle2,
     ChevronLeft,
     ChevronRight,
-    Chrome, Cpu,
     Eye, EyeOff,
-    Github,
     Loader2,
     Lock,
     Mail,
@@ -27,6 +24,7 @@ import {
     Zap
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { resolveAuthContext } from '@/lib/auth-context';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -86,25 +84,15 @@ export function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { data: activeIntegrations } = useQuery({
-    queryKey: ['active_integrations'],
-    queryFn: async () => {
-      const { data } = await apiClient.get('/api/v1/auth/integrations/active');
-      return data as Array<{ name: string; display_name: string }>;
-    },
-  });
-
-  const socialProviders = activeIntegrations?.filter(i => 
-    ['google_oauth', 'github_oauth', 'microsoft_oauth'].includes(i.name)
-  ) || [];
-
   // OIDC / Redirect params
   const returnTo = searchParams.get('return_to');
-  const clientId = searchParams.get('client_id');
+  // Tenant and client can sit inside return_to (the authorize URL); see lib/auth-context.
+  const flow = resolveAuthContext(searchParams);
+  const clientId = flow.clientId || null;
   const redirectUri = searchParams.get('redirect_uri');
   const stateParam = searchParams.get('state');
   const scope = searchParams.get('scope');
-  const defaultTenant = searchParams.get('tenant') || '';
+  const defaultTenant = flow.tenantSlug;
   // When a tenant slug is provided, we auto-join that org and skip Step 2
   const hasTenantContext = !!defaultTenant;
 
@@ -371,6 +359,8 @@ export function SignupForm() {
       email,
       tenant_slug: tenantSlug,
       org_action: orgAction,
+      // Lets auth-api give a customer-facing app's own role (customer, driver, student).
+      client_id: clientId || undefined,
       terms_accepted: termsAccepted,
       profile: {
         name,
@@ -520,7 +510,6 @@ export function SignupForm() {
           isOAuthFlow={isOAuthFlow}
           oauthProvider={oauthProvider}
           oauthPrefillEmail={oauthPrefillEmail}
-          socialProviders={socialProviders}
           defaultTenant={defaultTenant}
           returnTo={returnTo}
           clientId={clientId}
@@ -669,7 +658,7 @@ function StepBar({ step, isOAuthFlow, hasTenantContext }: { step: Step; isOAuthF
   );
 }
 
-function StepVerifyEmail({
+export function StepVerifyEmail({
   email, codeSending, verifyEmailCode, resend, onVerified,
 }: {
   email: string;
@@ -784,7 +773,7 @@ function StepVerifyEmail({
         type="button"
         onClick={() => submit(code)}
         disabled={verifying || code.length !== 6}
-        className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {verifying ? <Loader2 className="w-5 h-5 animate-spin" /> : (<><CheckCircle2 className="w-4 h-4 mr-2" /> Verify &amp; Continue</>)}
       </Button>
@@ -808,7 +797,7 @@ function Step0({
   name, setName, email, setEmail, password, setPassword,
   confirmPassword, setConfirmPassword, showPassword, setShowPassword,
   showConfirmPassword, setShowConfirmPassword, isOAuthFlow, oauthProvider,
-  oauthPrefillEmail, socialProviders, defaultTenant, returnTo, clientId,
+  oauthPrefillEmail, defaultTenant, returnTo, clientId,
   redirectUri, stateParam, scope, termsAccepted, setTermsAccepted,
 }: any) {
   return (
@@ -859,33 +848,6 @@ function Step0({
           </p>
         </>
       )}
-
-      {!isOAuthFlow && socialProviders.length > 0 && (
-        <div className="relative py-4">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-slate-800"></div></div>
-          <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-slate-900 px-2 text-slate-400">Or continue with</span></div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        {socialProviders.map((p: any) => {
-          const Icon = p.name.includes('google') ? Chrome : p.name.includes('github') ? Github : Cpu;
-          const startUrl = new URL(`/api/v1/auth/oauth/${p.name.split('_')[0]}/start`, process.env.NEXT_PUBLIC_AUTH_API_URL);
-          startUrl.searchParams.set('flow', 'signup');
-          if (defaultTenant) startUrl.searchParams.set('tenant_slug', defaultTenant);
-          if (clientId) startUrl.searchParams.set('client_id', clientId);
-          if (redirectUri) startUrl.searchParams.set('redirect_uri', redirectUri);
-          if (stateParam) startUrl.searchParams.set('state', stateParam);
-          if (scope) startUrl.searchParams.set('scope', scope);
-          if (returnTo) startUrl.searchParams.set('return_to', returnTo);
-
-          return (
-            <Button key={p.name} type="button" variant="outline" onClick={() => window.location.href = startUrl.toString()} className="h-11 rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-              <Icon className="w-4 h-4 mr-2" /> {PROVIDER_LABELS[p.name.split('_')[0]]}
-            </Button>
-          );
-        })}
-      </div>
 
       {/* Terms & Privacy acceptance — required before account creation */}
       <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
