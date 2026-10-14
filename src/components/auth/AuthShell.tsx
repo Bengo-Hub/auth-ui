@@ -104,7 +104,7 @@ function BrandPanel() {
       </div>
 
       <p className="text-xs opacity-60">
-        {brand.isPlatform ? 'Codevertex Africa Limited, Nairobi' : 'Secured by Codevertex'}
+        {brand.isPlatform ? 'Codevertex Africa Limited' : 'Secured by Codevertex'}
       </p>
     </div>
   );
@@ -162,7 +162,7 @@ export function AuthShell({
               </Link>
             ) : (
               <Link href="/" className="hidden lg:block" aria-label="Codevertex accounts, home">
-                <Logo brand={brand} className={brand.isPlatform ? 'h-20 sm:h-24' : 'h-14'} />
+                <Logo brand={brand} className={brand.isPlatform ? 'h-24 sm:h-28' : 'h-14'} />
               </Link>
             )}
             <span className="lg:hidden" />

@@ -40,8 +40,7 @@ export function SiteNav() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5" aria-label="Codevertex accounts, home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/logo/codevertex.png" alt="" className="h-9 w-auto dark:brightness-0 dark:invert" />
-          <span className="font-display text-lg font-semibold tracking-tight">Accounts</span>
+          <img src="/images/logo/codevertex.png" alt="" className="h-12 w-auto dark:brightness-0 dark:invert" />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main">

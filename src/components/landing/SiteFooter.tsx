@@ -33,7 +33,7 @@ export function SiteFooter() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/logo/codevertex.png" alt="Codevertex Africa Limited" className="h-10 w-auto dark:brightness-0 dark:invert" />
           <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-            One account for every Codevertex app. Built in Nairobi by Codevertex Africa Limited.
+            One account for every Codevertex app, from Codevertex Africa Limited.
           </p>
         </div>
 

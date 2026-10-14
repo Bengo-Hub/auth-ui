@@ -35,6 +35,12 @@ const PUBLIC_ROUTES = [
   '/reset-password',  // Reset password page
   '/status',          // Status page
   '/pricing',         // Pricing page
+  '/privacy',         // Legal pages must be readable without an account
+  '/terms-of-service',
+  '/cookies',
+  '/refund-policy',
+  '/data-requests',
+  '/about',
   '/equity-holder',   // Equity portal — token-authenticated, no session cookie
   '/p',              // Short-link redirects
   '/select-organisation', // SSO org picker — handles its own 401 (keeps return_to + tenant)
