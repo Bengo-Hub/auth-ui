@@ -33,6 +33,7 @@ const TOC = [
   { id: 'usage', label: '3. How We Use Your Data' },
   { id: 'sharing', label: '4. Third-Party Sharing' },
   { id: 'google-ads', label: '5. Google Ads API Data' },
+  { id: 'google-signin', label: '5A. Google Sign-In Data' },
   { id: 'cookies', label: '6. Cookies & Tracking' },
   { id: 'security', label: '7. Security Measures' },
   { id: 'retention', label: '8. Data Retention' },
@@ -280,6 +281,36 @@ export default function PrivacyPolicyPage() {
                 <strong>Google API Services User Data Policy</strong> and the{' '}
                 <strong>Google Ads API Terms of Service</strong>. We do not use Google Ads data for
                 profiling, remarketing outside the tenant&apos;s account, or any secondary purpose.
+              </p>
+            </section>
+
+            {/* 5A. Google Sign-In data */}
+            <section id="google-signin">
+              <div className="flex items-center gap-3 mb-6 not-prose">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <UserCheck className="w-5 h-5" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">5A. Google Sign-In Data</h2>
+              </div>
+              <p>
+                Codevertex accounts (accounts.codevertexafrica.com) lets you sign in to Codevertex apps with
+                your Google account. This section describes exactly what Google user data we access, why,
+                and what we do with it.
+              </p>
+              <ul>
+                <li><strong>What we request.</strong> Only the basic Sign-In scopes: <code>openid</code>, <code>email</code> and <code>profile</code>. We never request access to Gmail, Drive, Calendar, Contacts or any other Google service.</li>
+                <li><strong>What we receive.</strong> Your Google account identifier, your email address and whether Google has verified it, your name, and your profile picture URL.</li>
+                <li><strong>Why we use it.</strong> To identify you, create or find your Codevertex account, show your name and picture in the apps you use, and sign you in. Nothing else.</li>
+                <li><strong>What we store.</strong> The identifier, email, name and picture URL, linked to your Codevertex account. We do not store your Google access token or refresh token after sign-in completes, and we never read your Google data again in the background.</li>
+                <li><strong>Sharing.</strong> We do not sell your Google user data, we do not use it for advertising, and we do not share it with third parties. It is available only to the organisation whose app you sign in to, as the account holder details for your login, and to our service providers acting on our instructions to run the platform.</li>
+                <li><strong>No humans read it.</strong> Staff do not read Google user data except where you ask for support, where required for security, or where the law requires it.</li>
+                <li><strong>Deletion and revocation.</strong> You can remove the Google link or delete your account from your account settings, or email <a href="mailto:info@codevertexafrica.com">info@codevertexafrica.com</a>, and we delete the stored Google data. You can also revoke access any time at <a href="https://myaccount.google.com/permissions" rel="noopener noreferrer">myaccount.google.com/permissions</a>.</li>
+              </ul>
+              <p>
+                Codevertex&apos;s use and transfer of information received from Google APIs to any other app
+                adheres to the{' '}
+                <a href="https://developers.google.com/terms/api-services-user-data-policy#limited-use" rel="noopener noreferrer"><strong>Google API Services User Data Policy</strong></a>
+                , including the Limited Use requirements.
               </p>
             </section>
 
