@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
  * sits on the primary colour (the sign-in panel); `tone="paper"` sits on the page (the landing hero).
  */
 export function AppLauncher({
-  apps = LAUNCHER_APPS.slice(0, 9),
+  apps = LAUNCHER_APPS.slice(0, 8),
   tone = 'solid',
   className,
 }: {
@@ -21,7 +21,7 @@ export function AppLauncher({
   const { isAuthenticated } = useAuth();
   const href = (app: LauncherApp) => (isAuthenticated ? app.url : `/login?return_to=${encodeURIComponent(app.url)}`);
   return (
-    <ul className={cn('grid grid-cols-3 gap-3', className)} aria-label="Apps on your account">
+    <ul className={cn('grid grid-cols-4 gap-2.5', className)} aria-label="Apps on your account">
       {apps.map((app, i) => (
         <li
           key={app.id}
@@ -31,14 +31,14 @@ export function AppLauncher({
           <a
             href={href(app)}
             className={cn(
-              'flex aspect-square flex-col items-start justify-between rounded-2xl p-3.5 transition-transform hover:-translate-y-0.5 sm:p-4',
+              'flex aspect-[5/4] flex-col items-start justify-between rounded-2xl p-2.5 transition-transform hover:-translate-y-0.5',
               tone === 'solid' ? 'bg-card text-card-foreground shadow-soft' : 'border border-border/60 bg-card shadow-soft',
             )}
           >
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-secondary text-primary">
               <app.icon className="h-[18px] w-[18px]" aria-hidden />
             </span>
-            <span className="text-[0.8rem] font-semibold leading-tight sm:text-sm">{app.name}</span>
+            <span className="text-[0.7rem] font-semibold leading-tight xl:text-xs">{app.name}</span>
           </a>
         </li>
       ))}

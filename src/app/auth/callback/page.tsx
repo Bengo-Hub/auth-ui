@@ -15,7 +15,21 @@ function CallbackHandler() {
 
     if (user) {
       const returnTo = searchParams.get('return_to') || '/dashboard';
-      router.replace(returnTo);
+      if (/^https:\/\//i.test(returnTo)) {
+        // The API already validated this at sign-in start; check again before leaving the origin.
+        try {
+          const host = new URL(returnTo).hostname.toLowerCase();
+          if (host === window.location.hostname || host === 'codevertexafrica.com' || host.endsWith('.codevertexafrica.com')) {
+            window.location.replace(returnTo);
+            return;
+          }
+        } catch {
+          // fall through to the dashboard
+        }
+        router.replace('/dashboard');
+        return;
+      }
+      router.replace(returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/dashboard');
       return;
     }
 

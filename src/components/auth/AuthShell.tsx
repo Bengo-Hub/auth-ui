@@ -25,12 +25,12 @@ function Logo({ brand, className, invert }: { brand: AuthBrand; className?: stri
         <img
           src={brand.logoUrl}
           alt={brand.name}
-          className={cn('w-auto max-w-[70%] object-contain', invert ? 'brightness-0 invert' : 'dark:brightness-0 dark:invert', className)}
+          className={cn('w-auto max-w-none object-contain', invert ? 'brightness-0 invert' : 'dark:brightness-0 dark:invert', className)}
         />
       ) : (
         // Tenant logos are often drawn on white: a neutral plate keeps them legible in dark mode too.
         <span className="inline-flex rounded-xl bg-white p-1.5 shadow-soft">
-          <img src={brand.logoUrl} alt={brand.name} className={cn('w-auto max-w-[10rem] object-contain', className)} />
+          <img src={brand.logoUrl} alt={brand.name} className={cn('w-auto max-w-[14rem] object-contain', className)} />
         </span>
       )
     );
@@ -42,18 +42,31 @@ function Logo({ brand, className, invert }: { brand: AuthBrand; className?: stri
   );
 }
 
-const CUSTOMER_PERKS: Record<string, string[]> = {
-  customer: ['Track every order from the kitchen to your door', 'Saved addresses and one-tap reorders', 'Receipts and loyalty points in one place'],
-  driver: ['Your deliveries and earnings at a glance', 'Go online when you are ready to ride', 'Payouts and shift history, always on hand'],
-  student: ['Your course, lessons and progress', 'Pay in instalments that fit you', 'Certificates the moment you finish'],
+// What a customer gets depends on what the tenant sells: a retail shop has no kitchen. The first use
+// case on the tenant (it can list several, comma separated) picks the order-tracking line.
+const ORDER_PERK: Record<string, string> = {
+  hospitality: 'Track every order from the kitchen to your table or door',
+  quick_service: 'Track every order from the kitchen to your table or door',
+  retail: 'Track every order from the shelf to your door',
+  pharmacy: 'Track every prescription and order until it reaches you',
+  logistics: 'Track every parcel from pickup to delivery',
 };
+function customerPerks(role: string, useCase: string): string[] | null {
+  const first = (useCase || '').split(',')[0]?.trim().toLowerCase();
+  if (role === 'customer') {
+    return [ORDER_PERK[first] ?? 'Track every order from checkout to your door', 'Saved addresses and one-tap reorders', 'Receipts and loyalty points in one place'];
+  }
+  if (role === 'driver') return ['Your deliveries and earnings at a glance', 'Go online when you are ready to ride', 'Payouts and shift history, always on hand'];
+  if (role === 'student') return ['Your course, lessons and progress', 'Pay in instalments that fit you', 'Certificates the moment you finish'];
+  return null;
+}
 const STAFF_PERKS = ['Passkeys and authenticator codes', 'See and end any session, from one place', 'Sign out once, everywhere'];
 
 function BrandPanel() {
   const brand = useAuthBrand();
   const { flow } = brand;
   const customerRole = flow.customerApp?.role;
-  const perks = customerRole ? CUSTOMER_PERKS[customerRole] : null;
+  const perks = customerRole ? customerPerks(customerRole, brand.tenant?.useCase ?? '') : null;
   const headline = brand.isPlatform
     ? flow.isCustomerApp && brand.appName
       ? `Welcome to ${brand.appName}.`
@@ -75,7 +88,7 @@ function BrandPanel() {
         </div>
 
         {brand.isPlatform && !perks ? (
-          <AppLauncher className="max-w-md" />
+          <AppLauncher className="max-w-xl" />
         ) : (
           <ul className="max-w-md space-y-3.5">
             {(perks ?? STAFF_PERKS).map((line) => (
@@ -149,7 +162,7 @@ export function AuthShell({
               </Link>
             ) : (
               <Link href="/" className="hidden lg:block" aria-label="Codevertex accounts, home">
-                <Logo brand={brand} className={brand.isPlatform ? 'h-16' : 'h-10'} />
+                <Logo brand={brand} className={brand.isPlatform ? 'h-20 sm:h-24' : 'h-14'} />
               </Link>
             )}
             <span className="lg:hidden" />

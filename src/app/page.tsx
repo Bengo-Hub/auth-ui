@@ -6,8 +6,7 @@ import {
   HeartHandshake,
   KeyRound,
   LogOut,
-  ShieldCheck,
-  ShoppingBag,
+    ShoppingBag,
   Truck,
   Users,
 } from 'lucide-react';
@@ -15,7 +14,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 
-import { AppLauncher } from '@/components/landing/AppLauncher';
+import { AccountMap } from '@/components/landing/AccountMap';
 import { BooksScene, BrandPreview, OrderScene, PosScene, StockScene } from '@/components/landing/AppScenes';
 import { HeroActions } from '@/components/landing/HeroActions';
 import { ServiceDirectory } from '@/components/landing/ServiceDirectory';
@@ -62,8 +61,8 @@ export default function LandingPage() {
   return (
     <div className="bg-paper">
       {/* Hero */}
-      <section className="mx-auto grid max-w-6xl items-center gap-14 px-4 pb-20 pt-10 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pb-28 lg:pt-16">
-        <div className="space-y-9">
+      <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-12 pt-8 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pb-16 lg:pt-10">
+        <div className="space-y-7">
           <div className="space-y-5">
             <p className="animate-rise text-sm font-medium tracking-wide text-gold" style={rise(0)}>One account for every Codevertex app</p>
             <h1 className="animate-rise font-serif-soft text-[2.7rem] leading-[1.04] text-foreground sm:text-6xl lg:text-[4.1rem]" style={rise(80)}>
@@ -80,30 +79,15 @@ export default function LandingPage() {
         </div>
 
         <div className="relative animate-rise" style={rise(120)}>
-          <div className="rounded-[2rem] bg-primary p-6 text-primary-foreground shadow-lift sm:p-8">
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-primary-foreground/70">Signed in</p>
-                <p className="font-serif-soft text-2xl leading-tight">Your apps</p>
-              </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold">
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Passkey verified
-              </span>
-            </div>
-            <AppLauncher />
-          </div>
-          <div className="absolute -bottom-7 -left-3 hidden w-60 rounded-3xl border-4 border-paper bg-card p-4 shadow-lift sm:block lg:-left-9">
-            <p className="text-xs text-muted-foreground">Customer sign-in</p>
-            <p className="font-serif-soft text-lg leading-snug">Urban Loft</p>
-            <p className="text-xs text-muted-foreground">Their colours, their name, one account</p>
-          </div>
+          <div className="absolute inset-0 -z-10 rounded-[3rem] bg-gradient-to-br from-primary/10 via-transparent to-gold/15" aria-hidden />
+          <AccountMap />
         </div>
       </section>
 
       {/* Apps */}
-      <section id="apps" className="scroll-mt-20 bg-background py-20 lg:py-28">
+      <section id="apps" className="scroll-mt-20 bg-background py-12 lg:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <Reveal className="mb-12 max-w-2xl space-y-3">
+          <Reveal className="mb-8 max-w-2xl space-y-3">
             <h2 className="font-serif-soft text-4xl leading-tight sm:text-5xl">Everything a business runs on</h2>
             <p className="text-lg text-muted-foreground">Each app works on its own. They all share your people, your branches and your accounts.</p>
           </Reveal>
@@ -137,9 +121,9 @@ export default function LandingPage() {
       </section>
 
       {/* Every app, with its status */}
-      <section id="directory" className="scroll-mt-20 py-20 lg:py-28">
+      <section id="directory" className="scroll-mt-20 py-12 lg:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <Reveal className="mb-10 max-w-2xl space-y-3">
+          <Reveal className="mb-6 max-w-2xl space-y-3">
             <h2 className="font-serif-soft text-4xl leading-tight sm:text-5xl">Open an app</h2>
             <p className="text-lg text-muted-foreground">Every Codevertex app on your account, with its live status. Pick one and you are signed in.</p>
           </Reveal>
@@ -148,9 +132,9 @@ export default function LandingPage() {
       </section>
 
       {/* Who signs in */}
-      <section id="people" className="scroll-mt-20 bg-background py-20 lg:py-28">
+      <section id="people" className="scroll-mt-20 bg-background py-12 lg:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <Reveal className="mx-auto mb-14 max-w-2xl space-y-3 text-center">
+          <Reveal className="mx-auto mb-8 max-w-2xl space-y-3 text-center">
             <h2 className="font-serif-soft text-4xl leading-tight sm:text-5xl">The right door for everyone</h2>
             <p className="text-lg text-muted-foreground">Staff, customers, riders, students and parents each get their own kind of account, kept apart so nobody sees what is not theirs.</p>
           </Reveal>
@@ -174,8 +158,8 @@ export default function LandingPage() {
       </section>
 
       {/* How it works + brand */}
-      <section id="how" className="scroll-mt-20 py-20 lg:py-28">
-        <div className="mx-auto grid max-w-6xl gap-14 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+      <section id="how" className="scroll-mt-20 py-12 lg:py-16">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center">
           <div className="space-y-10">
             <Reveal className="space-y-3">
               <h2 className="font-serif-soft text-4xl leading-tight sm:text-5xl">Set up in an afternoon</h2>
@@ -203,7 +187,7 @@ export default function LandingPage() {
       </section>
 
       {/* Security */}
-      <section id="security" className="scroll-mt-20 py-20 lg:py-24">
+      <section id="security" className="scroll-mt-20 py-10 lg:py-14">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
             <div className="rounded-[2rem] bg-primary p-8 text-primary-foreground sm:p-12">
@@ -223,7 +207,7 @@ export default function LandingPage() {
       </section>
 
       {/* Maskani */}
-      <section className="pb-20 lg:pb-24">
+      <section className="pb-12 lg:pb-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
             <div className="grid overflow-hidden rounded-[2rem] border border-border/60 bg-card shadow-soft lg:grid-cols-2">
@@ -246,7 +230,7 @@ export default function LandingPage() {
       </section>
 
       {/* Closing */}
-      <section className="pb-24">
+      <section className="pb-16">
         <Reveal className="mx-auto max-w-2xl space-y-6 px-4 text-center sm:px-6">
           <h2 className="font-serif-soft text-4xl leading-tight sm:text-5xl">Ready to open your account?</h2>
           <p className="text-lg text-muted-foreground">It takes a few minutes, and your team can start using it the same day.</p>
