@@ -83,8 +83,8 @@ export function LoginForm() {
   // client_id may only live inside return_to (the authorize URL); the server needs it to
   // know a customer-facing app is asking, so it can make the person that tenant's customer.
   const clientId = flow.clientId;
-  // Empty when no tenant is in the flow: auth-api then resolves the user's primary tenant.
-  const tenantSlug = flow.tenantSlug;
+  // Only the explicit tenant param. Empty: auth-api then resolves the user's primary tenant.
+  const tenantSlug = flow.loginTenant;
   const notice = searchParams.get('message');
 
   const [email, setEmail] = useState(searchParams.get('login_hint') ?? '');

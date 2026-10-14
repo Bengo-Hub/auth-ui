@@ -72,7 +72,7 @@ customer, rider or student gets from a tenant's app. Phones get a brand band abo
 tenant's logo sits on a neutral plate top-left; its name and the app's own name come from
 `service_branding`.
 
-**Where the tenant comes from.** `lib/auth-context.ts resolveAuthContext` reads, in order: the
+**Where the branding tenant comes from.** `lib/auth-context.ts resolveAuthContext` reads, in order: the
 `tenant` param, the `tenant` inside the authorize URL in `return_to`, then the
 `/<slug>/auth/callback` path of either `redirect_uri`. The app (`client_id`) comes from the param or
 from inside `return_to`. Every link between auth pages is built with `authFlowHref`, which keeps
@@ -81,9 +81,13 @@ from inside `return_to`. Every link between auth pages is built with `authFlowHr
 **Login** (`app/login`, `components/auth/LoginForm`): providers side by side first, then email and
 password with "Forgot password?" beside the label, "Sign in with a passkey" as a secondary action,
 the MFA, terms and passkey-nudge steps, and a forced new password after a temporary-password login.
-Social providers come from `GET /auth/integrations/active?category=oauth`: the tenant's own when it has
-any configured, otherwise the platform's, and each starts with `POST /auth/oauth/{provider}/start`
-carrying the tenant, `client_id` and return URL.
+Sign-in is central, not per tenant. Social providers are the same for everyone
+(`GET /auth/integrations/active?category=oauth`; auth-api ignores `tenant_slug` for that category),
+and each starts with `POST /auth/oauth/{provider}/start`. The only tenant input to login, social
+login, passkeys and the organisation wizard is the explicit `tenant` URL parameter
+(`flow.loginTenant`), which auth-api uses as the session's target tenant (with none it resolves the
+person's primary tenant). The tenant derived from `return_to` or `redirect_uri` (`flow.tenantSlug`) is
+for BRANDING and the customer sign-up target only.
 "New to <tenant>? Create an account" for customer apps and tenant flows, "No account yet? Create
 one" on the platform.
 

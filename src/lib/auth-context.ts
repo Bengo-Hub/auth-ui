@@ -27,7 +27,19 @@ export const CUSTOMER_APPS: Record<string, { role: string; person: string; peopl
 };
 
 export interface AuthContext {
+  /**
+   * The tenant this flow BRANDS as, derived from the whole flow (tenant param, the authorize URL in
+   * return_to, the redirect_uri path). Branding and the customer sign-up target only: it never
+   * changes how anyone signs in.
+   */
   tenantSlug: string;
+  /**
+   * The tenant to sign in to: only the explicit `tenant` URL parameter, exactly as before the
+   * redesign. Login, social login, passkeys and the organisation wizard use this. Sign-in itself is
+   * central (one set of credentials and providers); auth-api treats tenant_slug as the session's
+   * target tenant, and with none it resolves the person's primary tenant.
+   */
+  loginTenant: string;
   clientId: string;
   returnTo: string | null;
   /** True when the app is customer-facing (ordering, rider, Digitika). */
@@ -70,7 +82,8 @@ export function resolveAuthContext(params: URLSearchParams | { get(name: string)
     CUSTOMER_APPS[clientId]?.defaultTenant ||
     '';
   const customerApp = CUSTOMER_APPS[clientId] ?? null;
-  return { tenantSlug, clientId, returnTo, isCustomerApp: !!customerApp, customerApp };
+  const loginTenant = params.get('tenant') ?? '';
+  return { tenantSlug, loginTenant, clientId, returnTo, isCustomerApp: !!customerApp, customerApp };
 }
 
 /**

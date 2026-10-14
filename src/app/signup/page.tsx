@@ -51,8 +51,8 @@ function SignupCard() {
   return (
     <AuthShell
       wide
-      title={flow.tenantSlug && !brand.isPlatform ? `Join ${brand.name}` : 'Create your organisation'}
-      subtitle={flow.tenantSlug && !brand.isPlatform ? 'Create an account in this organisation' : 'One account for every Codevertex app your team uses'}
+      title={flow.loginTenant && !brand.isPlatform ? `Join ${brand.name}` : 'Create your organisation'}
+      subtitle={flow.loginTenant && !brand.isPlatform ? 'Create an account in this organisation' : 'One account for every Codevertex app your team uses'}
       below={<SignInPrompt />}
     >
       {!oauthHandOff && <OAuthButtonGroup label="Sign up with" after={<AuthDivider />} />}

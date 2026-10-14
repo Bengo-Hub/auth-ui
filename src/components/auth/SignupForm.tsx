@@ -92,7 +92,7 @@ export function SignupForm() {
   const redirectUri = searchParams.get('redirect_uri');
   const stateParam = searchParams.get('state');
   const scope = searchParams.get('scope');
-  const defaultTenant = flow.tenantSlug;
+  const defaultTenant = flow.loginTenant;
   // When a tenant slug is provided, we auto-join that org and skip Step 2
   const hasTenantContext = !!defaultTenant;
 

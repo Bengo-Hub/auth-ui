@@ -20,33 +20,20 @@ import { getSafeReturnUrl } from '@/lib/utils';
 
 type ActiveIntegration = { name: string };
 
-async function fetchActive(tenantSlug: string): Promise<ActiveIntegration[]> {
-  const qs = new URLSearchParams({ category: 'oauth' });
-  if (tenantSlug) qs.set('tenant_slug', tenantSlug);
-  const { data } = await apiClient.get(`/api/v1/auth/integrations/active?${qs}`);
-  return data ?? [];
-}
-
 /**
- * Providers to offer: those active for the tenant when it has any configured, otherwise the
- * platform's. Asking only for the tenant's own list made social sign-in vanish for every tenant
- * that had not set up its own providers.
+ * Providers are central: auth-api serves the same Google, Microsoft and GitHub apps to every tenant
+ * (GET /auth/integrations/active ignores tenant_slug for the oauth category). Nothing here depends on
+ * the tenant, so a tenant's branding never changes which sign-in methods exist.
  */
-function useActiveOAuthProviders(tenantSlug: string): OAuthProviderDef[] {
-  const tenantList = useQuery<ActiveIntegration[]>({
-    queryKey: ['active_integrations', 'oauth', tenantSlug],
-    queryFn: () => fetchActive(tenantSlug),
+function useActiveOAuthProviders(): OAuthProviderDef[] {
+  const { data } = useQuery<ActiveIntegration[]>({
+    queryKey: ['active_integrations', 'oauth'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/api/v1/auth/integrations/active?category=oauth');
+      return data ?? [];
+    },
     staleTime: 5 * 60 * 1000,
-    enabled: !!tenantSlug,
   });
-  const needPlatform = !tenantSlug || (tenantList.isSuccess && (tenantList.data?.length ?? 0) === 0) || tenantList.isError;
-  const platformList = useQuery<ActiveIntegration[]>({
-    queryKey: ['active_integrations', 'oauth', ''],
-    queryFn: () => fetchActive(''),
-    staleTime: 5 * 60 * 1000,
-    enabled: needPlatform,
-  });
-  const data = (tenantList.data?.length ?? 0) > 0 ? tenantList.data : platformList.data;
   const enabled = new Set((data ?? []).map((i) => i.name));
   return oauthProviders.filter((p) => enabled.has(p.id));
 }
@@ -63,7 +50,8 @@ function OAuthButton({ provider, label }: { provider: OAuthProviderDef; label: s
     try {
       const response = await apiClient.post(`/api/v1/auth/oauth/${provider.id}/start`, {
         return_to: getSafeReturnUrl(searchParams.get('return_to'), '/dashboard'),
-        tenant_slug: flow.tenantSlug,
+        // The explicit tenant param only, as before: tenant context rides in the signed OAuth state.
+        tenant_slug: flow.loginTenant,
         client_id: flow.clientId || undefined,
       });
       const url = response.data?.authorization_url;
@@ -105,8 +93,7 @@ function OAuthButton({ provider, label }: { provider: OAuthProviderDef; label: s
 
 /** Renders nothing when no provider is active, so the divider passed in `after` goes too. */
 export function OAuthButtonGroup({ label = 'Continue with', after }: { label?: string; after?: ReactNode }) {
-  const { flow } = useAuthBrand();
-  const providers = useActiveOAuthProviders(flow.tenantSlug);
+  const providers = useActiveOAuthProviders();
   if (providers.length === 0) return null;
   return (
     <>
