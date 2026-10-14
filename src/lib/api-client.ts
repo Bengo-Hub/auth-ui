@@ -43,6 +43,7 @@ const PUBLIC_ROUTES = [
   '/about',
   '/equity-holder',   // Equity portal — token-authenticated, no session cookie
   '/p',              // Short-link redirects
+  '/auth/mfa',        // Social sign-in code step: a wrong code is a 401 it handles itself
   '/select-organisation', // SSO org picker — handles its own 401 (keeps return_to + tenant)
 ];
 
