@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import type { CSSProperties } from 'react';
 
 import { AccountMap } from '@/components/landing/AccountMap';
@@ -21,6 +22,12 @@ import { ServiceDirectory } from '@/components/landing/ServiceDirectory';
 import { Reveal } from '@/components/landing/reveal';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+export const metadata: Metadata = {
+  title: 'Codevertex Accounts | One sign-in for every Codevertex app',
+  description:
+    'Codevertex Accounts is the single sign-in for Codevertex apps: point of sale, stock, books, payroll, orders and more. Staff, customers, riders and students each get their own account.',
+};
 
 const rise = (ms: number) => ({ '--rise-delay': `${ms}ms` }) as CSSProperties;
 
@@ -227,6 +234,19 @@ export default function LandingPage() {
             </div>
           </Reveal>
         </div>
+      </section>
+
+      {/* How sign-in data is used (also read by Google's app verification) */}
+      <section id="data-use" className="pb-12 lg:pb-16">
+        <Reveal className="mx-auto max-w-3xl space-y-3 px-4 text-center sm:px-6">
+          <h2 className="font-serif-soft text-2xl leading-tight sm:text-3xl">Your sign-in details stay yours</h2>
+          <p className="leading-relaxed text-muted-foreground">
+            Codevertex Accounts is the sign-in service for Codevertex apps. If you choose Google, Microsoft or GitHub to sign in, we receive only your name, email address and profile picture, and use them to find or create your Codevertex account. We never read your mail, files or contacts, and we do not sell or share this data. Read the full{' '}
+            <Link href="/privacy#google-signin" className="font-medium text-primary underline underline-offset-4">privacy policy</Link>{' '}
+            and{' '}
+            <Link href="/terms-of-service" className="font-medium text-primary underline underline-offset-4">terms of service</Link>.
+          </p>
+        </Reveal>
       </section>
 
       {/* Closing */}
