@@ -67,6 +67,28 @@ const SECURITY = [
 export default function LandingPage() {
   return (
     <div className="bg-paper">
+      <script
+        type="application/ld+json"
+        // Structured data so search engines know who runs this site and what it is.
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Codevertex Africa Limited',
+              url: 'https://codevertexafrica.com',
+              logo: 'https://accounts.codevertexafrica.com/images/logo/codevertex.png',
+              address: { '@type': 'PostalAddress', addressLocality: 'Kisumu', addressCountry: 'KE' },
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Codevertex Accounts',
+              url: 'https://accounts.codevertexafrica.com',
+            },
+          ]),
+        }}
+      />
       {/* Hero */}
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-12 pt-8 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pb-16 lg:pt-10">
         <div className="space-y-7">

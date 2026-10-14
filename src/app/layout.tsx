@@ -55,7 +55,16 @@ const APPLE_SPLASH_SCREENS: { url: string; media: string }[] = [
 ];
 
 export const metadata: Metadata = {
-  title: "Codevertex SSO - Unified Identity",
+  metadataBase: new URL("https://accounts.codevertexafrica.com"),
+  alternates: { canonical: "./" },
+  openGraph: {
+    type: "website",
+    siteName: "Codevertex Accounts",
+    title: "Codevertex Accounts",
+    description: "One sign-in for every Codevertex app.",
+    images: ["/icons/icon-512.png"],
+  },
+  title: "Codevertex Accounts",
   description: "The central identity and access management portal for the Codevertex ecosystem.",
   manifest: "/manifest.json",
   icons: {
