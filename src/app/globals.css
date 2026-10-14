@@ -142,90 +142,97 @@ button:focus-visible {
 }
 
 @layer base {
-  /* Maskani owner-portal system, shared across Codevertex sign-in surfaces: warm paper canvas,
-     deep plum primary, gold accent, soft serif for display. A tenant's own brand colour replaces
-     --primary at runtime (TenantBrandScope), so every surface below follows it. */
+  /* Codevertex brand (purple and orange) in the Maskani owner-portal style: warm paper canvas,
+     tinted neutrals, soft serif display. These are the DEFAULT and the fallback: a tenant's own
+     brand colours replace them at runtime (TenantBrandScope + lib/tenant-theme.ts, which generated
+     these very values from PLATFORM_PRIMARY and PLATFORM_SECONDARY). */
   :root {
-    --background: 320 20% 98.5%;
-    --foreground: 314 30% 13%;
+    --background: 289 20% 99%;
+    --foreground: 289 30% 13%;
     --card: 0 0% 100%;
-    --card-foreground: 314 30% 13%;
+    --card-foreground: 289 30% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 314 30% 13%;
-    --primary: 314 62% 27%;
-    --primary-dark: 314 63% 19%;
+    --popover-foreground: 289 30% 13%;
+    --primary: 289 100% 35%;
+    --primary-dark: 289 100% 26%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 314 22% 94%;
-    --secondary-foreground: 314 45% 20%;
-    --muted: 314 16% 95%;
+    --secondary: 289 22% 94%;
+    --secondary-foreground: 289 45% 20%;
+    --muted: 289 16% 95%;
     --muted-foreground: 223 7% 40%;
-    --accent: 314 22% 95%;
-    --accent-foreground: 314 45% 20%;
+    --accent: 289 22% 94%;
+    --accent-foreground: 289 45% 20%;
     --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --success: 152 60% 30%;
     --warning: 32 92% 36%;
-    --gold: 38 56% 51%;
-    --gold-foreground: 314 63% 15%;
-    --border: 314 14% 89%;
-    --input: 314 14% 86%;
-    --ring: 314 62% 27%;
+    --gold: 28 83% 48%;
+    --gold-foreground: 28 40% 10%;
+    --border: 289 14% 89%;
+    --input: 289 14% 86%;
+    --ring: 289 100% 35%;
     --radius: 0.75rem;
 
-    --chart-1: 315 53% 36%;
-    --chart-2: 37 60% 41%;
+    --chart-1: 289 100% 35%;
+    --chart-2: 28 83% 48%;
     --chart-3: 223 7% 55%;
-    --chart-4: 314 30% 62%;
+    --chart-4: 289 60% 62%;
     --chart-5: 43 74% 66%;
 
     --creamy-white: 48 100% 96%;
 
-    --sidebar: 30 20% 98.5%;
-    --sidebar-foreground: 314 30% 13%;
+    --sidebar: 30 20% 99%;
+    --sidebar-foreground: 289 30% 13%;
     --sidebar-muted: 223 7% 42%;
-    --sidebar-border: 314 12% 90%;
-    --sidebar-hover: 314 14% 93.5%;
+    --sidebar-border: 289 12% 90%;
+    --sidebar-hover: 289 14% 94%;
     --sidebar-section: 223 7% 52%;
+    --brand-primary: 145 0 176;
+    --brand-emphasis: 224 116 21;
+    --brand-dark: 107 0 130;
   }
 
   .dark {
-    --background: 314 30% 8%;
-    --foreground: 320 25% 95%;
-    --card: 314 28% 11%;
-    --card-foreground: 320 25% 95%;
-    --popover: 314 28% 11%;
-    --popover-foreground: 320 25% 95%;
-    --primary: 314 45% 62%;
-    --primary-dark: 314 45% 52%;
-    --primary-foreground: 314 60% 10%;
-    --secondary: 314 22% 18%;
-    --secondary-foreground: 320 25% 95%;
-    --muted: 314 18% 16%;
-    --muted-foreground: 320 10% 70%;
-    --accent: 314 22% 18%;
-    --accent-foreground: 320 25% 95%;
+    --background: 289 30% 8%;
+    --foreground: 289 25% 95%;
+    --card: 289 28% 11%;
+    --card-foreground: 289 25% 95%;
+    --popover: 289 28% 11%;
+    --popover-foreground: 289 25% 95%;
+    --primary: 289 62% 62%;
+    --primary-dark: 289 62% 52%;
+    --primary-foreground: 289 40% 10%;
+    --secondary: 289 22% 18%;
+    --secondary-foreground: 289 25% 95%;
+    --muted: 289 18% 16%;
+    --muted-foreground: 289 10% 70%;
+    --accent: 289 22% 18%;
+    --accent-foreground: 289 25% 95%;
     --destructive: 0 65% 52%;
     --destructive-foreground: 0 0% 100%;
     --success: 152 50% 52%;
     --warning: 38 90% 60%;
-    --gold: 40 69% 69%;
-    --gold-foreground: 314 63% 12%;
-    --border: 314 18% 22%;
-    --input: 314 18% 25%;
-    --ring: 314 45% 62%;
+    --gold: 28 75% 62%;
+    --gold-foreground: 28 40% 10%;
+    --border: 289 18% 22%;
+    --input: 289 18% 25%;
+    --ring: 289 62% 62%;
 
-    --chart-1: 315 33% 54%;
-    --chart-2: 40 50% 44%;
+    --chart-1: 289 62% 62%;
+    --chart-2: 28 75% 62%;
     --chart-3: 223 8% 62%;
     --chart-4: 314 25% 45%;
     --chart-5: 43 74% 66%;
 
-    --sidebar: 314 40% 7%;
-    --sidebar-foreground: 320 25% 95%;
+    --sidebar: 289 40% 7%;
+    --sidebar-foreground: 289 25% 95%;
     --sidebar-muted: 314 12% 65%;
-    --sidebar-border: 314 25% 14%;
-    --sidebar-hover: 314 30% 15%;
+    --sidebar-border: 289 25% 14%;
+    --sidebar-hover: 289 30% 15%;
     --sidebar-section: 314 12% 55%;
+    --brand-primary: 197 98 218;
+    --brand-emphasis: 231 154 85;
+    --brand-dark: 182 57 208;
   }
 }
 

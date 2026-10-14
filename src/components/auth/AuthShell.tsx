@@ -68,7 +68,7 @@ function BrandPanel() {
 
       <div className="space-y-8 py-10">
         <div className="space-y-4">
-          <p className="text-sm font-medium tracking-wide text-gold">
+          <p className="text-sm font-medium tracking-wide opacity-80">
             {perks ? `For ${flow.customerApp?.people}` : brand.isPlatform ? 'Codevertex accounts' : 'Your account'}
           </p>
           <h2 className="font-serif-soft max-w-md text-4xl leading-[1.1] xl:text-5xl">{headline}</h2>
@@ -116,7 +116,15 @@ export function AuthShell({
 }) {
   const brand = useAuthBrand();
   const defaultSubtitle = brand.appName
-    ? <>to continue to <span className="font-medium text-foreground">{brand.appName}</span></>
+    ? (
+      <span className="inline-flex items-center gap-2">
+        {brand.appIconUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={brand.appIconUrl} alt="" className="h-6 w-6 rounded-md object-contain" />
+        )}
+        <span>to continue to <span className="font-medium text-foreground">{brand.appName}</span></span>
+      </span>
+    )
     : brand.isPlatform
       ? 'with your Codevertex account'
       : <>to <span className="font-medium text-foreground">{brand.name}</span></>;

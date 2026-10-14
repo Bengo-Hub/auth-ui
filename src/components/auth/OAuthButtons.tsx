@@ -20,17 +20,33 @@ import { getSafeReturnUrl } from '@/lib/utils';
 
 type ActiveIntegration = { name: string };
 
+async function fetchActive(tenantSlug: string): Promise<ActiveIntegration[]> {
+  const qs = new URLSearchParams({ category: 'oauth' });
+  if (tenantSlug) qs.set('tenant_slug', tenantSlug);
+  const { data } = await apiClient.get(`/api/v1/auth/integrations/active?${qs}`);
+  return data ?? [];
+}
+
+/**
+ * Providers to offer: those active for the tenant when it has any configured, otherwise the
+ * platform's. Asking only for the tenant's own list made social sign-in vanish for every tenant
+ * that had not set up its own providers.
+ */
 function useActiveOAuthProviders(tenantSlug: string): OAuthProviderDef[] {
-  const { data } = useQuery<ActiveIntegration[]>({
+  const tenantList = useQuery<ActiveIntegration[]>({
     queryKey: ['active_integrations', 'oauth', tenantSlug],
-    queryFn: async () => {
-      const qs = new URLSearchParams({ category: 'oauth' });
-      if (tenantSlug) qs.set('tenant_slug', tenantSlug);
-      const { data } = await apiClient.get(`/api/v1/auth/integrations/active?${qs}`);
-      return data ?? [];
-    },
+    queryFn: () => fetchActive(tenantSlug),
     staleTime: 5 * 60 * 1000,
+    enabled: !!tenantSlug,
   });
+  const needPlatform = !tenantSlug || (tenantList.isSuccess && (tenantList.data?.length ?? 0) === 0) || tenantList.isError;
+  const platformList = useQuery<ActiveIntegration[]>({
+    queryKey: ['active_integrations', 'oauth', ''],
+    queryFn: () => fetchActive(''),
+    staleTime: 5 * 60 * 1000,
+    enabled: needPlatform,
+  });
+  const data = (tenantList.data?.length ?? 0) > 0 ? tenantList.data : platformList.data;
   const enabled = new Set((data ?? []).map((i) => i.name));
   return oauthProviders.filter((p) => enabled.has(p.id));
 }
@@ -94,7 +110,7 @@ export function OAuthButtonGroup({ label = 'Continue with', after }: { label?: s
   if (providers.length === 0) return null;
   return (
     <>
-      <div className={providers.length === 1 ? 'grid gap-3' : 'grid gap-3 sm:grid-cols-2'}>
+      <div className={providers.length === 1 ? 'grid gap-3' : providers.length === 2 ? 'grid gap-3 sm:grid-cols-2' : 'grid gap-3 sm:grid-cols-3'}>
         {providers.map((p) => <OAuthButton key={p.id} provider={p} label={providers.length === 1 ? label : ''} />)}
       </div>
       {after}

@@ -1,4 +1,7 @@
+'use client';
+
 import { LAUNCHER_APPS, type LauncherApp } from '@/config/launcher-apps';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 /**
@@ -14,6 +17,9 @@ export function AppLauncher({
   tone?: 'solid' | 'paper';
   className?: string;
 }) {
+  // Signed in: straight to the app. Otherwise through sign-in and back (same rule as getServiceUrl).
+  const { isAuthenticated } = useAuth();
+  const href = (app: LauncherApp) => (isAuthenticated ? app.url : `/login?return_to=${encodeURIComponent(app.url)}`);
   return (
     <ul className={cn('grid grid-cols-3 gap-3', className)} aria-label="Apps on your account">
       {apps.map((app, i) => (
@@ -22,9 +28,10 @@ export function AppLauncher({
           className="animate-tile-in"
           style={{ '--tile-delay': `${160 + i * 55}ms` } as React.CSSProperties}
         >
-          <div
+          <a
+            href={href(app)}
             className={cn(
-              'flex aspect-square flex-col items-start justify-between rounded-2xl p-3.5 sm:p-4',
+              'flex aspect-square flex-col items-start justify-between rounded-2xl p-3.5 transition-transform hover:-translate-y-0.5 sm:p-4',
               tone === 'solid' ? 'bg-card text-card-foreground shadow-soft' : 'border border-border/60 bg-card shadow-soft',
             )}
           >
@@ -32,7 +39,7 @@ export function AppLauncher({
               <app.icon className="h-[18px] w-[18px]" aria-hidden />
             </span>
             <span className="text-[0.8rem] font-semibold leading-tight sm:text-sm">{app.name}</span>
-          </div>
+          </a>
         </li>
       ))}
     </ul>

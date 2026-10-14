@@ -18,6 +18,7 @@ import type { CSSProperties } from 'react';
 import { AppLauncher } from '@/components/landing/AppLauncher';
 import { BooksScene, BrandPreview, OrderScene, PosScene, StockScene } from '@/components/landing/AppScenes';
 import { HeroActions } from '@/components/landing/HeroActions';
+import { ServiceDirectory } from '@/components/landing/ServiceDirectory';
 import { Reveal } from '@/components/landing/reveal';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -135,8 +136,19 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Every app, with its status */}
+      <section id="directory" className="scroll-mt-20 py-20 lg:py-28">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <Reveal className="mb-10 max-w-2xl space-y-3">
+            <h2 className="font-serif-soft text-4xl leading-tight sm:text-5xl">Open an app</h2>
+            <p className="text-lg text-muted-foreground">Every Codevertex app on your account, with its live status. Pick one and you are signed in.</p>
+          </Reveal>
+          <ServiceDirectory />
+        </div>
+      </section>
+
       {/* Who signs in */}
-      <section id="people" className="scroll-mt-20 py-20 lg:py-28">
+      <section id="people" className="scroll-mt-20 bg-background py-20 lg:py-28">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal className="mx-auto mb-14 max-w-2xl space-y-3 text-center">
             <h2 className="font-serif-soft text-4xl leading-tight sm:text-5xl">The right door for everyone</h2>
@@ -162,7 +174,7 @@ export default function LandingPage() {
       </section>
 
       {/* How it works + brand */}
-      <section id="how" className="scroll-mt-20 bg-background py-20 lg:py-28">
+      <section id="how" className="scroll-mt-20 py-20 lg:py-28">
         <div className="mx-auto grid max-w-6xl gap-14 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center">
           <div className="space-y-10">
             <Reveal className="space-y-3">

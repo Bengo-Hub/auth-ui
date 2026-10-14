@@ -9,6 +9,10 @@
  * (components/providers/tenant-brand-scope.tsx). Pure functions, no DOM.
  */
 
+/** The platform's own brand colours: the default theme and the fallback for anything a tenant leaves unset. */
+export const PLATFORM_PRIMARY = '#9100B0';
+export const PLATFORM_SECONDARY = '#ea8022';
+
 export interface Hsl { h: number; s: number; l: number }
 
 const HEX = /^#?([0-9a-f]{6})$/i;
@@ -84,10 +88,11 @@ export function buildTenantThemeCss(input: TenantThemeInput): string {
   // Very grey brands (black, grey) would give colourless tints; keep a whisper of hue for warmth.
   const tintS = (n: number) => clamp(base.s, 12, 60) * (n / 100) + 0;
   const secondaryHex = parseHex(input.secondary);
-  const accent = secondaryHex ? hexToHsl(secondaryHex) : { h: 38, s: 56, l: 51 };
+  // No secondary colour: fall back to the Codevertex orange, the platform's accent.
+  const accent = hexToHsl(secondaryHex ?? PLATFORM_SECONDARY);
 
   // Light theme
-  const primary = legibleOnLight({ ...base, s: clamp(base.s, 8, 92) });
+  const primary = legibleOnLight({ ...base, s: clamp(base.s, 8, 100) });
   const primaryDark: Hsl = { ...primary, l: clamp(primary.l - 9, 8, 90) };
   const gold = legibleOnLight(accent, 3);
   const light = {

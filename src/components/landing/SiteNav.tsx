@@ -12,6 +12,7 @@ const LINKS = [
   { href: '/#apps', label: 'Apps' },
   { href: '/#people', label: 'Who signs in' },
   { href: '/#security', label: 'Security' },
+  { href: '/dashboard/developer', label: 'Developers' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/status', label: 'Status' },
 ];

@@ -44,12 +44,14 @@ This document defines the user-facing flows, page layouts, and interaction patte
 
 ## Design system (adapted from the Maskani owner portal, 2026-10-14)
 
-The sign-in pages, landing page and dashboard share Maskani's system: a warm paper canvas, a deep
-plum primary with a gold accent, DM Sans for text, Outfit for headings and Fraunces (soft serif)
-for display, large rounded surfaces (1.75 to 2rem), soft shadows, scroll reveals, and no gradients
-or glows. Tokens live in `globals.css`; public-page utilities are `font-serif-soft`, `bg-paper`,
-`shadow-soft`, `shadow-lift`, `animate-rise`, `reveal` (with `components/landing/reveal.tsx`) and
-`photo-zoom`.
+The sign-in pages, landing page and dashboard take Maskani's style: a warm paper canvas, tinted
+neutrals, DM Sans for text, Outfit for headings and Fraunces (soft serif) for display, large rounded
+surfaces (1.75 to 2rem), soft shadows, scroll reveals, and no gradients or glows. The colours stay
+the Codevertex brand: purple `#9100B0` primary and orange `#ea8022` accent are the DEFAULT theme and
+the fallback for anything a tenant leaves unset. Tokens live in `globals.css` (generated from
+`PLATFORM_PRIMARY` and `PLATFORM_SECONDARY` in `lib/tenant-theme.ts`); public-page utilities are
+`font-serif-soft`, `bg-paper`, `shadow-soft`, `shadow-lift`, `animate-rise`, `reveal` (with
+`components/landing/reveal.tsx`) and `photo-zoom`.
 
 **Per-tenant theme.** `TenantBrandScope` (`components/providers/tenant-brand-scope.tsx`) reads the
 tenant's brand from the public record (`GET /api/v1/tenants/by-slug/{slug}`: logo, primary and
@@ -58,8 +60,8 @@ until it holds 4.5:1 contrast), readable foreground, tinted neutrals, border, fo
 accent from the secondary colour, charts, shadows, and a separate dark theme with a lightened
 brand. It is injected as one `<style id="tenant-theme">` for the life of the scope, so sign-in,
 sign-up, reset and the dashboard all follow the tenant. The last theme per slug is cached in
-localStorage for first paint. The platform tenant, or a tenant with no brand colour, keeps the
-platform theme.
+localStorage for first paint. A tenant with no brand colour keeps the platform theme, and one with a
+primary but no secondary gets the Codevertex orange as its accent.
 
 ## Sign-in pages
 
@@ -79,6 +81,9 @@ from inside `return_to`. Every link between auth pages is built with `authFlowHr
 **Login** (`app/login`, `components/auth/LoginForm`): providers side by side first, then email and
 password with "Forgot password?" beside the label, "Sign in with a passkey" as a secondary action,
 the MFA, terms and passkey-nudge steps, and a forced new password after a temporary-password login.
+Social providers come from `GET /auth/integrations/active?category=oauth`: the tenant's own when it has
+any configured, otherwise the platform's, and each starts with `POST /auth/oauth/{provider}/start`
+carrying the tenant, `client_id` and return URL.
 "New to <tenant>? Create an account" for customer apps and tenant flows, "No account yet? Create
 one" on the platform.
 
@@ -92,8 +97,11 @@ auth-api gives the right role; everything else gets the organisation wizard.
 fed by `config/launcher-apps.ts`), a bento of what the apps do drawn with the design tokens
 (`AppScenes`, sample values only), who signs in (staff, customers, riders, students, parents), how
 setup works beside a preview of two differently branded sign-in pages, security, and a Maskani band
-with its own photography. `SiteNav` and `SiteFooter` replace the old Navbar and Footer on every
-public page. The viewport no longer disables pinch zoom.
+with its own photography. The directory (`ServiceDirectory`) keeps the original logic: every service
+from `config/services.ts` with its status from `/api/health`, filterable by category, linking through
+`getServiceUrl` (signed in goes straight to the app, otherwise through sign-in and back). The hero
+tiles link the same way. `SiteNav` and `SiteFooter` replace the old Navbar and Footer on every public
+page. The viewport no longer disables pinch zoom.
 
 Fonts are declared in `@theme inline` in `globals.css`: next/font defines `--font-dm-sans` on
 `<body>`, and a plain `@theme` value resolved on `:root` made every page render in Times New Roman.
