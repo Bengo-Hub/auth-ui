@@ -53,7 +53,7 @@ function PasswordField({
           onChange={(e) => onChange(e.target.value)}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
-          className="h-11 pr-11"
+          className="h-12 rounded-xl bg-card pr-12 text-base"
           required
         />
         <button
@@ -351,7 +351,7 @@ export function LoginForm() {
         {newPasswordError && <AuthNotice>{newPasswordError}</AuthNotice>}
         <PasswordField id="new_password" label="New password" value={newPassword} onChange={setNewPassword} autoComplete="new-password" autoFocus />
         <PasswordField id="confirm_password" label="Confirm new password" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" />
-        <Button type="submit" className="h-11 w-full" disabled={newPasswordSaving}>
+        <Button type="submit" className="h-12 w-full rounded-full text-base font-semibold" disabled={newPasswordSaving}>
           {newPasswordSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save and continue'}
         </Button>
       </form>
@@ -380,7 +380,7 @@ export function LoginForm() {
             <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">Privacy Policy</a>.
           </span>
         </label>
-        <Button type="button" className="h-11 w-full" disabled={termsLoading} onClick={handleAcceptTerms}>
+        <Button type="button" className="h-12 w-full rounded-full text-base font-semibold" disabled={termsLoading} onClick={handleAcceptTerms}>
           {termsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Accept and continue'}
         </Button>
       </div>
@@ -409,11 +409,11 @@ export function LoginForm() {
               const raw = e.target.value.replace(/[^0-9]/g, '');
               setTotpCode(raw.length > 3 ? raw.slice(0, 3) + ' ' + raw.slice(3, 6) : raw);
             }}
-            className="h-12 text-center font-mono text-xl tracking-[0.3em]"
+            className="h-14 rounded-xl bg-card text-center font-mono text-2xl tracking-[0.3em]"
             autoFocus
           />
         </div>
-        <Button type="submit" className="h-11 w-full" disabled={isLoading}>
+        <Button type="submit" className="h-12 w-full rounded-full text-base font-semibold" disabled={isLoading}>
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify'}
         </Button>
         <button
@@ -441,7 +441,7 @@ export function LoginForm() {
         />
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {notice && <AuthNotice tone="success">{notice}</AuthNotice>}
         {error && <AuthNotice>{error}</AuthNotice>}
 
@@ -453,7 +453,7 @@ export function LoginForm() {
             autoComplete="username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-11"
+            className="h-12 rounded-xl bg-card text-base"
             required
             autoFocus={!email}
           />
@@ -473,7 +473,7 @@ export function LoginForm() {
           }
         />
 
-        <Button type="submit" className="h-11 w-full" disabled={isLoading}>
+        <Button type="submit" className="h-12 w-full rounded-full text-base font-semibold" disabled={isLoading}>
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
         </Button>
 
@@ -482,7 +482,7 @@ export function LoginForm() {
             <Button
               type="button"
               variant="outline"
-              className="h-11 w-full"
+              className="h-12 w-full rounded-full text-base font-semibold"
               onClick={() => biometricAuth(hasRegisteredCredential ? email : '', tenantSlug || undefined)}
               disabled={biometricLoading}
             >

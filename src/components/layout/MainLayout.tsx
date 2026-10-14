@@ -1,8 +1,8 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import Footer from './Footer';
-import Navbar from './Navbar';
+import { SiteFooter } from '@/components/landing/SiteFooter';
+import { SiteNav } from '@/components/landing/SiteNav';
 
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password', '/reset-password', '/select-organisation', '/auth'];
 
@@ -20,11 +20,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {!isStandalonePortal && <Navbar />}
+      {!isStandalonePortal && <SiteNav />}
       <main className={!isStandalonePortal ? "flex-grow" : "h-screen"}>
         {children}
       </main>
-      {!isStandalonePortal && <Footer />}
+      {!isStandalonePortal && <SiteFooter />}
     </>
   );
 }

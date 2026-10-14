@@ -42,53 +42,61 @@ This document defines the user-facing flows, page layouts, and interaction patte
 
 ---
 
-## Sign-in pages (revamped 2026-10-13)
+## Design system (adapted from the Maskani owner portal, 2026-10-14)
 
-Login, sign-up, forgot password and reset password share one layout, `components/auth/AuthShell`:
-a single centred card on a muted background, modelled on hosted sign-in pages people trust
-(Auth0 Universal Login, Clerk, Google and Microsoft account sign-in). No split panel, no
-marketing copy, no Codevertex header or footer around it (`MainLayout` skips its chrome on
-auth routes).
+The sign-in pages, landing page and dashboard share Maskani's system: a warm paper canvas, a deep
+plum primary with a gold accent, DM Sans for text, Outfit for headings and Fraunces (soft serif)
+for display, large rounded surfaces (1.75 to 2rem), soft shadows, scroll reveals, and no gradients
+or glows. Tokens live in `globals.css`; public-page utilities are `font-serif-soft`, `bg-paper`,
+`shadow-soft`, `shadow-lift`, `animate-rise`, `reveal` (with `components/landing/reveal.tsx`) and
+`photo-zoom`.
 
-**Tenant branding.** The card shows the tenant's logo (or an initial on the brand colour), its
-name, and "to continue to <app>" using the tenant's own name for the app (shared-ui-lib
-`serviceAppName`). Colours come from the shared `TenantBrandingProvider` through
-`components/providers/tenant-brand-scope.tsx`; the platform tenant, or no tenant, keeps
-auth-ui's own tokens. "Secured by Codevertex" is the only platform mark on a tenant's card.
+**Per-tenant theme.** `TenantBrandScope` (`components/providers/tenant-brand-scope.tsx`) reads the
+tenant's brand from the public record (`GET /api/v1/tenants/by-slug/{slug}`: logo, primary and
+secondary colour) and `lib/tenant-theme.ts` derives the whole token set from it: primary (darkened
+until it holds 4.5:1 contrast), readable foreground, tinted neutrals, border, focus ring, gold
+accent from the secondary colour, charts, shadows, and a separate dark theme with a lightened
+brand. It is injected as one `<style id="tenant-theme">` for the life of the scope, so sign-in,
+sign-up, reset and the dashboard all follow the tenant. The last theme per slug is cached in
+localStorage for first paint. The platform tenant, or a tenant with no brand colour, keeps the
+platform theme.
+
+## Sign-in pages
+
+Login, sign-up, forgot and reset password use `components/auth/AuthShell`: the form on warm paper in
+a serif headline (wide, 30rem, not a narrow card) beside a solid brand panel. The panel shows what
+the person is signing in to: the real app grid on the platform, or three concrete things a
+customer, rider or student gets from a tenant's app. Phones get a brand band above the form. The
+tenant's logo sits on a neutral plate top-left; its name and the app's own name come from
+`service_branding`.
 
 **Where the tenant comes from.** `lib/auth-context.ts resolveAuthContext` reads, in order: the
 `tenant` param, the `tenant` inside the authorize URL in `return_to`, then the
-`/<slug>/auth/callback` path of either `redirect_uri`. The app (`client_id`) comes from the
-param or from inside `return_to`. Every link between auth pages is built with `authFlowHref`,
-which keeps `return_to`, `client_id`, `tenant` and the other flow params.
+`/<slug>/auth/callback` path of either `redirect_uri`. The app (`client_id`) comes from the param or
+from inside `return_to`. Every link between auth pages is built with `authFlowHref`, which keeps
+`return_to`, `client_id`, `tenant` and the other flow params.
 
-**Login** (`app/login`, `components/auth/LoginForm`):
-- social providers first (`components/auth/OAuthButtons`, only providers active in auth-api)
-- email and password, "Forgot password?" beside the password label
-- "Sign in with a passkey" as a secondary button
-- MFA code step, one-time terms step, passkey nudge (unchanged behaviour)
-- a temporary password (admin-added staff, Digitika students and parents) must be replaced in
-  the card before any redirect, so a service redirect cannot skip it
-- below the card: "New to <tenant>? Create an account" for customer apps and tenant flows,
-  "No account yet? Create one" on the platform
+**Login** (`app/login`, `components/auth/LoginForm`): providers side by side first, then email and
+password with "Forgot password?" beside the label, "Sign in with a passkey" as a secondary action,
+the MFA, terms and passkey-nudge steps, and a forced new password after a temporary-password login.
+"New to <tenant>? Create an account" for customer apps and tenant flows, "No account yet? Create
+one" on the platform.
 
-**Sign-up** (`app/signup`):
-- customer apps (`ordering-ui`, `rider-app`, `codevertex-website`, see `CUSTOMER_APPS`) get
-  `components/auth/CustomerSignupForm`: name, email, optional phone, password, terms, then an
-  email code. It registers into the tenant with the app's `client_id` (auth-api gives the role)
-  and signs the person straight back into the app. An email that already has an account gets
-  "Sign in and we will add you to <tenant>".
-- everything else gets the organisation wizard (`SignupForm`), in the wide card
+**Sign-up** (`app/signup`): customer apps (`CUSTOMER_APPS`: ordering, rider app, Digitika) get the
+short `CustomerSignupForm` and are registered into the tenant with the app's `client_id`, so
+auth-api gives the right role; everything else gets the organisation wizard.
 
-**Forgot and reset password** use the same card and keep the flow, so "Back to sign in" returns
-to the right app.
+## Landing page
 
-The dashboard wears the active organisation's brand the same way (`TenantBrandScope` in
-`app/dashboard/layout.tsx`); platform owners keep the Codevertex look.
+`app/page.tsx` is a server component: hero with the real app grid (`components/landing/AppLauncher`,
+fed by `config/launcher-apps.ts`), a bento of what the apps do drawn with the design tokens
+(`AppScenes`, sample values only), who signs in (staff, customers, riders, students, parents), how
+setup works beside a preview of two differently branded sign-in pages, security, and a Maskani band
+with its own photography. `SiteNav` and `SiteFooter` replace the old Navbar and Footer on every
+public page. The viewport no longer disables pinch zoom.
 
 Fonts are declared in `@theme inline` in `globals.css`: next/font defines `--font-dm-sans` on
-`<body>`, and a plain `@theme` value resolved on `:root` made every page render in Times New
-Roman.
+`<body>`, and a plain `@theme` value resolved on `:root` made every page render in Times New Roman.
 
 ---
 

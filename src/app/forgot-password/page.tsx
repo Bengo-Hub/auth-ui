@@ -48,8 +48,8 @@ function ForgotPasswordCard() {
       <AuthShell title="Check your email" subtitle={<>If an account exists for <span className="font-medium text-foreground">{email}</span>, a reset link is on its way.</>}>
         <div className="space-y-3">
           <p className="text-center text-sm text-muted-foreground">The link works for 30 minutes. Check your spam folder if it does not arrive.</p>
-          <Button asChild className="h-11 w-full"><Link href={backToSignIn}>Back to sign in</Link></Button>
-          <Button variant="outline" className="h-11 w-full" onClick={() => { setSent(false); setEmail(''); }}>Use another email</Button>
+          <Button asChild className="h-12 w-full rounded-full text-base font-semibold"><Link href={backToSignIn}>Back to sign in</Link></Button>
+          <Button variant="outline" className="h-12 w-full rounded-full text-base font-semibold" onClick={() => { setSent(false); setEmail(''); }}>Use another email</Button>
         </div>
       </AuthShell>
     );
@@ -65,9 +65,9 @@ function ForgotPasswordCard() {
         {error && <AuthNotice>{error}</AuthNotice>}
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11" required autoFocus />
+          <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl bg-card text-base" required autoFocus />
         </div>
-        <Button type="submit" className="h-11 w-full" disabled={isLoading}>
+        <Button type="submit" className="h-12 w-full rounded-full text-base font-semibold" disabled={isLoading}>
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send reset link'}
         </Button>
       </form>

@@ -154,19 +154,19 @@ export function CustomerSignupForm() {
 
       <div className="space-y-1.5">
         <Label htmlFor="name">Full name</Label>
-        <Input id="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className="h-11" required autoFocus />
+        <Input id="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className="h-12 rounded-xl bg-card text-base" required autoFocus />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setEmailTaken(false); }} className="h-11" required />
+        <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setEmailTaken(false); }} className="h-12 rounded-xl bg-card text-base" required />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="phone">Phone <span className="font-normal text-muted-foreground">(optional)</span></Label>
-        <Input id="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="+254 712 345 678" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-11" />
+        <Input id="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="+254 712 345 678" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-12 rounded-xl bg-card text-base" />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11" required />
+        <Input id="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-xl bg-card text-base" required />
         <p className="text-xs text-muted-foreground">At least {MIN_PASSWORD} characters.</p>
       </div>
 
@@ -179,7 +179,7 @@ export function CustomerSignupForm() {
         </span>
       </label>
 
-      <Button type="submit" className="h-11 w-full" disabled={busy}>
+      <Button type="submit" className="h-12 w-full rounded-full text-base font-semibold" disabled={busy}>
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create account'}
       </Button>
     </form>

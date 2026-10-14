@@ -1,31 +1,32 @@
 'use client';
 
 /**
- * Applies a tenant's branding (logo, name, colour tokens) to whatever it wraps, through the
- * shared shared-ui-lib TenantBrandingProvider so the colour maths and caching match every other
- * app (ordering-frontend, pos-ui, notifications-ui). The platform tenant, or no tenant, keeps
- * auth-ui's own Codevertex tokens. Used by the sign-in pages (tenant from the auth flow) and the
- * dashboard (the signed-in person's active organisation).
+ * Applies a tenant's brand (logo, name and a full colour theme) to whatever it wraps. The brand
+ * comes from the public tenant record (GET /api/v1/tenants/by-slug/{slug}) through the shared
+ * shared-ui-lib TenantBrandingProvider, which also handles caching and the service_branding names.
+ * Colours are NOT left to that provider's partial variable set: lib/tenant-theme.ts derives every
+ * token (tinted neutrals, accent, ring, dark mode, readable text) from the tenant's primary and
+ * secondary colours, so the whole surface follows the tenant, in light and dark.
+ *
+ * The platform tenant, or a tenant with no brand colour, keeps auth-ui's own Maskani-style theme.
+ * The last theme seen for each slug is kept in localStorage so a returning visitor sees the
+ * tenant's colours on first paint instead of after the network call.
  */
 
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, type ReactNode } from 'react';
 import { TenantBrandingProvider, useTenantBranding, type TenantBrand } from '@bengo-hub/shared-ui-lib/tenant';
 import { PLATFORM_TENANT_SLUG } from '@/lib/auth-context';
+import { buildTenantThemeCss, hasTenantTheme } from '@/lib/tenant-theme';
 
 const AUTH_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com';
 
-// Fallbacks while a tenant without its own colours resolves: auth-ui's own primary
-// (globals.css 291 100% 35%) and the Codevertex accent, so nothing flashes indigo.
-const PLATFORM_PRIMARY = '#9800B3';
-const PLATFORM_SECONDARY = '#ea8022';
 export const PLATFORM_LOGO = '/images/logo/codevertex.png';
 
-// Inline tokens the shared provider writes on <html>. Cleared when the scope unmounts so one
-// tenant's colour never leaks onto a platform page or another tenant.
-const BRAND_VARS = [
-  '--tenant-primary', '--tenant-secondary', '--tenant-logo-url', '--primary', '--primary-foreground',
-  '--ring', '--brand-primary', '--brand-emphasis', '--brand-dark', '--primary-dark',
-];
+const STYLE_ID = 'tenant-theme';
+const CACHE_PREFIX = 'cv-tenant-theme:';
+
+// Layout effects warn during server rendering; the theme only exists in the browser.
+const useBrowserLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 export interface ShellBrand {
   isPlatform: boolean;
@@ -58,13 +59,52 @@ function slugToName(slug: string): string {
   return slug.split(/[-_]+/).filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
+function setThemeCss(css: string) {
+  let el = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
+  if (!css) { el?.remove(); return; }
+  if (!el) {
+    el = document.createElement('style');
+    el.id = STYLE_ID;
+    document.head.appendChild(el);
+  }
+  if (el.textContent !== css) el.textContent = css;
+}
+
+/** Paints the cached theme for a slug as early as possible, and removes it with the scope. */
+function useCachedTheme(slug: string) {
+  useBrowserLayoutEffect(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_PREFIX + slug);
+      if (cached) setThemeCss(buildTenantThemeCss(JSON.parse(cached)));
+    } catch {
+      // Private mode or corrupt entry: the network result still applies.
+    }
+    return () => setThemeCss('');
+  }, [slug]);
+}
+
 function TenantBridge({ slug, children }: { slug: string; children: ReactNode }) {
   const { tenant, isLoading } = useTenantBranding();
+  useCachedTheme(slug);
+
+  // The provider echoes the slug as the brand name and a placeholder colour when the lookup fails,
+  // so only a real record (with its own colour) replaces the cached or platform theme.
+  const primary = tenant?.primaryColor ?? null;
+  const secondary = tenant?.secondaryColor ?? null;
+  useBrowserLayoutEffect(() => {
+    if (isLoading || !tenant || tenant.name === slug || !hasTenantTheme({ primary })) return;
+    setThemeCss(buildTenantThemeCss({ primary, secondary }));
+    try {
+      localStorage.setItem(CACHE_PREFIX + slug, JSON.stringify({ primary, secondary }));
+    } catch {
+      // Cache is an optimisation only.
+    }
+  }, [isLoading, tenant, slug, primary, secondary]);
+
   const value = useMemo<ShellBrand>(() => ({
     isPlatform: false,
     isLoading,
     slug,
-    // The shared provider echoes the slug as the name when the lookup fails.
     name: (tenant?.orgName && tenant.orgName !== slug ? tenant.orgName : '') || (tenant?.name && tenant.name !== slug ? tenant.name : '') || slugToName(slug),
     logoUrl: tenant?.logoUrl ?? null,
     tenant: tenant ?? null,
@@ -75,24 +115,11 @@ function TenantBridge({ slug, children }: { slug: string; children: ReactNode })
 export function TenantBrandScope({ slug, children }: { slug: string | null | undefined; children: ReactNode }) {
   const tenantSlug = slug && slug !== PLATFORM_TENANT_SLUG ? slug : '';
 
-  useEffect(() => {
-    if (!tenantSlug) return;
-    return () => {
-      const root = document.documentElement;
-      for (const v of BRAND_VARS) root.style.removeProperty(v);
-    };
-  }, [tenantSlug]);
-
   if (!tenantSlug) {
     return <ShellBrandContext.Provider value={PLATFORM_BRAND}>{children}</ShellBrandContext.Provider>;
   }
   return (
-    <TenantBrandingProvider
-      slug={tenantSlug}
-      authApiBase={AUTH_API_BASE}
-      defaultPrimaryColor={PLATFORM_PRIMARY}
-      defaultSecondaryColor={PLATFORM_SECONDARY}
-    >
+    <TenantBrandingProvider slug={tenantSlug} authApiBase={AUTH_API_BASE} applyCssVariables={false}>
       <TenantBridge slug={tenantSlug}>{children}</TenantBridge>
     </TenantBrandingProvider>
   );

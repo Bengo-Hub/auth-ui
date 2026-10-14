@@ -21,7 +21,7 @@ function PasswordInput({ id, label, value, onChange, autoFocus }: { id: string; 
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
       <div className="relative">
-        <Input id={id} type={show ? 'text' : 'password'} autoComplete="new-password" value={value} onChange={(e) => onChange(e.target.value)} className="h-11 pr-11" required autoFocus={autoFocus} />
+        <Input id={id} type={show ? 'text' : 'password'} autoComplete="new-password" value={value} onChange={(e) => onChange(e.target.value)} className="h-12 rounded-xl bg-card pr-12 text-base" required autoFocus={autoFocus} />
         <button type="button" onClick={() => setShow((s) => !s)} className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:text-foreground" aria-label={show ? 'Hide password' : 'Show password'}>
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
@@ -63,7 +63,7 @@ function ResetPasswordCard() {
   if (!token) {
     return (
       <AuthShell title="Link not valid" subtitle="This reset link is missing its code.">
-        <Button asChild className="h-11 w-full"><Link href={authFlowHref('/forgot-password', searchParams)}>Ask for a new link</Link></Button>
+        <Button asChild className="h-12 w-full rounded-full text-base font-semibold"><Link href={authFlowHref('/forgot-password', searchParams)}>Ask for a new link</Link></Button>
       </AuthShell>
     );
   }
@@ -71,7 +71,7 @@ function ResetPasswordCard() {
   if (done) {
     return (
       <AuthShell title="Password updated" subtitle="Sign in with your new password.">
-        <Button asChild className="h-11 w-full"><Link href={signIn}>Sign in</Link></Button>
+        <Button asChild className="h-12 w-full rounded-full text-base font-semibold"><Link href={signIn}>Sign in</Link></Button>
       </AuthShell>
     );
   }
@@ -83,7 +83,7 @@ function ResetPasswordCard() {
         <PasswordInput id="password" label="New password" value={password} onChange={setPassword} autoFocus />
         <PasswordInput id="confirm" label="Confirm new password" value={confirmPassword} onChange={setConfirmPassword} />
         <p className="text-xs text-muted-foreground">At least {MIN_PASSWORD} characters.</p>
-        <Button type="submit" className="h-11 w-full" disabled={isLoading}>
+        <Button type="submit" className="h-12 w-full rounded-full text-base font-semibold" disabled={isLoading}>
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save password'}
         </Button>
       </form>

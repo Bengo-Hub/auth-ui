@@ -4,7 +4,7 @@ import { PWAInstallPrompt } from "@/components/pwa/pwa-install-prompt";
 import { Toaster } from "@/components/ui/toaster";
 import { CookieNoticeMount } from "@/components/legal/CookieNoticeMount";
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, JetBrains_Mono, Outfit } from "next/font/google";
+import { DM_Sans, Fraunces, JetBrains_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 import "@bengo-hub/shared-ui-lib/contact/style.css";
 
@@ -14,11 +14,23 @@ import "@bengo-hub/shared-ui-lib/contact/style.css";
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
+// Headings: Outfit. Public pages and sign-in use Fraunces (soft serif) for display, as the
+// Maskani owner portal does.
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["500", "600", "700"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["SOFT", "opsz"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -70,13 +82,11 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c0910" },
+    { media: "(prefers-color-scheme: light)", color: "#6E1A5A" },
+    { media: "(prefers-color-scheme: dark)", color: "#4E1240" },
   ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -88,7 +98,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body
-        className={`${dmSans.variable} ${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}
+        className={`${dmSans.variable} ${outfit.variable} ${fraunces.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
         <ThemeProvider
           attribute="class"

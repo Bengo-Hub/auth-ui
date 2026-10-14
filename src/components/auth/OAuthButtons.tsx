@@ -65,7 +65,7 @@ function OAuthButton({ provider, label }: { provider: OAuthProviderDef; label: s
         type="button"
         onClick={start}
         disabled={isLoading}
-        className="flex h-11 w-full items-center justify-center gap-2.5 rounded-md border border-input bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex h-12 w-full items-center justify-center gap-2.5 rounded-full border border-input bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -80,7 +80,7 @@ function OAuthButton({ provider, label }: { provider: OAuthProviderDef; label: s
             className="!bg-transparent !p-0 !ring-0"
           />
         )}
-        {label} {provider.name}
+        {label ? `${label} ${provider.name}` : provider.name}
       </button>
       {failed && <p className="mt-1.5 text-center text-xs text-red-600 dark:text-red-400">Could not reach {provider.name}. Try again.</p>}
     </div>
@@ -94,8 +94,8 @@ export function OAuthButtonGroup({ label = 'Continue with', after }: { label?: s
   if (providers.length === 0) return null;
   return (
     <>
-      <div className="space-y-2.5">
-        {providers.map((p) => <OAuthButton key={p.id} provider={p} label={label} />)}
+      <div className={providers.length === 1 ? 'grid gap-3' : 'grid gap-3 sm:grid-cols-2'}>
+        {providers.map((p) => <OAuthButton key={p.id} provider={p} label={providers.length === 1 ? label : ''} />)}
       </div>
       {after}
     </>

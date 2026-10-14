@@ -13,7 +13,9 @@
    plain @theme value is resolved on :root where those do not exist yet. That made the whole
    stack invalid and every page rendered in Times New Roman, in production too. */
 @theme inline {
-  --font-sans: var(--font-dm-sans), var(--font-outfit), system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-display: var(--font-outfit), system-ui, sans-serif;
+  --font-heading: var(--font-outfit), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
 
@@ -58,6 +60,12 @@
   --color-brand-teal: #14b8a6;
   --color-brand-amber: #fbbf24;
   --color-brand-orange: #fb923c;
+
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-gold: hsl(var(--gold));
+  --color-gold-foreground: hsl(var(--gold-foreground));
+  --color-primary-dark: hsl(var(--primary-dark));
 
   --color-sidebar: hsl(var(--sidebar));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
@@ -134,90 +142,90 @@ button:focus-visible {
 }
 
 @layer base {
+  /* Maskani owner-portal system, shared across Codevertex sign-in surfaces: warm paper canvas,
+     deep plum primary, gold accent, soft serif for display. A tenant's own brand colour replaces
+     --primary at runtime (TenantBrandScope), so every surface below follows it. */
   :root {
-    /* Codevertex Africa Limited Brand Theme */
-    --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
+    --background: 320 20% 98.5%;
+    --foreground: 314 30% 13%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: 314 30% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
-
-    /* Primary - Brand Purple/Magenta #9100B0 */
-    --primary: 291 100% 35%;
+    --popover-foreground: 314 30% 13%;
+    --primary: 314 62% 27%;
+    --primary-dark: 314 63% 19%;
     --primary-foreground: 0 0% 100%;
+    --secondary: 314 22% 94%;
+    --secondary-foreground: 314 45% 20%;
+    --muted: 314 16% 95%;
+    --muted-foreground: 223 7% 40%;
+    --accent: 314 22% 95%;
+    --accent-foreground: 314 45% 20%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 60% 30%;
+    --warning: 32 92% 36%;
+    --gold: 38 56% 51%;
+    --gold-foreground: 314 63% 15%;
+    --border: 314 14% 89%;
+    --input: 314 14% 86%;
+    --ring: 314 62% 27%;
+    --radius: 0.75rem;
 
-    --secondary: 210 16% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 16% 96%;
-    --muted-foreground: 215 20% 47%;
-    --accent: 210 16% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 291 100% 35%;
-    --radius: 0.5rem;
+    --chart-1: 315 53% 36%;
+    --chart-2: 37 60% 41%;
+    --chart-3: 223 7% 55%;
+    --chart-4: 314 30% 62%;
+    --chart-5: 43 74% 66%;
 
-    /* Chart Colors */
-    --chart-1: 291 100% 35%;
-    --chart-2: 199 89% 48%;
-    --chart-3: 173 58% 45%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-
-    /* Custom */
     --creamy-white: 48 100% 96%;
 
-    /* Sidebar — light mode: clean white surface with visible text */
-    --sidebar: 0 0% 100%;
-    --sidebar-foreground: 222.2 47.4% 11.2%;
-    --sidebar-muted: 215 20% 47%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-hover: 210 16% 96%;
-    --sidebar-section: 215 20% 70%;
+    --sidebar: 30 20% 98.5%;
+    --sidebar-foreground: 314 30% 13%;
+    --sidebar-muted: 223 7% 42%;
+    --sidebar-border: 314 12% 90%;
+    --sidebar-hover: 314 14% 93.5%;
+    --sidebar-section: 223 7% 52%;
   }
 
   .dark {
-    /* Dark mode background: near-black #0c0910 */
-    --background: 270 20% 5%;
-    --foreground: 210 40% 98%;
-    --card: 270 20% 5%;
-    --card-foreground: 210 40% 98%;
-    --popover: 270 20% 5%;
-    --popover-foreground: 210 40% 98%;
+    --background: 314 30% 8%;
+    --foreground: 320 25% 95%;
+    --card: 314 28% 11%;
+    --card-foreground: 320 25% 95%;
+    --popover: 314 28% 11%;
+    --popover-foreground: 320 25% 95%;
+    --primary: 314 45% 62%;
+    --primary-dark: 314 45% 52%;
+    --primary-foreground: 314 60% 10%;
+    --secondary: 314 22% 18%;
+    --secondary-foreground: 320 25% 95%;
+    --muted: 314 18% 16%;
+    --muted-foreground: 320 10% 70%;
+    --accent: 314 22% 18%;
+    --accent-foreground: 320 25% 95%;
+    --destructive: 0 65% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 50% 52%;
+    --warning: 38 90% 60%;
+    --gold: 40 69% 69%;
+    --gold-foreground: 314 63% 12%;
+    --border: 314 18% 22%;
+    --input: 314 18% 25%;
+    --ring: 314 45% 62%;
 
-    /* Primary - lighter purple for dark bg */
-    --primary: 291 100% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 270 15% 14%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 270 15% 14%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 270 15% 14%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
-    --border: 270 15% 14%;
-    --input: 270 15% 14%;
-    --ring: 291 100% 60%;
-
-    /* Chart Colors - Dark mode */
-    --chart-1: 291 100% 60%;
-    --chart-2: 199 89% 58%;
-    --chart-3: 173 58% 55%;
-    --chart-4: 280 65% 60%;
+    --chart-1: 315 33% 54%;
+    --chart-2: 40 50% 44%;
+    --chart-3: 223 8% 62%;
+    --chart-4: 314 25% 45%;
     --chart-5: 43 74% 66%;
 
-    /* Sidebar — dark mode: deep purple-black surface */
-    --sidebar: 270 20% 5%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-muted: 215 20% 65%;
-    --sidebar-border: 270 15% 14%;
-    --sidebar-hover: 270 15% 14%;
-    --sidebar-section: 215 20% 50%;
+    --sidebar: 314 40% 7%;
+    --sidebar-foreground: 320 25% 95%;
+    --sidebar-muted: 314 12% 65%;
+    --sidebar-border: 314 25% 14%;
+    --sidebar-hover: 314 30% 15%;
+    --sidebar-section: 314 12% 55%;
   }
 }
 
@@ -230,6 +238,9 @@ button:focus-visible {
   }
   html {
     @apply font-sans;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
   }
   /* Tabular figures for data columns / amounts / counts — keeps numeric
      columns aligned and prevents width jitter as values change. */
@@ -322,4 +333,72 @@ button:focus-visible {
     border: 1px solid color-mix(in srgb, #ea8022, transparent 90%);
     transition: all 0.5s ease;
   }
+}
+
+/* ---- Public pages and sign-in: soft, photo-led, no gradients or glows (Maskani system) ---- */
+@utility font-display {
+  font-family: var(--font-display);
+}
+@utility font-serif-soft {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-variation-settings: "SOFT" 100, "WONK" 0;
+  letter-spacing: -0.015em;
+}
+@utility shadow-soft {
+  box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04), 0 8px 24px -6px hsl(var(--foreground) / 0.08);
+}
+@utility shadow-lift {
+  box-shadow: 0 2px 4px hsl(var(--foreground) / 0.04), 0 24px 48px -12px hsl(var(--foreground) / 0.16);
+}
+@utility bg-paper {
+  background-color: hsl(30 33% 97.5%);
+}
+.dark .bg-paper { background-color: hsl(var(--background)); }
+@utility photo-zoom {
+  overflow: hidden;
+  & img {
+    transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  &:hover img {
+    transform: scale(1.035);
+  }
+}
+@utility animate-rise {
+  animation: rise 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+/* Reveal on scroll: the Reveal component sets data-shown once the block enters the viewport. */
+@utility reveal {
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1), transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  &[data-shown="false"] {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+/* Soft glass for surfaces that sit over the tinted canvas (dashboard header, cards). */
+@utility glass {
+  background-color: hsl(var(--card) / 0.72);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid hsl(0 0% 100% / 0.65);
+  box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04), 0 12px 32px -14px hsl(var(--foreground) / 0.14);
+}
+.dark .glass { border-color: hsl(0 0% 100% / 0.08); }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tile-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@utility animate-tile-in {
+  animation: tile-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--tile-delay, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .photo-zoom img { transition: none; }
+  .animate-rise, .animate-tile-in { animation: none; }
 }
