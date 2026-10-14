@@ -32,7 +32,7 @@ export function AppLauncher({
             href={href(app)}
             className={cn(
               'flex aspect-[5/4] flex-col items-start justify-between rounded-2xl p-2.5 transition-transform hover:-translate-y-0.5',
-              tone === 'solid' ? 'bg-card text-card-foreground shadow-soft' : 'border border-border/60 bg-card shadow-soft',
+              tone === 'solid' ? 'bg-white text-slate-900 shadow-soft hover:shadow-lift dark:bg-card dark:text-card-foreground' : 'border border-border/60 bg-card shadow-soft',
             )}
           >
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-secondary text-primary">

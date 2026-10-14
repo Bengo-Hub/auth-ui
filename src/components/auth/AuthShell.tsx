@@ -8,7 +8,7 @@
  * name and colour replace the platform's through TenantBrandScope.
  */
 
-import { Check, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Check, Fingerprint, LogOut, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { AppLauncher } from '@/components/landing/AppLauncher';
@@ -62,6 +62,12 @@ function customerPerks(role: string, useCase: string): string[] | null {
 }
 const STAFF_PERKS = ['Passkeys and authenticator codes', 'See and end any session, from one place', 'Sign out once, everywhere'];
 
+const TRUST = [
+  { icon: Fingerprint, label: 'Passkeys' },
+  { icon: ShieldCheck, label: 'Two-step codes' },
+  { icon: LogOut, label: 'Sign out everywhere' },
+];
+
 function BrandPanel() {
   const brand = useAuthBrand();
   const { flow } = brand;
@@ -74,21 +80,49 @@ function BrandPanel() {
     : brand.appName
       ? `Welcome to ${brand.appName}.`
       : `Welcome to ${brand.name}.`;
+  const showLauncher = brand.isPlatform && !perks;
 
   return (
     <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-[2rem] bg-primary p-10 text-primary-foreground dark:border dark:border-border dark:bg-primary/20 dark:text-white xl:p-14">
-      <p className="text-sm font-medium opacity-70">{brand.isPlatform ? 'Codevertex' : brand.name}</p>
+      {/* Decoration: soft glows, orbit rings and a dot grid. Pure CSS, no image to load. */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-gold/30 blur-3xl" />
+        <div className="absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -right-40 top-1/3 h-[28rem] w-[28rem] rounded-full border border-white/10" />
+        <div className="absolute -right-24 top-[38%] h-80 w-80 rounded-full border border-white/10" />
+        <div
+          className="absolute inset-0 opacity-[0.18]"
+          style={{
+            backgroundImage: 'radial-gradient(currentColor 1px, transparent 1px)',
+            backgroundSize: '22px 22px',
+            maskImage: 'linear-gradient(to bottom, black, transparent 55%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black, transparent 55%)',
+          }}
+        />
+      </div>
 
-      <div className="space-y-8 py-10">
+      <div className="relative flex items-center justify-between">
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-medium backdrop-blur">
+          <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden />
+          {perks ? `For ${flow.customerApp?.people}` : brand.isPlatform ? 'Codevertex accounts' : 'Your account'}
+        </span>
+        <p className="text-sm font-medium opacity-70">{brand.isPlatform ? '' : brand.name}</p>
+      </div>
+
+      <div className="relative space-y-8 py-8">
         <div className="space-y-4">
-          <p className="text-sm font-medium tracking-wide opacity-80">
-            {perks ? `For ${flow.customerApp?.people}` : brand.isPlatform ? 'Codevertex accounts' : 'Your account'}
-          </p>
-          <h2 className="font-serif-soft max-w-md text-4xl leading-[1.1] xl:text-5xl">{headline}</h2>
+          <h2 className="font-serif-soft max-w-lg text-4xl leading-[1.08] xl:text-[3.25rem]">{headline}</h2>
+          {showLauncher && (
+            <p className="max-w-md text-[0.95rem] leading-relaxed opacity-85">
+              Point of sale, stock, books, payroll and orders open from one account, with one team list behind them.
+            </p>
+          )}
         </div>
 
-        {brand.isPlatform && !perks ? (
-          <AppLauncher className="max-w-xl" />
+        {showLauncher ? (
+          <div className="max-w-xl rounded-[1.5rem] border border-white/20 bg-white/10 p-3 shadow-lift backdrop-blur-sm">
+            <AppLauncher />
+          </div>
         ) : (
           <ul className="max-w-md space-y-3.5">
             {(perks ?? STAFF_PERKS).map((line) => (
@@ -103,9 +137,16 @@ function BrandPanel() {
         )}
       </div>
 
-      <p className="text-xs opacity-60">
-        {brand.isPlatform ? 'Codevertex Africa Limited' : 'Secured by Codevertex'}
-      </p>
+      <div className="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-white/15 pt-5">
+        <ul className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium opacity-90">
+          {TRUST.map((t) => (
+            <li key={t.label} className="inline-flex items-center gap-1.5">
+              <t.icon className="h-3.5 w-3.5" aria-hidden /> {t.label}
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs opacity-60">{brand.isPlatform ? 'Codevertex Africa Limited' : 'Secured by Codevertex'}</p>
+      </div>
     </div>
   );
 }
