@@ -1,9 +1,11 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
-import { useTenantMembers, useServiceSubscriptions, deriveActivePlan } from '@/hooks/use-dashboard-api';
+import { useTenantMembers, useServiceSubscriptions, deriveActivePlan, useProvisionTenantOAuthRedirects } from '@/hooks/use-dashboard-api';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Building2, CreditCard, Users } from 'lucide-react';
+import { Building2, CreditCard, Loader2, RefreshCw, Users } from 'lucide-react';
 
 // ── Overview ─────────────────────────────────────────────────────────────────
 
@@ -14,6 +16,17 @@ export function TenantOverview({ tenant }: { tenant: { id: string; name: string;
   const { data: subData } = useServiceSubscriptions(tenant.id);
   const activePlan = deriveActivePlan(subData);
   const planLabel = activePlan?.name ?? 'No active plan';
+
+  const { toast } = useToast();
+  const provision = useProvisionTenantOAuthRedirects();
+  const reprovision = {
+    isPending: provision.isPending,
+    mutate: () =>
+      provision.mutate(tenant.id, {
+        onSuccess: () => toast({ title: 'Sign-in URLs registered', description: `Apps now accept sign-in at /${tenant.slug}.` }),
+        onError: () => toast({ title: 'Could not register the sign-in URLs', description: 'Try again shortly.', variant: 'destructive' }),
+      }),
+  };
 
   const stats = [
     { label: 'Organization', value: tenant.name, icon: Building2, color: 'text-primary', bg: 'bg-primary/10' },
@@ -58,6 +71,20 @@ export function TenantOverview({ tenant }: { tenant: { id: string; name: string;
             </dd>
           </div>
         </dl>
+      </div>
+
+      <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-1">Sign-in URLs</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xl">
+            Signing in to each app only works at the address for your slug (<span className="font-mono">{tenant.slug}</span>).
+            They update on their own when the slug changes. If signing in fails after a change, register them again here.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => reprovision.mutate()} disabled={reprovision.isPending}>
+          {reprovision.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+          Reprovision sign-in URLs
+        </Button>
       </div>
     </div>
   );
