@@ -6,6 +6,24 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 const STALE_MS = 5 * 60 * 1000;
 
+// Service tags the tenant's plan covers (subscriptions entitled-services, via /api/entitled-services).
+// Undefined until loaded or when the lookup fails, which shows every service in the app switcher;
+// once known, the switcher marks the rest "Not in your plan". Exempt tenants cover every service.
+export function useEntitledServiceTags(tenantId: string | undefined): string[] | undefined {
+  const { data } = useQuery<string[] | null>({
+    queryKey: ['entitled-service-tags', tenantId],
+    queryFn: async () => {
+      const res = await fetch(`/api/entitled-services?tenant_id=${encodeURIComponent(tenantId as string)}`);
+      if (!res.ok) return null;
+      const body = (await res.json()) as { services?: { service_tag: string; entitled: boolean }[] };
+      return (body.services ?? []).filter((s) => s.entitled).map((s) => s.service_tag);
+    },
+    enabled: !!tenantId,
+    staleTime: 2 * 60 * 1000,
+  });
+  return data ?? undefined;
+}
+
 // ── Subscriptions (per-service, from the pricing API) ──────────────────────────
 // Shared by the Overview and Billing tabs so the "current plan" shown is always
 // the same source of truth (#4).

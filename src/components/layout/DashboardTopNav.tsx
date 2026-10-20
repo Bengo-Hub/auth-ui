@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { JoinOrganizationDialog } from '@/components/organizations/JoinOrganizationDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { useEntitledServiceTags } from '@/hooks/use-dashboard-api';
 import { isNavItemActive, useDashboardNav, type NavGroup } from '@/hooks/useDashboardNav';
 import { useLogout } from '@/hooks/useLogout';
 import { useAuthStore } from '@/store/auth-store';
@@ -105,10 +106,15 @@ export function DashboardTopNav() {
 
   const displayTitle = brand.isPlatform ? 'Codevertex Accounts' : `${brand.name} Accounts`;
   const orgSlug = user?.tenant?.slug ?? user?.tenants?.[0]?.slug ?? '';
+  // A service outside the plan stays visible as "Not in your plan" with a link to the plans page, so
+  // members discover the rest of the suite (the shared switcher default).
+  const activeServiceTags = useEntitledServiceTags(user?.tenant?.id ?? user?.tenants?.[0]?.id);
   const rawServices = useVisibleServices({
     orgSlug,
     urls: SERVICE_URLS,
     canManageLinks: isPlatformOwner || isTenantAdmin,
+    activeServiceTags,
+    upgradeUrl: SERVICE_URLS.subscriptions ? `${SERVICE_URLS.subscriptions}/${orgSlug}` : null,
   });
   // mail-ui doesn't share this app's SSO session (it authenticates its own
   // mailbox credential separately) — its real entry point is /login?tenant=,
