@@ -15,6 +15,7 @@ import { AppLauncher } from '@/components/landing/AppLauncher';
 import { useAuthBrand, type AuthBrand } from '@/components/auth/AuthBrand';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { cn } from '@/lib/utils';
+import { MediaImage } from '@bengo-hub/shared-ui-lib/media';
 
 function Logo({ brand, className, invert }: { brand: AuthBrand; className?: string; invert?: boolean }) {
   if (brand.isLoading) return <div className={cn('animate-pulse rounded-xl bg-muted', className)} aria-hidden />;
@@ -30,7 +31,7 @@ function Logo({ brand, className, invert }: { brand: AuthBrand; className?: stri
       ) : (
         // Tenant logos are often drawn on white: a neutral plate keeps them legible in dark mode too.
         <span className="inline-flex rounded-xl bg-white p-1.5 shadow-soft">
-          <img src={brand.logoUrl} alt={brand.name} className={cn('w-auto max-w-[14rem] object-contain', className)} />
+          <MediaImage src={brand.logoUrl} displayWidth={224} loading="eager" alt={brand.name} className={cn('w-auto max-w-[14rem] object-contain', className)} />
         </span>
       )
     );
