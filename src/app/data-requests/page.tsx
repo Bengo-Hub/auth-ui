@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'How to see, correct, download or delete your personal data, and how to stop marketing messages.',
 };
 
-const UPDATED = '6 October 2026';
+const UPDATED = '24 October 2026';
 
 const RIGHTS = [
   { icon: Eye, title: 'See your data', text: 'Ask what personal data we hold about you and how we use it.' },
@@ -71,6 +71,36 @@ const sections: LegalSection[] = [
         <p>
           If you run a business on Codevertex, the records of your own customers belong to your business. Ask the
           business directly about their data, or contact us if you cannot reach them.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'meta',
+    title: 'Data from Facebook, Instagram and Threads',
+    icon: FileX,
+    body: (
+      <>
+        <p>
+          If you connected a Facebook Page, Instagram account, ad account or Threads profile to MarketFlow, you can
+          delete what we received from Meta for you in two ways:
+        </p>
+        <ul>
+          <li>
+            Remove MarketFlow from your Facebook settings (Settings and privacy, Settings, Apps and websites) or from
+            Threads. Meta tells us at once, we delete the access tokens and connections you granted, and Meta shows
+            you a confirmation code.
+          </li>
+          <li>
+            Or email <a href={`mailto:${LEGAL_CONTACT.email}`}>{LEGAL_CONTACT.email}</a> and we do it for you.
+          </li>
+        </ul>
+        <p>
+          You can check a request with its confirmation code at{' '}
+          <a href="https://marketflow.codevertexafrica.com/data-deletion" rel="noopener noreferrer">
+            marketflow.codevertexafrica.com/data-deletion
+          </a>
+          . Leads and messages that people sent to a business stay with that business as its customer records.
         </p>
       </>
     ),

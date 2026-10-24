@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     'Privacy Policy for Codevertex Africa Limited and the Codevertex SSO / accounts identity platform. Learn how we collect, use, and protect your personal data.',
 };
 
-const LAST_UPDATED = 'October 6, 2026';
+const LAST_UPDATED = 'October 24, 2026';
 const EFFECTIVE_DATE = 'Jan 01, 2022';
 
 const TOC = [
@@ -34,6 +34,8 @@ const TOC = [
   { id: 'sharing', label: '4. Third-Party Sharing' },
   { id: 'google-ads', label: '5. Google Ads API Data' },
   { id: 'google-signin', label: '5A. Google Sign-In Data' },
+  { id: 'meta-data', label: '5B. Meta Platform Data' },
+  { id: 'google-calendar', label: '5C. Google Calendar Data' },
   { id: 'cookies', label: '6. Cookies & Tracking' },
   { id: 'security', label: '7. Security Measures' },
   { id: 'retention', label: '8. Data Retention' },
@@ -227,6 +229,7 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Payment Processing:</strong> Paystack and other PCI-DSS certified payment gateways process card transactions. We receive only a tokenized reference, not raw card data.</li>
                 <li><strong>Email Delivery:</strong> Transactional emails (password resets, security alerts) are sent via our Notifications Engine, which may relay to an SMTP provider.</li>
                 <li><strong>Error Monitoring:</strong> Aggregated, anonymised crash reports may be sent to internal monitoring tools (Prometheus, Grafana Loki) with PII stripped at log time.</li>
+                <li><strong>AI and media generation (MarketFlow):</strong> To answer chats and make ads, MarketFlow sends the text and images a tenant provides (questions, product details, brand descriptions, product photos) to AI providers acting as processors: Groq, OpenAI, Anthropic and TypeSafe for language, and fal.ai, Higgsfield, ElevenLabs and Creatomate for images, video and voice. We send only what the task needs, never passwords or payment data, and we choose providers whose API terms do not use customer data to train their models.</li>
               </ul>
 
               <h3>4.2 Advertising APIs (MarketFlow Only)</h3>
@@ -236,7 +239,8 @@ export default function PrivacyPolicyPage() {
               </p>
               <ul>
                 <li><strong>Google Ads API:</strong> Campaign metrics are fetched for the tenant&apos;s own account. Offline conversion events are uploaded with the tenant&apos;s Google Click ID (gclid), monetary value, and conversion timestamp. No personal data is attached.</li>
-                <li><strong>Meta Graph API:</strong> Lead and ad performance data for the tenant&apos;s own Meta Business account. No cross-tenant data sharing occurs.</li>
+                <li><strong>Meta Graph API:</strong> Lead and ad performance data for the tenant&apos;s own Meta Business account, and the posts and ads the tenant chooses to publish. No cross-tenant data sharing occurs. See Section 5B.</li>
+                <li><strong>Meta Conversions API:</strong> When a tenant turns it on, conversion events from that tenant&apos;s own customers (for example a purchase) are sent to the tenant&apos;s own Meta dataset to measure their ads. Email addresses and phone numbers are hashed (SHA-256) before they leave our servers.</li>
               </ul>
 
               <h3>4.3 Legal Disclosures</h3>
@@ -309,6 +313,58 @@ export default function PrivacyPolicyPage() {
               <p>
                 Codevertex&apos;s use and transfer of information received from Google APIs to any other app
                 adheres to the{' '}
+                <a href="https://developers.google.com/terms/api-services-user-data-policy#limited-use" rel="noopener noreferrer"><strong>Google API Services User Data Policy</strong></a>
+                , including the Limited Use requirements.
+              </p>
+            </section>
+
+            {/* 5B. Meta Platform Data */}
+            <section id="meta-data">
+              <div className="flex items-center gap-3 mb-6 not-prose">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">5B. Meta Platform Data (Facebook, Instagram, Threads, WhatsApp)</h2>
+              </div>
+              <p>
+                MarketFlow lets a business connect its own Facebook Page, Instagram business account, ad
+                account and, where offered, Threads profile and WhatsApp Business number, through Facebook
+                Login for Business. This section describes what Meta Platform Data we receive and how we use it.
+              </p>
+              <ul>
+                <li><strong>Who connects.</strong> Only a person who manages the business&apos;s Page or ad account, after Meta&apos;s consent screen lists each permission. We never connect anything silently.</li>
+                <li><strong>What we receive.</strong> The connecting person&apos;s app-scoped user ID; the Pages, Instagram accounts and ad accounts they choose, with access tokens for them; leads submitted to the business&apos;s Lead Ads forms; comments and messages sent to the business&apos;s Page or Instagram account where the business turns on the inbox; and ad performance figures.</li>
+                <li><strong>Why we use it.</strong> To show the business its leads, messages and ad results; to publish the posts and ads the business approves; to reply on the business&apos;s behalf where it asks us to; and to send its own conversion events to its own Meta dataset. Nothing else.</li>
+                <li><strong>What we never do.</strong> We do not sell Meta Platform Data, use it to build profiles of people, share it with other businesses on MarketFlow, use it to train AI models, or use it for any purpose other than the features the business uses.</li>
+                <li><strong>Storage and security.</strong> Access tokens are encrypted with AES-256-GCM and are never logged or shown to staff. Data is kept in the business&apos;s own account and isolated from every other business.</li>
+                <li><strong>Retention.</strong> Tokens are kept while the connection is active and deleted when the business disconnects or the person removes the app. Leads and messages become the business&apos;s customer records and follow the retention in Section 8.</li>
+                <li><strong>Deletion.</strong> Removing MarketFlow in your Facebook settings (Settings, Apps and websites) deletes the tokens you granted automatically, through our data deletion callback, and gives you a confirmation code you can check at <a href="https://marketflow.codevertexafrica.com/data-deletion" rel="noopener noreferrer">marketflow.codevertexafrica.com/data-deletion</a>. You can also email <a href="mailto:info@codevertexafrica.com">info@codevertexafrica.com</a>. See <Link href="/data-requests" className="text-primary underline">Your data and your rights</Link>.</li>
+              </ul>
+              <p>
+                Our use of Meta Platform Data follows the <strong>Meta Platform Terms</strong> and the{' '}
+                <strong>Meta Developer Policies</strong>.
+              </p>
+            </section>
+
+            {/* 5C. Google Calendar Data */}
+            <section id="google-calendar">
+              <div className="flex items-center gap-3 mb-6 not-prose">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <UserCheck className="w-5 h-5" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">5C. Google Calendar Data (MarketFlow)</h2>
+              </div>
+              <p>
+                Separately from signing in (Section 5A), a MarketFlow business can connect its Google
+                Calendar so customers can book meetings with it.
+              </p>
+              <ul>
+                <li><strong>What we request.</strong> Access to the connected calendar&apos;s free and busy times and to create, update and cancel the meetings booked through MarketFlow. The consent screen lists the exact scopes.</li>
+                <li><strong>Why we use it.</strong> To offer only free times on the business&apos;s booking page, add booked meetings with a video link to its calendar, and keep them in step when a meeting changes. We do not read event details that MarketFlow did not create.</li>
+                <li><strong>Storage, sharing and deletion.</strong> The refresh token is encrypted with AES-256-GCM. We do not sell, share or use Google Calendar data for advertising or AI training. Disconnecting the calendar deletes the token at once; you can also revoke access at <a href="https://myaccount.google.com/permissions" rel="noopener noreferrer">myaccount.google.com/permissions</a>.</li>
+              </ul>
+              <p>
+                This use adheres to the{' '}
                 <a href="https://developers.google.com/terms/api-services-user-data-policy#limited-use" rel="noopener noreferrer"><strong>Google API Services User Data Policy</strong></a>
                 , including the Limited Use requirements.
               </p>
