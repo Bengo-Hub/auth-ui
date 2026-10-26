@@ -21,6 +21,7 @@ import {
   useSetUserTenantRoles,
   useRemoveUserFromTenant,
   useAdminSetUserServicePin,
+  useAdminUser,
   useTenants,
   type PlatformUser,
 } from '@/hooks/use-dashboard-api';
@@ -145,14 +146,14 @@ function MembershipsSection({ user }: { user: PlatformUser }) {
               value={m.roles?.[0] ?? 'member'}
               onChange={(e) => setRoles.mutate(
                 { tenantId: m.tenant_id, userId: user.id, roles: [e.target.value] },
-                { onSuccess: () => toast({ title: 'Role updated' }), onError: () => toast({ title: 'Failed to update role', variant: 'destructive' }) },
+                { onSuccess: () => toast({ title: 'Role updated' }), onError: (err: any) => toast({ title: 'Failed to update role', description: err?.response?.data?.error, variant: 'destructive' }) },
               )}
               className="h-8 rounded-md border border-input bg-background px-2 text-sm w-36"
             >
               {SSO_ROLES.map((r) => <option key={r} value={r} className="capitalize">{r}</option>)}
             </select>
             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"
-              onClick={() => { if (confirm(`Remove from ${tenantName(m.tenant_id)}?`)) removeFromTenant.mutate({ tenantId: m.tenant_id, userId: user.id }, { onSuccess: () => toast({ title: 'Removed from organization' }) }); }}>
+              onClick={() => { if (confirm(`Remove from ${tenantName(m.tenant_id)}?`)) removeFromTenant.mutate({ tenantId: m.tenant_id, userId: user.id }, { onSuccess: () => toast({ title: 'Removed from organization' }), onError: (err: any) => toast({ title: 'Failed to remove', description: err?.response?.data?.error, variant: 'destructive' }) }); }}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -172,7 +173,7 @@ function MembershipsSection({ user }: { user: PlatformUser }) {
           <Button size="sm" disabled={!addTenantId || addToTenant.isPending}
             onClick={() => addToTenant.mutate(
               { tenantId: addTenantId, userId: user.id, roles: [addRole] },
-              { onSuccess: () => { toast({ title: 'Added to organization' }); setAddTenantId(''); }, onError: () => toast({ title: 'Failed to add', variant: 'destructive' }) },
+              { onSuccess: () => { toast({ title: 'Added to organization' }); setAddTenantId(''); }, onError: (err: any) => toast({ title: 'Failed to add', description: err?.response?.data?.error, variant: 'destructive' }) },
             )}>
             <Plus className="h-4 w-4" />
           </Button>
@@ -183,12 +184,16 @@ function MembershipsSection({ user }: { user: PlatformUser }) {
 }
 
 export function EditUserDialog({
-  user,
+  user: rowUser,
   onClose,
 }: {
   user: PlatformUser;
   onClose: () => void;
 }) {
+  // The row snapshot goes stale after a membership change (and drops out entirely when the
+  // list is filtered/searched), so read the live record and fall back to the row.
+  const { data: liveUser } = useAdminUser(rowUser.id);
+  const user = liveUser ?? rowUser;
   const { toast } = useToast();
   const update = useUpdateAdminUser();
   const resetPw = useAdminResetPassword();
@@ -203,7 +208,7 @@ export function EditUserDialog({
       { id: user.id, email },
       {
         onSuccess: () => { toast({ title: 'Updated', description: 'User email updated.' }); onClose(); },
-        onError: () => toast({ title: 'Error', description: 'Failed to update user.', variant: 'destructive' }),
+        onError: (err: any) => toast({ title: 'Error', description: err?.response?.data?.error || 'Failed to update user.', variant: 'destructive' }),
       }
     );
   };
