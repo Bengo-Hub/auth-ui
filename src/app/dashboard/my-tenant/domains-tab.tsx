@@ -162,7 +162,9 @@ export function DomainsTab({ tenantId }: { tenantId: string }) {
 
       <ul className="space-y-3">
         {list.map((d) => {
-          const st = STATUS[d.status];
+          const st = d.status === 'pending_dns' && d.dns_mode === 'cloudflare'
+            ? { ...STATUS.pending_dns, label: 'Setting up DNS' }
+            : STATUS[d.status];
           return (
             <li key={d.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
               <div className="flex flex-wrap items-center gap-2 justify-between">
