@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Building2,
   Edit,
+  Globe,
   Link as LinkIcon,
   Loader2,
   MoreVertical,
@@ -50,6 +51,8 @@ export interface TenantColumnCallbacks {
   onEdit: (tenant: Tenant) => void;
   onDelete: (tenant: Tenant) => void;
   onProvisionRedirects: (tenant: Tenant) => void;
+  /** Opens the tenant's custom domains (platform owners connect domains for a tenant). */
+  onDomains: (tenant: Tenant) => void;
   /** useProvisionTenantOAuthRedirects() is a single shared mutation (not per-row),
    * so — matching the pre-conversion behavior exactly — every row's menu item
    * disables/spins together while any provision-redirects call is in flight. */
@@ -165,6 +168,9 @@ export function buildTenantColumns(cb: TenantColumnCallbacks): DataTableColumn<T
                   <LinkIcon className="h-4 w-4 mr-2" />
                 )}
                 Provision OAuth Redirects
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => cb.onDomains(t)} className="rounded-xl p-3 cursor-pointer">
+                <Globe className="h-4 w-4 mr-2" /> Custom Domains
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => cb.onDelete(t)} className="rounded-xl p-3 cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-900/20">
                 <Trash2 className="h-4 w-4 mr-2" /> Delete Organization

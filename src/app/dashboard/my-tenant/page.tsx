@@ -7,6 +7,7 @@ import {
     Building2,
     CreditCard,
     DatabaseBackup,
+    Globe,
     MessageCircle,
     Palette,
     Store,
@@ -19,8 +20,9 @@ import { TeamTab } from './team-tab';
 import { BillingTab } from './billing-tab';
 import { SupportTab } from './support-tab';
 import { BackupsTab } from './backups-tab';
+import { DomainsTab } from './domains-tab';
 
-type Tab = 'overview' | 'branding' | 'branches' | 'team' | 'billing' | 'backups' | 'support';
+type Tab = 'overview' | 'branding' | 'branches' | 'team' | 'billing' | 'domains' | 'backups' | 'support';
 
 export default function MyTenantPage() {
   const { user, isTenantAdmin } = useAuth();
@@ -62,6 +64,7 @@ export default function MyTenantPage() {
     { id: 'branches', label: 'Branches', icon: Store },
     { id: 'team', label: 'Team', icon: Users },
     { id: 'billing', label: 'Billing', icon: CreditCard },
+    { id: 'domains', label: 'Domains', icon: Globe },
     { id: 'backups', label: 'Backups', icon: DatabaseBackup },
     { id: 'support', label: 'Support', icon: MessageCircle },
   ];
@@ -96,6 +99,7 @@ export default function MyTenantPage() {
       {activeTab === 'branches' && <BranchesTab tenantSlug={tenant.slug} />}
       {activeTab === 'team' && <TeamTab tenantId={tenant.id} tenantSlug={tenant.slug} />}
       {activeTab === 'billing' && <BillingTab tenantSlug={tenant.slug} user={user} />}
+      {activeTab === 'domains' && <DomainsTab tenantId={tenant.id} />}
       {activeTab === 'backups' && <BackupsTab tenantId={tenant.id} />}
       {activeTab === 'support' && <SupportTab tenant={tenant} />}
     </div>

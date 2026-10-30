@@ -37,6 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth-store';
 import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
 import { buildTenantColumns } from './tenants-columns';
+import { DomainsTab } from '../my-tenant/domains-tab';
 import { suggestTenantSlug } from '@/lib/tenant-slug';
 
 function slugify(text: string): string {
@@ -414,6 +415,7 @@ export default function TenantsPage() {
   const setActiveTenant = useAuthStore((state) => state.setActiveTenant);
 
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+  const [domainsTenant, setDomainsTenant] = useState<Tenant | null>(null);
   const [deletingTenant, setDeletingTenant] = useState<Tenant | null>(null);
 
   const handleSwitch = (tenant: Tenant) => {
@@ -455,6 +457,7 @@ export default function TenantsPage() {
         onEdit: setEditingTenant,
         onDelete: setDeletingTenant,
         onProvisionRedirects: handleProvisionRedirects,
+        onDomains: setDomainsTenant,
         provisionPending: provisionRedirects.isPending,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -500,6 +503,18 @@ export default function TenantsPage() {
         onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         pageSizeOptions={[20, 50, 100]}
       />
+
+      {domainsTenant && (
+        <Dialog open={!!domainsTenant} onOpenChange={(open) => !open && setDomainsTenant(null)}>
+          <DialogContent className="sm:max-w-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Custom domains: {domainsTenant.name}</DialogTitle>
+              <DialogDescription>Connect a domain this organization owns to one of its services.</DialogDescription>
+            </DialogHeader>
+            <DomainsTab tenantId={domainsTenant.id} />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {editingTenant && (
         <EditOrgDialog 
