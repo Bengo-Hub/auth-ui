@@ -362,6 +362,10 @@ export interface TenantMember {
   roles: string[];
   status: string;
   outlet_id?: string;
+  /** Services a tenant admin assigned; absent while the services follow the roles. */
+  services?: string[];
+  /** Services the member gets ("*" = every service); absent when it could not be decided. */
+  effective_services?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -469,6 +473,10 @@ interface UpdateTenantMemberPayload {
   roles?: string[];
   outlet_id?: string;
   status?: string;
+  /** Assign these services (each in the plan and backed by a role, else 422). */
+  services?: string[];
+  /** Clear the assignment so the services follow the roles again. */
+  services_follow_roles?: boolean;
 }
 
 export function useUpdateTenantMember(tenantId: string | undefined) {

@@ -14,6 +14,7 @@ import {
   useSetMemberPin,
   useAdminResetPassword,
   useAdminSendResetEmail,
+  useEntitledServiceTags,
   type TenantMember,
 } from '@/hooks/use-dashboard-api';
 import { useQuery } from '@tanstack/react-query';
@@ -22,7 +23,7 @@ import { Loader2, Plus, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { outletsPath, type TenantOutlet } from './shared';
 import { TEAM_ROLES, buildTeamColumns } from './team-columns';
-import { AssignOutletDialog, ResetPasswordDialog, SetPinDialog, TempPasswordRevealDialog } from './team-dialogs';
+import { AssignOutletDialog, ResetPasswordDialog, ServiceAccessDialog, SetPinDialog, TempPasswordRevealDialog } from './team-dialogs';
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,8 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
   // for each: only the invite path actually sends a welcome email).
   const [tempPwInfo, setTempPwInfo] = useState<{ email: string; password: string; context: 'invite' | 'reset' } | null>(null);
   const [resetPwTarget, setResetPwTarget] = useState<TenantMember | null>(null);
+  const [servicesTarget, setServicesTarget] = useState<TenantMember | null>(null);
+  const entitledTags = useEntitledServiceTags(tenantId);
 
   const addMember = useAddTenantMember(tenantId);
   const updateMember = useUpdateTenantMember(tenantId);
@@ -207,6 +210,7 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
         onStatusChange: handleStatusChange,
         onAssignOutlet: (m) => { setOutletTarget(m); setOutletAssignId(m.outlet_id ?? ''); },
         onSetPin: (m) => { setPinTarget(m); setPin(''); },
+        onServices: setServicesTarget,
         onResetPassword: setResetPwTarget,
         onRemove: handleRemove,
       }),
@@ -329,6 +333,15 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
       </section>
 
       {/* Assign Outlet Modal */}
+      {servicesTarget && (
+        <ServiceAccessDialog
+          key={servicesTarget.user_id}
+          tenantId={tenantId}
+          target={servicesTarget}
+          entitledTags={entitledTags}
+          onClose={() => setServicesTarget(null)}
+        />
+      )}
       {outletTarget && (
         <AssignOutletDialog
           target={outletTarget}

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { TenantMember } from '@/hooks/use-dashboard-api';
-import { Copy, KeyRound, Loader2, Lock, Mail, MapPin } from 'lucide-react';
+import { useUpdateTenantMember, type TenantMember } from '@/hooks/use-dashboard-api';
+import { useToast } from '@/hooks/use-toast';
+import { AppWindow, Copy, KeyRound, Loader2, Lock, Mail, MapPin } from 'lucide-react';
 import type { TenantOutlet } from './shared';
 
 // Modal dialogs used by TeamTab's member list: outlet assignment, service-PIN
@@ -281,6 +282,159 @@ export function TempPasswordRevealDialog({
         </div>
         <Button type="button" className="w-full h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold"
           onClick={onDone}>Done</Button>
+      </div>
+    </div>
+  );
+}
+
+// Display names for service tags (auth-api access rules, subscription service tags).
+const SERVICE_LABELS: Record<string, string> = {
+  pos: 'POS', inventory: 'Inventory', treasury: 'Books', ordering: 'Online ordering', logistics: 'Logistics',
+  hospital: 'Hospital', library: 'Library', maskani: 'Maskani', projects: 'Projects', erp: 'ERP',
+};
+export const serviceLabel = (tag: string) =>
+  tag === '*' ? 'Every service' : SERVICE_LABELS[tag] ?? tag.charAt(0).toUpperCase() + tag.slice(1);
+
+interface RoleRequiredDetails {
+  services?: string[];
+  roles_by_service?: Record<string, string[]>;
+}
+
+// Which services keep this member (their user, roles and PIN in that service). Tenant admins get
+// every planned service; anyone else gets what is ticked here, within the plan, and each ticked
+// service needs a role for it: when one is missing, the admin picks a role to add and saves again.
+export function ServiceAccessDialog({
+  tenantId,
+  target,
+  entitledTags,
+  onClose,
+}: {
+  tenantId: string;
+  target: TenantMember;
+  /** The plan's service tags; undefined while loading or when the plan is not limited. */
+  entitledTags: string[] | undefined;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const updateMember = useUpdateTenantMember(tenantId);
+  const isAdmin = target.roles.some((r) => r === 'admin' || r === 'superuser');
+  const [followRoles, setFollowRoles] = useState(!target.services);
+  const [picked, setPicked] = useState<string[]>(
+    target.services ?? (target.effective_services ?? []).filter((s) => s !== '*'),
+  );
+  const [needRole, setNeedRole] = useState<RoleRequiredDetails | null>(null);
+  const [rolesToAdd, setRolesToAdd] = useState<Record<string, string>>({});
+
+  const choices = useMemo(() => {
+    const tags = new Set<string>(entitledTags ?? Object.keys(SERVICE_LABELS));
+    picked.forEach((t) => tags.add(t));
+    return Array.from(tags).sort();
+  }, [entitledTags, picked]);
+
+  const toggle = (tag: string) =>
+    setPicked((cur) => (cur.includes(tag) ? cur.filter((t) => t !== tag) : [...cur, tag]));
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const extraRoles = Object.values(rolesToAdd).filter(Boolean);
+    const roles = Array.from(new Set([...target.roles, ...extraRoles]));
+    try {
+      await updateMember.mutateAsync(
+        followRoles
+          ? { user_id: target.user_id, roles: target.roles, services_follow_roles: true }
+          : { user_id: target.user_id, roles, services: picked },
+      );
+      toast({ title: `Service access saved for ${target.name ?? target.email}` });
+      onClose();
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { code?: string; error?: string; details?: RoleRequiredDetails } } })
+        ?.response?.data;
+      if (data?.code === 'role_required_for_service' && data.details) {
+        setNeedRole(data.details);
+        return;
+      }
+      toast({ title: data?.error ?? 'Failed to save service access', variant: 'destructive' });
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl w-full max-w-md p-8 max-h-[90dvh] overflow-y-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <AppWindow className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Service Access</h3>
+            <p className="text-xs text-slate-400 mt-0.5">{target.name ?? target.email}</p>
+          </div>
+        </div>
+        {isAdmin ? (
+          <div className="space-y-5">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Admins use every service in your plan. Remove the admin role to limit this person to chosen services.
+            </p>
+            <Button type="button" variant="outline" className="w-full h-12 rounded-2xl" onClick={onClose}>Close</Button>
+          </div>
+        ) : (
+          <form onSubmit={save} className="space-y-5">
+            <label className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-200">
+              <input type="checkbox" className="mt-1" checked={followRoles} onChange={(e) => setFollowRoles(e.target.checked)} />
+              <span>
+                Follow their roles
+                <span className="block text-xs text-slate-400">
+                  Services come from the roles they hold
+                  {target.effective_services?.length ? `: now ${target.effective_services.map(serviceLabel).join(', ')}` : ''}.
+                </span>
+              </span>
+            </label>
+            {!followRoles && (
+              <fieldset className="space-y-2">
+                <legend className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Services they use</legend>
+                {choices.map((tag) => (
+                  <label key={tag} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
+                    <input type="checkbox" checked={picked.includes(tag)} onChange={() => toggle(tag)} />
+                    {serviceLabel(tag)}
+                  </label>
+                ))}
+                <p className="text-xs text-slate-400">Only services in your plan are listed. Unticked services remove this person from them.</p>
+              </fieldset>
+            )}
+            {needRole?.services?.length ? (
+              <div className="space-y-3 rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-500/10 p-4">
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  Add a role for {needRole.services.map(serviceLabel).join(', ')} first.
+                </p>
+                {needRole.services.map((svc) => {
+                  const options = needRole.roles_by_service?.[svc] ?? [];
+                  return (
+                    <div key={svc} className="space-y-1">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">{serviceLabel(svc)} role</Label>
+                      <select
+                        value={rolesToAdd[svc] ?? ''}
+                        onChange={(e) => setRolesToAdd((cur) => ({ ...cur, [svc]: e.target.value }))}
+                        className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      >
+                        <option value="">Choose a role to add</option>
+                        {options.map((r) => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
+                      </select>
+                      {options.length === 0 && (
+                        <p className="text-xs text-slate-500">No role is set up for this service yet; untick it or ask the platform team.</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="outline" className="flex-1 h-12 rounded-2xl" onClick={onClose}>Cancel</Button>
+              <Button type="submit" disabled={updateMember.isPending}
+                className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold">
+                {updateMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : needRole ? 'Add role and save' : 'Save'}
+              </Button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
