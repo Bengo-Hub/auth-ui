@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppWindow, RotateCcw } from 'lucide-react';
 import { serviceAppName, serviceBrandingMap, serviceShortName } from '@bengo-hub/shared-ui-lib/branding';
 import {
-  BRANDABLE_SERVICES,
+  brandableServicesFor,
   getServiceBranding,
   type ServiceBrandingEntry,
 } from '@/lib/tenant-api';
@@ -47,7 +47,7 @@ export function ServiceBrandingSection({
         blank to use the name shown.
       </p>
       <div className="space-y-6">
-        {BRANDABLE_SERVICES.map((service) => {
+        {brandableServicesFor(tenantData?.slug).map((service) => {
           const entry = getServiceBranding(tenantData?.metadata, service.key) || {};
           const customised = Boolean(entry.name || entry.icon_url || entry.short_name);
           return (

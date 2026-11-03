@@ -86,6 +86,16 @@ export interface BrandableService {
   description: string;
   /** SSO client id, so the sign-in page can say "Continue to <app name>". */
   clientId?: string;
+  /**
+   * Tenant slug of a custom service built for one client (Hadia). The branding settings list it
+   * only for that tenant, so other tenants never see it; the sign-in page still names it.
+   */
+  onlyForTenant?: string;
+}
+
+/** The brandable services a given tenant may see in its settings (custom services only for their tenant). */
+export function brandableServicesFor(tenantSlug: string | undefined | null): BrandableService[] {
+  return BRANDABLE_SERVICES.filter((s) => !s.onlyForTenant || s.onlyForTenant === tenantSlug);
 }
 
 /** Every app that shows the tenant's own name for it (header, install prompt, manifest). */
@@ -114,6 +124,9 @@ export const BRANDABLE_SERVICES: BrandableService[] = [
     description: 'Estate bills, payments, visitors and requests.' },
   { key: 'library', label: 'Library', appLabel: 'Library',
     description: 'Catalogue, loans, holds and fines.' },
+  // Custom service for one client: listed in branding settings only for the hadia tenant.
+  { key: 'hadia', label: 'Hadia (gift registry)', appLabel: 'Hadia', clientId: 'hadia-ui', onlyForTenant: 'hadia',
+    description: 'Gift registries, guest pages and the staff console.' },
 ];
 
 /** Public tenant record (metadata included) for pages that need more than the brand. */
