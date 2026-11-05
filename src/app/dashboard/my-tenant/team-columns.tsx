@@ -11,10 +11,8 @@ import { serviceLabel } from './team-dialogs';
 // finance_admin) are JIT-provisioned by each service and not listed here.
 export const TEAM_ROLES = [
   'admin',                // Full tenant admin (all services)
-  'developer',           // Developer Portal access (apps/API keys/OAuth) — no admin/billing/team access
   'manager',             // Store/operations manager
   'staff',               // General cross-service staff
-  'member',              // Basic ordering/tenant member
   'viewer',              // Read-only access for auditors/observers
   'floor_supervisor',    // POS floor supervisor
   'cashier',             // POS cashier / treasury cashier
@@ -24,12 +22,58 @@ export const TEAM_ROLES = [
   'bar',                 // POS bar display
   'receptionist',        // POS hotel receptionist
   'accountant',          // Finance/back-office: inventory, purchases & treasury (plan-gated)
+  'warehouse_manager',   // Inventory: purchases, goods received, items, stock and counts
+  'stock_clerk',         // Inventory: stock movements and counts
   'rider',               // Logistics motorcycle delivery rider
   'driver',              // Logistics fleet/cargo driver
   'delivery_coordinator',// Ordering/logistics dispatch coordinator
-  'technician',          // Field technician (ISP billing / IT services)
-  'customer',            // B2C end-user / ordering customer / ISP subscriber
+  'technician',          // Field technician (IT and other services)
 ];
+
+// Business types that run each kind of floor. Mirrors the role scoping in pos-api's
+// rbac/use_case_scope.go, reading a tenant's use case the way auth-api's defaultTrialPlan groups them.
+const HOSPITALITY = ['hospitality', 'hotel', 'restaurant', 'bar', 'cafe', 'food_delivery'];
+const QUICK_SERVICE = ['quick_service'];
+const RETAIL = ['retail', 'grocery', 'warehouse', 'warehousing', 'e_commerce', 'ecommerce', 'hardware', 'agrovet'];
+const SERVICES = ['services'];
+
+const ROLE_USE_CASES: Record<string, string[]> = {
+  floor_supervisor: HOSPITALITY,
+  waiter: HOSPITALITY,
+  bar: HOSPITALITY,
+  kitchen: [...HOSPITALITY, ...QUICK_SERVICE],
+  barista: [...HOSPITALITY, ...QUICK_SERVICE],
+  receptionist: [...HOSPITALITY, ...RETAIL, ...SERVICES],
+  technician: SERVICES,
+};
+
+// The service a role works in; it is offered only when the plan includes that service.
+const ROLE_SERVICES: Record<string, string> = {
+  warehouse_manager: 'inventory',
+  stock_clerk: 'inventory',
+  accountant: 'treasury',
+  rider: 'logistics',
+  driver: 'logistics',
+  delivery_coordinator: 'logistics',
+};
+
+/**
+ * The roles this organisation's admin can hand out: those for its kind of business and its plan.
+ * An unknown use case or plan (still loading, or a plan with no limits) leaves that check off, so a
+ * failed lookup never empties the list. Roles a member already holds stay listed in the dialog.
+ */
+export function assignableRoles(useCase: string | undefined, entitledTags: string[] | undefined): string[] {
+  const uc = (useCase ?? '').toLowerCase();
+  // A use case outside these groups ('pos', say) says nothing about the floor, so it filters nothing.
+  const scoped = [...HOSPITALITY, ...QUICK_SERVICE, ...RETAIL, ...SERVICES].includes(uc);
+  return TEAM_ROLES.filter((role) => {
+    const useCases = ROLE_USE_CASES[role];
+    if (scoped && useCases && !useCases.includes(uc)) return false;
+    const service = ROLE_SERVICES[role];
+    if (entitledTags && service && !entitledTags.includes(service)) return false;
+    return true;
+  });
+}
 
 export interface TeamColumnCallbacks {
   outlets: TenantOutlet[];

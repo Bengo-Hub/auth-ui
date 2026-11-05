@@ -22,12 +22,12 @@ import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
 import { Loader2, Plus, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { outletsPath, type TenantOutlet } from './shared';
-import { TEAM_ROLES, buildTeamColumns } from './team-columns';
+import { TEAM_ROLES, assignableRoles, buildTeamColumns } from './team-columns';
 import { AssignOutletDialog, MemberRolesDialog, ResetPasswordDialog, ServiceAccessDialog, SetPinDialog, TempPasswordRevealDialog } from './team-dialogs';
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 
-export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug: string }) {
+export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; tenantSlug: string; useCase?: string }) {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
   const LIMIT = 20;
@@ -38,7 +38,7 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
   const [outletFilter, setOutletFilter] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteName, setInviteName] = useState('');
-  const [inviteRole, setInviteRole] = useState('member');
+  const [inviteRole, setInviteRole] = useState('staff');
   const [invitePin, setInvitePin] = useState('');
   const [pinTarget, setPinTarget] = useState<TenantMember | null>(null);
   const [pin, setPin] = useState('');
@@ -53,6 +53,7 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
   const [servicesTarget, setServicesTarget] = useState<TenantMember | null>(null);
   const [rolesTarget, setRolesTarget] = useState<TenantMember | null>(null);
   const entitledTags = useEntitledServiceTags(tenantId);
+  const rolesToOffer = useMemo(() => assignableRoles(useCase, entitledTags), [useCase, entitledTags]);
 
   const addMember = useAddTenantMember(tenantId);
   const updateMember = useUpdateTenantMember(tenantId);
@@ -250,7 +251,7 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
             <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Role</Label>
             <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}
               className="w-full h-12 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
-              {TEAM_ROLES.map((r) => <option key={r} value={r} className="capitalize">{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
+              {rolesToOffer.map((r) => <option key={r} value={r}>{(r.charAt(0).toUpperCase() + r.slice(1)).replace(/_/g, ' ')}</option>)}
             </select>
           </div>
           <div className="w-32 space-y-1">
@@ -339,7 +340,7 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
           key={rolesTarget.user_id}
           tenantId={tenantId}
           target={rolesTarget}
-          roles={TEAM_ROLES}
+          roles={rolesToOffer}
           onClose={() => setRolesTarget(null)}
         />
       )}

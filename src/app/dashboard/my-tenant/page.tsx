@@ -97,7 +97,7 @@ export default function MyTenantPage() {
       {activeTab === 'overview' && <TenantOverview tenant={tenant} user={user} />}
       {activeTab === 'branding' && <BrandingTab />}
       {activeTab === 'branches' && <BranchesTab tenantSlug={tenant.slug} />}
-      {activeTab === 'team' && <TeamTab tenantId={tenant.id} tenantSlug={tenant.slug} />}
+      {activeTab === 'team' && <TeamTab tenantId={tenant.id} tenantSlug={tenant.slug} useCase={tenant.use_case} />}
       {activeTab === 'billing' && <BillingTab tenantSlug={tenant.slug} user={user} />}
       {activeTab === 'domains' && <DomainsTab tenantId={tenant.id} />}
       {activeTab === 'backups' && <BackupsTab tenantId={tenant.id} />}
