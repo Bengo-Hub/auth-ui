@@ -23,7 +23,7 @@ import { Loader2, Plus, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { outletsPath, type TenantOutlet } from './shared';
 import { TEAM_ROLES, assignableRoles, buildTeamColumns } from './team-columns';
-import { AssignOutletDialog, MemberRolesDialog, ResetPasswordDialog, ServiceAccessDialog, SetPinDialog, TempPasswordRevealDialog } from './team-dialogs';
+import { AssignOutletDialog, MemberRolesDialog, ResetPasswordDialog, ServiceAccessDialog, SetPinDialog, TempPasswordRevealDialog, type OutletAssignment } from './team-dialogs';
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 
@@ -44,7 +44,6 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
   const [pin, setPin] = useState('');
   const [pinService, setPinService] = useState('pos');
   const [outletTarget, setOutletTarget] = useState<TenantMember | null>(null);
-  const [outletAssignId, setOutletAssignId] = useState('');
   // One-time temp-password reveal — after a brand-new account is created, OR after
   // generating a temp password via the Reset Password dialog below (different copy
   // for each: only the invite path actually sends a welcome email).
@@ -127,20 +126,18 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
     }
   };
 
-  const handleAssignOutlet = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAssignOutlet = async (assignment: OutletAssignment) => {
     if (!outletTarget) return;
     try {
       // Include current roles so the backend doesn't wipe them.
-      // Empty string for outlet_id signals "clear assignment".
+      // Empty outlet_id clears the home outlet; empty outlet_ids means tenant-wide.
       await updateMember.mutateAsync({
         user_id: outletTarget.user_id,
         roles: outletTarget.roles,
-        outlet_id: outletAssignId || '',
+        ...assignment,
       });
       toast({ title: `Outlet assigned for ${outletTarget.name ?? outletTarget.email}` });
       setOutletTarget(null);
-      setOutletAssignId('');
     } catch {
       toast({ title: 'Failed to assign outlet', variant: 'destructive' });
     }
@@ -210,7 +207,7 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
       buildTeamColumns({
         outlets,
         onStatusChange: handleStatusChange,
-        onAssignOutlet: (m) => { setOutletTarget(m); setOutletAssignId(m.outlet_id ?? ''); },
+        onAssignOutlet: (m) => setOutletTarget(m),
         onSetPin: (m) => { setPinTarget(m); setPin(''); },
         onRoles: setRolesTarget,
         onServices: setServicesTarget,
@@ -358,11 +355,10 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
       {outletTarget && (
         <AssignOutletDialog
           target={outletTarget}
+          key={outletTarget.user_id}
           outlets={outlets}
-          outletAssignId={outletAssignId}
-          onOutletAssignIdChange={setOutletAssignId}
-          onCancel={() => { setOutletTarget(null); setOutletAssignId(''); }}
-          onSubmit={handleAssignOutlet}
+          onCancel={() => setOutletTarget(null)}
+          onSave={handleAssignOutlet}
           pending={updateMember.isPending}
         />
       )}

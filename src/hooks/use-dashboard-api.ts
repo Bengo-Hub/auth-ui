@@ -362,6 +362,8 @@ export interface TenantMember {
   roles: string[];
   status: string;
   outlet_id?: string;
+  /** The outlets a manager is limited to; absent means tenant-wide or one home outlet. */
+  outlet_ids?: string[];
   /** Services a tenant admin assigned; absent while the services follow the roles. */
   services?: string[];
   /** Services the member gets ("*" = every service); absent when it could not be decided. */
@@ -472,6 +474,8 @@ interface UpdateTenantMemberPayload {
   user_id: string;
   roles?: string[];
   outlet_id?: string;
+  /** Limits a manager to these outlets; empty means tenant-wide. */
+  outlet_ids?: string[];
   status?: string;
   /** Assign these services (each in the plan and backed by a role, else 422). */
   services?: string[];

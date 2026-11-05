@@ -102,10 +102,12 @@ export function buildTeamColumns(cb: TeamColumnCallbacks): DataTableColumn<Tenan
             {m.name && m.email && <p className="text-xs text-slate-400 truncate">{m.email}</p>}
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               <p className="text-xs text-slate-400 capitalize">{m.status}</p>
-              {m.outlet_id && cb.outlets.length > 0 && (
+              {(m.outlet_ids?.length || m.outlet_id) && cb.outlets.length > 0 && (
                 <span className="flex items-center gap-1 text-xs font-medium text-primary/80">
                   <MapPin className="h-2.5 w-2.5" />
-                  {cb.outlets.find((o) => o.id === m.outlet_id)?.name ?? 'Outlet'}
+                  {(m.outlet_ids?.length ? m.outlet_ids : [m.outlet_id])
+                    .map((id) => cb.outlets.find((o) => o.id === id)?.name ?? 'Outlet')
+                    .join(', ')}
                 </span>
               )}
             </div>

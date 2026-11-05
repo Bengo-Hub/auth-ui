@@ -13,23 +13,38 @@ import type { TenantOutlet } from './shared';
 // assignment, and the one-time temp-password reveal shown after inviting a
 // brand-new (non-existing) user account.
 
+// Roles that may work several outlets or the whole organisation. Same list as auth-api's
+// multiOutletRoles, which enforces it. Every other staff role works one outlet.
+const MULTI_OUTLET_ROLES = ['manager', 'accountant', 'warehouse_manager'];
+
+export type OutletAssignment = { outlet_id: string } | { outlet_ids: string[] };
+
 export function AssignOutletDialog({
   target,
   outlets,
-  outletAssignId,
-  onOutletAssignIdChange,
   onCancel,
-  onSubmit,
+  onSave,
   pending,
 }: {
   target: TenantMember;
   outlets: TenantOutlet[];
-  outletAssignId: string;
-  onOutletAssignIdChange: (id: string) => void;
   onCancel: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSave: (assignment: OutletAssignment) => void;
   pending: boolean;
 }) {
+  const isAdmin = target.roles.some((r) => r === 'admin' || r === 'superuser');
+  const multi = !isAdmin && outlets.length > 1 && target.roles.some((r) => MULTI_OUTLET_ROLES.includes(r));
+  const [homeOutlet, setHomeOutlet] = useState(target.outlet_id ?? '');
+  const [selected, setSelected] = useState<string[]>(target.outlet_ids ?? []);
+  const [tenantWide, setTenantWide] = useState(!target.outlet_ids?.length);
+  const pickNothing = multi && !tenantWide && selected.length === 0;
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pickNothing) return;
+    onSave(multi ? { outlet_ids: tenantWide ? [] : selected } : { outlet_id: homeOutlet });
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl w-full max-w-sm p-8">
@@ -43,18 +58,49 @@ export function AssignOutletDialog({
           </div>
         </div>
         <form onSubmit={onSubmit} className="space-y-5">
-          <div className="space-y-1">
-            <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Home Outlet</Label>
-            <select value={outletAssignId} onChange={(e) => onOutletAssignIdChange(e.target.value)}
-              className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
-              <option value="">Unassigned (tenant-wide)</option>
-              {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}{o.use_case ? ` (${o.use_case})` : ''}</option>)}
-            </select>
-            <p className="text-xs text-slate-400">Sets the default outlet for PIN login and reporting.</p>
-          </div>
+          {multi ? (
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Outlets</Label>
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-white">
+                <input type="checkbox" checked={tenantWide} onChange={(e) => setTenantWide(e.target.checked)} />
+                All outlets (tenant-wide)
+              </label>
+              {!tenantWide && (
+                <div className="max-h-48 overflow-y-auto space-y-2 pl-1">
+                  {outlets.map((o) => (
+                    <label key={o.id} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(o.id)}
+                        onChange={(e) => setSelected((cur) => (e.target.checked ? [...cur, o.id] : cur.filter((id) => id !== o.id)))}
+                      />
+                      {o.name}{o.use_case ? ` (${o.use_case})` : ''}
+                    </label>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-slate-400">
+                {pickNothing ? 'Choose at least one outlet.' : 'Takes effect the next time they sign in.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Home Outlet</Label>
+              <select value={homeOutlet} onChange={(e) => setHomeOutlet(e.target.value)}
+                className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
+                <option value="">Unassigned</option>
+                {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}{o.use_case ? ` (${o.use_case})` : ''}</option>)}
+              </select>
+              <p className="text-xs text-slate-400">
+                {isAdmin
+                  ? 'Admins work across every outlet. This sets where they start.'
+                  : 'Sets the default outlet for PIN login and reporting. This role works one outlet.'}
+              </p>
+            </div>
+          )}
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1 h-12 rounded-2xl" onClick={onCancel}>Cancel</Button>
-            <Button type="submit" disabled={pending}
+            <Button type="submit" disabled={pending || pickNothing}
               className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold">
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assign'}
             </Button>
