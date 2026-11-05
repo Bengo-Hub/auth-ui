@@ -15,7 +15,7 @@ import type { TenantOutlet } from './shared';
 
 // Roles that may work several outlets or the whole organisation. Same list as auth-api's
 // multiOutletRoles, which enforces it. Every other staff role works one outlet.
-const MULTI_OUTLET_ROLES = ['manager', 'accountant', 'warehouse_manager'];
+export const MULTI_OUTLET_ROLES = ['manager', 'accountant', 'warehouse_manager'];
 
 export type OutletAssignment = { outlet_id: string } | { outlet_ids: string[] };
 

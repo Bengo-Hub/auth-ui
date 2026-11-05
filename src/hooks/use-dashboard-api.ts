@@ -394,6 +394,8 @@ interface AddTenantMemberPayload {
   email?: string;
   roles: string[];
   outlet_id?: string;
+  /** Limits a manager to these outlets; absent means tenant-wide. */
+  outlet_ids?: string[];
   // Direct-add fields (#3): when email is not an existing account, the backend
   // creates it and returns a one-time temp_password.
   name?: string;

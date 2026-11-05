@@ -23,7 +23,7 @@ import { Loader2, Plus, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { outletsPath, type TenantOutlet } from './shared';
 import { TEAM_ROLES, assignableRoles, buildTeamColumns } from './team-columns';
-import { AssignOutletDialog, MemberRolesDialog, ResetPasswordDialog, ServiceAccessDialog, SetPinDialog, TempPasswordRevealDialog, type OutletAssignment } from './team-dialogs';
+import { AssignOutletDialog, MemberRolesDialog, MULTI_OUTLET_ROLES, ResetPasswordDialog, ServiceAccessDialog, SetPinDialog, TempPasswordRevealDialog, type OutletAssignment } from './team-dialogs';
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 
@@ -98,6 +98,8 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
   const total = data?.total ?? 0;
 
   const [inviteOutletId, setInviteOutletId] = useState('');
+  const [inviteOutletIds, setInviteOutletIds] = useState<string[]>([]);
+  const inviteMultiOutlet = outlets.length > 1 && MULTI_OUTLET_ROLES.includes(inviteRole);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +110,9 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
         email: inviteEmail,
         roles: [inviteRole],
         ...(inviteName ? { name: inviteName } : {}),
-        ...(inviteOutletId ? { outlet_id: inviteOutletId } : {}),
+        ...(inviteMultiOutlet
+          ? (inviteOutletIds.length > 0 ? { outlet_ids: inviteOutletIds } : {})
+          : (inviteOutletId ? { outlet_id: inviteOutletId } : {})),
         ...(invitePin.length === 4 ? { pin: invitePin, service: 'pos' } : {}),
       });
       if (result?.temp_password) {
@@ -119,6 +123,8 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
       setInviteEmail('');
       setInviteName('');
       setInvitePin('');
+      setInviteOutletId('');
+      setInviteOutletIds([]);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
         ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -258,7 +264,25 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
               placeholder="POS PIN"
               className="h-12 rounded-2xl text-center tracking-widest border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono" />
           </div>
-          {outlets.length > 0 && (
+          {inviteMultiOutlet && (
+            <div className="w-56 space-y-1">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Outlets</Label>
+              <div className="max-h-32 overflow-y-auto space-y-1 px-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                {outlets.map((o) => (
+                  <label key={o.id} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={inviteOutletIds.includes(o.id)}
+                      onChange={(e) => setInviteOutletIds((cur) => (e.target.checked ? [...cur, o.id] : cur.filter((id) => id !== o.id)))}
+                    />
+                    <span className="truncate">{o.name}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400">None selected means all outlets.</p>
+            </div>
+          )}
+          {!inviteMultiOutlet && outlets.length > 0 && (
             <div className="w-44 space-y-1">
               <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Outlet (optional)</Label>
               <select value={inviteOutletId} onChange={(e) => setInviteOutletId(e.target.value)}
