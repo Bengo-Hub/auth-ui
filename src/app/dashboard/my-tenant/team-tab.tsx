@@ -23,7 +23,7 @@ import { Loader2, Plus, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { outletsPath, type TenantOutlet } from './shared';
 import { TEAM_ROLES, buildTeamColumns } from './team-columns';
-import { AssignOutletDialog, ResetPasswordDialog, ServiceAccessDialog, SetPinDialog, TempPasswordRevealDialog } from './team-dialogs';
+import { AssignOutletDialog, MemberRolesDialog, ResetPasswordDialog, ServiceAccessDialog, SetPinDialog, TempPasswordRevealDialog } from './team-dialogs';
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 
@@ -51,6 +51,7 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
   const [tempPwInfo, setTempPwInfo] = useState<{ email: string; password: string; context: 'invite' | 'reset' } | null>(null);
   const [resetPwTarget, setResetPwTarget] = useState<TenantMember | null>(null);
   const [servicesTarget, setServicesTarget] = useState<TenantMember | null>(null);
+  const [rolesTarget, setRolesTarget] = useState<TenantMember | null>(null);
   const entitledTags = useEntitledServiceTags(tenantId);
 
   const addMember = useAddTenantMember(tenantId);
@@ -210,6 +211,7 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
         onStatusChange: handleStatusChange,
         onAssignOutlet: (m) => { setOutletTarget(m); setOutletAssignId(m.outlet_id ?? ''); },
         onSetPin: (m) => { setPinTarget(m); setPin(''); },
+        onRoles: setRolesTarget,
         onServices: setServicesTarget,
         onResetPassword: setResetPwTarget,
         onRemove: handleRemove,
@@ -331,6 +333,16 @@ export function TeamTab({ tenantId, tenantSlug }: { tenantId: string; tenantSlug
           }
         />
       </section>
+
+      {rolesTarget && (
+        <MemberRolesDialog
+          key={rolesTarget.user_id}
+          tenantId={tenantId}
+          target={rolesTarget}
+          roles={TEAM_ROLES}
+          onClose={() => setRolesTarget(null)}
+        />
+      )}
 
       {/* Assign Outlet Modal */}
       {servicesTarget && (

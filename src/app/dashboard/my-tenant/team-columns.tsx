@@ -3,7 +3,7 @@
 import type { DataTableColumn } from '@bengo-hub/shared-ui-lib/data-table';
 import type { TenantMember } from '@/hooks/use-dashboard-api';
 import { Button } from '@/components/ui/button';
-import { AppWindow, Ban, CheckCircle2, KeyRound, Lock, MapPin, Trash2 } from 'lucide-react';
+import { AppWindow, Ban, CheckCircle2, KeyRound, Lock, MapPin, Trash2, UserCog } from 'lucide-react';
 import type { TenantOutlet } from './shared';
 import { serviceLabel } from './team-dialogs';
 
@@ -16,6 +16,7 @@ export const TEAM_ROLES = [
   'staff',               // General cross-service staff
   'member',              // Basic ordering/tenant member
   'viewer',              // Read-only access for auditors/observers
+  'floor_supervisor',    // POS floor supervisor
   'cashier',             // POS cashier / treasury cashier
   'waiter',              // POS hospitality waiter
   'barista',             // POS hospitality café barista (order + till + drink prep)
@@ -35,6 +36,7 @@ export interface TeamColumnCallbacks {
   onStatusChange: (m: TenantMember, status: string) => void;
   onAssignOutlet: (m: TenantMember) => void;
   onSetPin: (m: TenantMember) => void;
+  onRoles: (m: TenantMember) => void;
   onServices: (m: TenantMember) => void;
   onResetPassword: (m: TenantMember) => void;
   onRemove: (userId: string) => void;
@@ -74,9 +76,9 @@ export function buildTeamColumns(cb: TeamColumnCallbacks): DataTableColumn<Tenan
       mobileHidden: true,
       render: (m) => (
         <div className="flex items-center gap-2 flex-wrap">
-          {m.roles.slice(0, 2).map((r) => (
+          {m.roles.map((r) => (
             <span key={r} className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 capitalize">
-              {r}
+              {r.replace(/_/g, ' ')}
             </span>
           ))}
         </div>
@@ -132,6 +134,11 @@ export function buildTeamColumns(cb: TeamColumnCallbacks): DataTableColumn<Tenan
               <MapPin className="h-3 w-3" /> Outlet
             </Button>
           )}
+          <Button variant="outline" size="sm"
+            className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+            onClick={() => cb.onRoles(m)}>
+            <UserCog className="h-3 w-3" /> Roles
+          </Button>
           <Button variant="outline" size="sm"
             className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
             onClick={() => cb.onServices(m)}>

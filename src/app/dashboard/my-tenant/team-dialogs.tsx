@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useUpdateTenantMember, type TenantMember } from '@/hooks/use-dashboard-api';
 import { useToast } from '@/hooks/use-toast';
-import { AppWindow, Copy, KeyRound, Loader2, Lock, Mail, MapPin } from 'lucide-react';
+import { AppWindow, Copy, KeyRound, Loader2, Lock, Mail, MapPin, UserCog } from 'lucide-react';
 import type { TenantOutlet } from './shared';
 
 // Modal dialogs used by TeamTab's member list: outlet assignment, service-PIN
@@ -282,6 +282,76 @@ export function TempPasswordRevealDialog({
         </div>
         <Button type="button" className="w-full h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold"
           onClick={onDone}>Done</Button>
+      </div>
+    </div>
+  );
+}
+
+// Change a member's roles. Roles they already hold stay listed so an edit never strips a service's
+// own role by accident; auth-api refuses a super role and keeps the organisation with an admin.
+export function MemberRolesDialog({
+  tenantId,
+  target,
+  roles,
+  onClose,
+}: {
+  tenantId: string;
+  target: TenantMember;
+  /** The roles a tenant admin can assign. */
+  roles: string[];
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const updateMember = useUpdateTenantMember(tenantId);
+  const [picked, setPicked] = useState<string[]>(target.roles);
+  const choices = useMemo(() => Array.from(new Set([...roles, ...target.roles])), [roles, target.roles]);
+
+  const toggle = (role: string) =>
+    setPicked((cur) => (cur.includes(role) ? cur.filter((r) => r !== role) : [...cur, role]));
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await updateMember.mutateAsync({ user_id: target.user_id, roles: picked });
+      toast({ title: `Roles saved for ${target.name ?? target.email}` });
+      onClose();
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data;
+      toast({ title: message?.message ?? message?.error ?? 'Failed to save roles', variant: 'destructive' });
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl w-full max-w-md p-8 max-h-[90dvh] overflow-y-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <UserCog className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Roles</h3>
+            <p className="text-xs text-slate-400 mt-0.5">{target.name ?? target.email}</p>
+          </div>
+        </div>
+        <form onSubmit={save} className="space-y-5">
+          <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <legend className="sr-only">Roles this person holds</legend>
+            {choices.map((role) => (
+              <label key={role} className="flex items-center gap-3 min-h-11 text-sm text-slate-700 dark:text-slate-200 capitalize">
+                <input type="checkbox" checked={picked.includes(role)} onChange={() => toggle(role)} />
+                {role.replace(/_/g, ' ')}
+              </label>
+            ))}
+          </fieldset>
+          <p className="text-xs text-slate-400">The person gets the new access the next time they sign in.</p>
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1 h-12 rounded-2xl" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={updateMember.isPending || picked.length === 0}
+              className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold">
+              {updateMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );
