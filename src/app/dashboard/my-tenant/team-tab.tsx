@@ -266,7 +266,7 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
               <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Outlet (optional)</Label>
               <select value={inviteOutletId} onChange={(e) => setInviteOutletId(e.target.value)}
                 className="w-full h-12 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
-                <option value="">Unassigned</option>
+                <option value="">Default outlet</option>
                 {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
               </select>
             </div>
