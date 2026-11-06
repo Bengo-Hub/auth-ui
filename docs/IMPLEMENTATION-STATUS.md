@@ -564,12 +564,17 @@ image: ghcr.io/bengo-hub/auth-ui:v1.2.3
 - Tenant management
 - Permission policies
 - Admin dashboard
+- Public pricing page (Nov 2026): live plans grouped by product, checkout links with exact plan codes (sprint 7)
 
 ### In Progress 🔄
 - SEO optimization (meta tags, structured data)
 - Performance profiling & optimization
 - Security audit (OWASP Top 10)
 - Load testing & scalability validation
+
+### Known issues (Nov 2026)
+- `/pricing` shows plan limits, not feature names: the feature catalog in subscriptions-api needs sign-in.
+- `/pricing` cannot load prices on localhost: subscriptions-api CORS allows the accounts domain only.
 
 ### Planned Features (Future)
 - SAML support (enterprise SSO)

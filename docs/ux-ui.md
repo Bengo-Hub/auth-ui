@@ -206,6 +206,19 @@ See treasury-ui and notifications-ui docs for full UX/UI and API details.
 
 ---
 
+## Public Pricing Page (`/pricing`)
+
+- Prices are read live from subscriptions-api and grouped by who each product serves: Shops and
+  restaurants, Healthcare, Running the business, Specialist operations, For developers. A sticky
+  bar jumps between the groups.
+- One block per product, with its "from" price and trial length, then one row per tier. Where a
+  tier has both, the row shows "Pay monthly" and "Or buy once" side by side.
+- Each tier lists at most four plain limits (branches, cashiers, products), never raw keys.
+- Buttons say what happens: "Start free trial", "Buy licence", or "Choose plan" when signed in.
+  They open subscriptions-ui checkout with the exact plan code, through sign-up when signed out.
+- "Compare every feature and limit" opens the subscriptions-ui plan picker on that product.
+- No invented social proof, no gradient text. Errors say what failed and offer a retry and an email.
+
 ## Responsive Design
 
 - Mobile-first responsive layout

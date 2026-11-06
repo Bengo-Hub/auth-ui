@@ -47,6 +47,12 @@ export interface Plan {
   TierOrder?: number;
   plan_type?: string;
   service_tag?: string;
+  /** One-time setup fee, waived when paying 6 months or more upfront. */
+  setup_fee?: number;
+  free_trial_days?: number;
+  is_public?: boolean;
+  /** Business vertical a plan targets (retail, hospitality). Absent means any tenant. */
+  use_case?: string | null;
   ServiceTag?: string;
   features?: PlanFeature[];
   Features?: PlanFeature[];
@@ -94,6 +100,10 @@ function normalizePlan(p: any): Plan {
     tier_order: p.tier_order ?? p.tierOrder ?? p.TierOrder ?? 0,
     plan_type: p.plan_type ?? p.planType ?? p.PlanType,
     service_tag: p.service_tag ?? p.serviceTag ?? p.ServiceTag,
+    setup_fee: p.setup_fee ?? p.setupFee ?? p.SetupFee ?? 0,
+    free_trial_days: p.free_trial_days ?? p.freeTrialDays ?? p.FreeTrialDays ?? 0,
+    is_public: p.is_public ?? p.isPublic ?? p.IsPublic ?? true,
+    use_case: p.use_case ?? p.useCase ?? p.UseCase ?? null,
     features: (p.features ?? p.Features ?? []).map((f: any) => ({
       id: f.id ?? f.ID ?? '',
       name: f.name ?? f.Name ?? f.featureCode ?? f.FeatureCode ?? f.feature_code ?? '',

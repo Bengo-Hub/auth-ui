@@ -28,6 +28,7 @@ Auth-ui is the central Single Sign-On (SSO) portal for all Codevertex services. 
 | 4 | Account Management | Complete |
 | 5 | Developer Portal | Complete |
 | 6 | Production Hardening | In Progress |
+| 7 | Public pricing page, grouped and relinked | Done, open items in `sprints/sprint-7-public-pricing.md` |
 | MVP | MVP Launch | In Progress (March 6-17, 2026) |
 
 ---

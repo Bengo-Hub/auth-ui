@@ -1,201 +1,218 @@
 'use client';
 
+import { useMemo } from 'react';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { Plan, subscriptionApi } from '@/lib/subscription-api';
-import { useAuthStore } from '@/store/auth-store';
-import { motion } from 'framer-motion';
-import { ArrowRight, Building2, Check, ShieldCheck } from 'lucide-react';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { subscriptionApi, type Plan } from '@/lib/subscription-api';
+import { buildCatalog, compareUrl, fromPrice, subscribeUrl, type Product, type Tier } from '@/lib/pricing-catalog';
+import { cn } from '@/lib/utils';
 
+const money = (amount: number, currency = 'KES') =>
+  `${currency} ${amount.toLocaleString('en-KE', { maximumFractionDigits: 0 })}`;
+
+/**
+ * Public price list for every Codevertex app, read live from subscriptions-api and grouped by who
+ * each product serves. Buying happens in subscriptions-ui: a signed-out visitor creates an account
+ * first and lands on checkout for the plan they picked.
+ */
 export default function PricingPage() {
-  const { activeTenant } = useAuthStore();
   const { isAuthenticated } = useAuth();
-  const [allPlans, setAllPlans] = useState<Plan[]>([]);
-  const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'ANNUAL'>('MONTHLY');
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+    queryKey: ['public-plans'],
+    queryFn: () => subscriptionApi.getPlans(),
+    staleTime: 10 * 60_000,
+  });
+  const categories = useMemo(() => buildCatalog(data ?? []), [data]);
 
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        const data = await subscriptionApi.getPlans();
-        setAllPlans(data.sort((a, b) => (a.tier_order ?? 0) - (b.tier_order ?? 0)));
-      } catch (error) {
-        console.error('Failed to fetch plans:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPlans();
-  }, []);
-
-  const plans = allPlans.filter((p) => p.billing_cycle === billingCycle);
-  
-  const SUBSCRIPTIONS_BASE_URL = 'https://pricing.codevertexafrica.com';
-  
-  const getPlanHref = (plan: Plan) => {
-    const returnTo = `${SUBSCRIPTIONS_BASE_URL}/plans?plan=${plan.plan_code.toLowerCase()}`;
-    if (isAuthenticated && activeTenant) {
-      return `${SUBSCRIPTIONS_BASE_URL}/${activeTenant.slug}/plans?plan=${plan.plan_code.toLowerCase()}`;
-    }
-    return `/signup?return_to=${encodeURIComponent(returnTo)}&plan=${plan.plan_code.toLowerCase()}`;
-  };
+  // Checkout needs a session; sign-up hands the visitor back to checkout for the same plan.
+  const buyHref = (code: string) =>
+    isAuthenticated ? subscribeUrl(code) : `/signup?return_to=${encodeURIComponent(subscribeUrl(code))}`;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 selection:bg-primary/30 font-sans text-slate-900 dark:text-white">
-      <div className="pt-24 pb-16 px-4 overflow-hidden relative">
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-20">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-6"
-            >
-              <ShieldCheck className="h-4 w-4" /> Trusted by 1,000+ Teams
-            </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-4xl sm:text-6xl font-black mb-6"
-            >
-              Simple, Transparent <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Pricing.</span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto"
-            >
-              Scale your application security and identity management without breaking the bank. Choose the plan that fits your journey.
-            </motion.p>
-          </div>
+    <div className="bg-background text-foreground">
+      <header className="mx-auto max-w-6xl px-4 pb-10 pt-16 sm:px-6 sm:pt-20 lg:px-8">
+        <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">Pricing</h1>
+        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+          Each Codevertex app is priced on its own, so you pay only for what you use. Try it free,
+          pay monthly, or buy a licence once and keep it.
+        </p>
+        <p className="mt-3 text-sm text-muted-foreground">Prices are in Kenya shillings and come straight from our billing system. VAT may apply.</p>
+      </header>
 
-          {/* Billing cycle toggle */}
-          <div className="flex justify-center mb-12">
-            <div className="inline-flex rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1 shadow-sm">
-              <button
-                onClick={() => setBillingCycle('MONTHLY')}
-                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
-                  billingCycle === 'MONTHLY'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle('ANNUAL')}
-                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
-                  billingCycle === 'ANNUAL'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                Annual <span className="text-xs opacity-75 ml-1">Save ~8%</span>
-              </button>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-[600px] rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {plans.map((plan, idx) => (
-                <motion.div
-                  key={plan.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.1 * idx }}
-                  className={`relative flex flex-col p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border ${
-                    plan.plan_code === 'GROWTH' || plan.plan_code === 'PRO' 
-                      ? 'border-primary shadow-2xl shadow-primary/10' 
-                      : 'border-slate-200 dark:border-slate-800 shadow-sm'
-                  }`}
+      {categories.length > 0 && (
+        <nav aria-label="Product groups" className="sticky top-16 z-20 border-y border-border bg-background/95 backdrop-blur">
+          <ul className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 py-2 scrollbar-hide sm:px-6 lg:px-8">
+            {categories.map((c) => (
+              <li key={c.id} className="shrink-0">
+                <a
+                  href={`#${c.id}`}
+                  className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
-                  {(plan.plan_code === 'GROWTH' || plan.plan_code === 'PRO') && (
-                    <div className="absolute top-0 right-0 -translate-y-1/2 -translate-x-8 px-4 py-1 rounded-full bg-primary text-white text-xs font-black uppercase tracking-widest">
-                      Most Popular
-                    </div>
-                  )}
-                  <div className="mb-8">
-                    <h3 className="text-xl font-black mb-2 uppercase tracking-tight">{plan.name}</h3>
-                    <div className="flex items-baseline gap-1 mb-4">
-                      <span className="text-5xl font-black">
-                        {plan.base_price > 0 ? `${plan.currency === 'USD' ? '$' : 'KSh'}${plan.base_price}` : 'Free'}
-                      </span>
-                      {plan.base_price > 0 && <span className="text-slate-500 font-bold">/{plan.billing_cycle.toLowerCase().replace('_', '')}</span>}
-                    </div>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium text-sm leading-relaxed min-h-[40px]">
-                      {plan.description}
-                    </p>
-                  </div>
+                  {c.title}
+                  <span className="rounded-md bg-muted px-1.5 text-xs tabular-nums text-muted-foreground">{c.products.length}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
 
-                  <div className="flex-1 space-y-4 mb-10">
-                    {plan.features?.map((feature) => (
-                      <div key={feature.id} className="flex items-start gap-3">
-                        <div className="p-1 rounded-full bg-green-500/10 shrink-0">
-                          <Check className="h-4 w-4 text-green-500" />
-                        </div>
-                        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{feature.name}</span>
-                      </div>
-                    ))}
-                    {(!plan.features || plan.features.length === 0) && (
-                      <div className="text-slate-400 text-xs italic">Full platform access included</div>
-                    )}
-                  </div>
-
-                  <Button
-                    variant={(plan.plan_code === 'GROWTH' || plan.plan_code === 'PRO') ? 'default' : 'outline'}
-                    className={`w-full h-14 rounded-2xl font-black text-lg transition-all ${
-                      (plan.plan_code === 'GROWTH' || plan.plan_code === 'PRO')
-                        ? 'bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20' 
-                        : 'border-slate-200 dark:border-slate-700 dark:text-white'
-                    }`}
-                    asChild
-                  >
-                    <Link href={getPlanHref(plan)}>
-                      {plan.base_price === 0 ? 'Get Started' : 'Subscribe Now'}
-                      <ArrowRight className="h-5 w-5 ml-2" />
-                    </Link>
-                  </Button>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-20 p-12 rounded-[3.5rem] bg-slate-900 text-white flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden"
-          >
-            <div className="relative z-10 max-w-xl">
-              <div className="p-3 w-fit rounded-2xl bg-white/10 mb-6">
-                <Building2 className="h-8 w-8 text-primary" />
+      <main className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8">
+        {isLoading ? (
+          <div className="space-y-6 pt-10" aria-label="Loading prices">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-56 animate-pulse rounded-2xl bg-muted" />
+            ))}
+          </div>
+        ) : isError || categories.length === 0 ? (
+          <div className="mt-10 rounded-2xl border border-border bg-card p-8">
+            <p className="font-semibold">Prices did not load.</p>
+            <p className="mt-1 text-muted-foreground">
+              Try again, or email <a className="font-medium text-primary hover:underline" href="mailto:info@codevertexafrica.com">info@codevertexafrica.com</a> for a quote.
+            </p>
+            <Button className="mt-5" onClick={() => refetch()} disabled={isFetching}>
+              {isFetching ? 'Loading' : 'Try again'}
+            </Button>
+          </div>
+        ) : (
+          categories.map((c) => (
+            <section key={c.id} id={c.id} aria-labelledby={`${c.id}-title`} className="scroll-mt-32 border-b border-border py-12 last:border-b-0 lg:grid lg:grid-cols-12 lg:gap-10">
+              <div className="lg:col-span-3">
+                <div className="lg:sticky lg:top-36">
+                  <h2 id={`${c.id}-title`} className="font-display text-2xl font-bold tracking-tight">{c.title}</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.lead}</p>
+                </div>
               </div>
-              <h2 className="text-3xl font-black mb-4 uppercase">Organizations</h2>
-              <p className="text-slate-400 text-lg leading-relaxed">
-                Managing multiple teams or a large workforce? Our organizational plans provide 
-                granular control, centralized billing, and advanced governance.
-              </p>
-            </div>
-            <div className="relative z-10 flex flex-col gap-4 w-full md:w-auto">
-              <Button size="lg" className="h-16 px-10 rounded-2xl bg-white text-slate-900 hover:bg-slate-100 font-black text-lg" asChild>
-                <Link href="mailto:enterprise@codevertexafrica.com">Request a Demo</Link>
-              </Button>
-            </div>
-            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[140px] -mr-48 -mt-48" />
-          </motion.div>
-        </div>
+              <div className="mt-6 space-y-8 lg:col-span-9 lg:mt-0">
+                {c.products.map((p) => (
+                  <ProductPrices key={p.key} product={p} buyHref={buyHref} signedIn={isAuthenticated} />
+                ))}
+              </div>
+            </section>
+          ))
+        )}
 
-        <div className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[160px] pointer-events-none" />
-      </div>
+        <aside className="mt-4 grid gap-6 rounded-2xl bg-secondary p-6 text-secondary-foreground sm:p-8 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <h2 className="font-display text-xl font-bold">Need more than the top plan?</h2>
+            <p className="mt-1 max-w-xl text-sm leading-relaxed opacity-80">
+              Several branches, a hospital, or a setup that needs installation and training? Tell us
+              about it and we will quote within one business day. Annual support contracts are arranged the same way.
+            </p>
+          </div>
+          <Button asChild size="lg">
+            <a href="mailto:info@codevertexafrica.com?subject=Pricing%20enquiry">Ask for a quote</a>
+          </Button>
+        </aside>
+      </main>
     </div>
+  );
+}
+
+function ProductPrices({ product, buyHref, signedIn }: { product: Product; buyHref: (code: string) => string; signedIn: boolean }) {
+  const from = fromPrice(product);
+  const hasLicence = product.tiers.some((t) => t.licence);
+  const hasMonthly = product.tiers.some((t) => t.monthly);
+
+  return (
+    <article className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 p-5 sm:p-6">
+        <div className="min-w-0">
+          <h3 className="font-display text-xl font-bold">{product.name}</h3>
+          {product.forWho && <p className="mt-0.5 text-sm text-muted-foreground">{product.forWho}</p>}
+        </div>
+        <div className="text-left sm:text-right">
+          {from && (
+            <p className="text-sm text-muted-foreground">
+              From <span className="font-display text-lg font-bold text-foreground">{money(from.amount, from.currency)}</span>
+              {from.once ? ' once' : ' a month'}
+            </p>
+          )}
+          {product.trialDays > 0 && <p className="text-xs font-medium text-primary">{product.trialDays}-day free trial</p>}
+        </div>
+      </div>
+
+      {/* Column labels only where both ways to pay exist, so a single price never needs a key. */}
+      {hasLicence && hasMonthly && (
+        <div className="hidden border-t border-border bg-muted/50 px-6 py-2 text-xs font-medium text-muted-foreground md:grid md:grid-cols-12 md:gap-4">
+          <span className="col-span-5">Plan</span>
+          <span className="col-span-3">Pay monthly</span>
+          <span className="col-span-4">Or buy once</span>
+        </div>
+      )}
+
+      <ul className="divide-y divide-border border-t border-border">
+        {product.tiers.map((t) => (
+          <TierRow key={t.code} tier={t} split={hasLicence && hasMonthly} buyHref={buyHref} signedIn={signedIn} />
+        ))}
+      </ul>
+
+      <div className="border-t border-border px-5 py-3 sm:px-6">
+        <a href={compareUrl(product.serviceTag, product.tiers[0]?.code)} className="text-sm font-medium text-primary hover:underline underline-offset-4">
+          Compare every feature and limit
+        </a>
+      </div>
+    </article>
+  );
+}
+
+function TierRow({ tier, split, buyHref, signedIn }: { tier: Tier; split: boolean; buyHref: (code: string) => string; signedIn: boolean }) {
+  const { monthly, licence } = tier;
+  const setup = monthly?.setup_fee ?? 0;
+  const monthlyCta = (p: Plan) => (signedIn ? 'Choose plan' : (p.free_trial_days ?? 0) > 0 ? 'Start free trial' : 'Subscribe');
+
+  return (
+    <li className="grid gap-4 p-5 sm:p-6 md:grid-cols-12 md:items-start">
+      <div className={cn(split ? 'md:col-span-5' : 'md:col-span-7')}>
+        <p className="font-semibold">{tier.label}</p>
+        {tier.description && <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{tier.description}</p>}
+        {tier.limits.length > 0 && (
+          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
+            {tier.limits.map((l) => (
+              <li key={l.label} className="inline-flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-primary" aria-hidden />
+                <span><span className="font-semibold tabular-nums">{l.value}</span> {l.label}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {tier.notes.map((n) => (
+          <p key={n} className="mt-2 text-sm text-muted-foreground">{n}</p>
+        ))}
+      </div>
+
+      {monthly && (
+        <div className={cn('flex flex-col gap-2', split ? 'md:col-span-3' : 'md:col-span-5 md:items-end md:text-right')}>
+          <p className="flex flex-wrap items-baseline gap-x-1">
+            <span className="whitespace-nowrap font-display text-2xl font-bold tabular-nums">{money(monthly.base_price, monthly.currency)}</span>
+            <span className="whitespace-nowrap text-sm text-muted-foreground">a month</span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {setup > 0 ? `Setup ${money(setup, monthly.currency)}, waived when you pay 6 months or more` : 'No setup fee'}
+          </p>
+          <Button asChild size="sm" className="mt-1 w-full md:w-auto">
+            <Link href={buyHref(monthly.plan_code)}>{monthlyCta(monthly)}</Link>
+          </Button>
+        </div>
+      )}
+
+      {licence && (
+        <div className={cn('flex flex-col gap-2', split ? 'md:col-span-4 md:border-l md:border-border md:pl-4' : 'md:col-span-5 md:items-end md:text-right')}>
+          <p className="flex flex-wrap items-baseline gap-x-1">
+            <span className="whitespace-nowrap font-display text-2xl font-bold tabular-nums">{money(licence.base_price, licence.currency)}</span>
+            <span className="whitespace-nowrap text-sm text-muted-foreground">once</span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Perpetual licence, yours to keep{(licence.setup_fee ?? 0) > 0 ? `. Setup ${money(licence.setup_fee ?? 0, licence.currency)}` : ''}
+          </p>
+          <Button asChild size="sm" variant="outline" className="mt-1 w-full md:w-auto">
+            <Link href={buyHref(licence.plan_code)}>Buy licence</Link>
+          </Button>
+        </div>
+      )}
+    </li>
   );
 }

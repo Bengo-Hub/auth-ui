@@ -611,7 +611,7 @@ export function SignupForm() {
 
       {step === 2 && !hasTenantContext && (
         <p className="text-xs text-center text-slate-400 dark:text-slate-500">
-          All accounts start with a free STARTER plan.
+          Your organisation starts on a free trial. Pick a plan any time from Billing.
         </p>
       )}
     </div>

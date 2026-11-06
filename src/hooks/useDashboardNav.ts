@@ -86,8 +86,8 @@ const PLATFORM_ITEMS: NavItem[] = [
   { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
   { title: 'Infra Monitor', href: '/dashboard/platform/monitoring', icon: Activity },
   {
-    title: 'Membership Tiers',
-    href: 'https://pricing.codevertexafrica.com/codevertex/platform/plans',
+    title: 'Subscription Plans',
+    href: 'https://pricing.codevertexafrica.com/platform/plans',
     icon: ExternalLink,
     newTab: true,
   },

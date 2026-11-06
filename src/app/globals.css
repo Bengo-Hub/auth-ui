@@ -409,3 +409,11 @@ button:focus-visible {
   .photo-zoom img { transition: none; }
   .animate-rise, .animate-tile-in { animation: none; }
 }
+
+/* Horizontal scrollers (pricing group nav) keep touch and wheel scrolling without a visible bar. */
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
