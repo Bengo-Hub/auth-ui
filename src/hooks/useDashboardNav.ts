@@ -74,6 +74,7 @@ const SECURITY_ITEMS: NavItem[] = [
   { title: 'Roles', href: '/dashboard/platform/roles', icon: ShieldCheck },
   { title: 'Permissions', href: '/dashboard/platform/permissions', icon: KeySquare },
   { title: 'Password Policy', href: '/dashboard/platform/security/password-policy', icon: KeyRound },
+  { title: 'Sign-in Security', href: '/dashboard/platform/security/mfa-policy', icon: ShieldCheck },
   { title: 'Audit Log', href: '/dashboard/platform/audit', icon: ScrollText },
 ];
 

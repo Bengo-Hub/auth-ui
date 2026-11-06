@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import apiClient from '@/lib/api-client';
+import { MFA_COPY, signInAfterEnrollment } from '@/lib/mfa-enrollment';
+import { useAuthStore } from '@/store/auth-store';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -32,6 +34,16 @@ export default function TwoFactorSetupPage() {
   // enrolling 2FA here would lock everyone else out. Server-side enforced too
   // (demoSelfServiceBlocked in auth-api), this just avoids showing the wizard.
   const demoRestricted = !!user?.is_demo && !isPlatformOwner;
+  const clearAuth = useAuthStore((s) => s.logout);
+  // Required mode: the organisation's MFA policy sent the person here from sign-in. Read from the
+  // address bar once mounted (no Suspense boundary needed for search params).
+  const [requiredParams, setRequiredParams] = useState<{ required: boolean; next: string | null }>({ required: false, next: null });
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setRequiredParams({ required: params.get('required') === '1', next: params.get('next') });
+  }, []);
+  const enrollmentRequired = requiredParams.required || !!user?.mfa_enrollment_required;
+  const [finishing, setFinishing] = useState(false);
   const [step, setStep] = useState<SetupStep>('scan');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,17 +60,30 @@ export default function TwoFactorSetupPage() {
   const [copiedSecret, setCopiedSecret] = useState(false);
   const [copiedBackup, setCopiedBackup] = useState(false);
 
+  // An authenticator is already set up: replacing it needs its current code (auth-api answers 409
+  // authenticator_exists without one, and always for an enrolment-only session).
+  const [replacing, setReplacing] = useState(false);
+  const [currentCode, setCurrentCode] = useState('');
+
   // Step 1: Start TOTP enrollment
-  const startSetup = useCallback(async () => {
+  const startSetup = useCallback(async (current?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await apiClient.post('/api/v1/auth/mfa/totp/start');
+      const response = await apiClient.post('/api/v1/auth/mfa/totp/start', current ? { current_code: current } : undefined);
       setSecret(response.data.Secret || response.data.secret);
       setProvisioningUrl(response.data.Provisioning || response.data.provisioning);
+      setReplacing(false);
       setStep('scan');
     } catch (err: any) {
-      setError(err.message || 'Failed to start 2FA setup');
+      const status = err?.response?.status;
+      if (status === 409) {
+        setReplacing(true);
+      } else if (status === 401 && current) {
+        setError('That code is not right. Enter the current code from your authenticator app.');
+      } else {
+        setError(err.message || 'Failed to start 2FA setup');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -113,6 +138,20 @@ export default function TwoFactorSetupPage() {
     }
   };
 
+  // After a required setup the session is still enrolment-only: sign out and go back to sign-in,
+  // where the new code gives a full session.
+  const finishRequiredSetup = async () => {
+    setFinishing(true);
+    try {
+      await apiClient.post('/api/v1/auth/logout');
+    } catch {
+      // Signing in again replaces the session either way.
+    }
+    queryClient.clear();
+    clearAuth();
+    window.location.href = signInAfterEnrollment(requiredParams.next, MFA_COPY.enrolledMessage);
+  };
+
   const downloadBackupCodes = () => {
     const content = [
       'Codevertex Identity Platform - Backup Recovery Codes',
@@ -160,19 +199,27 @@ export default function TwoFactorSetupPage() {
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/dashboard/security"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition-colors mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Security
-        </Link>
+        {!enrollmentRequired && (
+          <Link
+            href="/dashboard/security"
+            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition-colors mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Security
+          </Link>
+        )}
         <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
-          Set Up Two-Factor Authentication
+          {enrollmentRequired ? MFA_COPY.enrollTitle : 'Set Up Two-Factor Authentication'}
         </h1>
         <p className="text-slate-600 dark:text-slate-400">
           Protect your account with an authenticator app like Google Authenticator, Authy, or 1Password.
         </p>
+        {enrollmentRequired && (
+          <div className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground">
+            <Shield className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <p>{MFA_COPY.enrollBody}</p>
+          </div>
+        )}
       </div>
 
       {/* Progress Steps */}
@@ -210,8 +257,48 @@ export default function TwoFactorSetupPage() {
         </div>
       )}
 
+      {/* An authenticator is already set up: prove it before replacing it. */}
+      {step === 'scan' && replacing && (
+        <div className="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">An authenticator app is already set up</h2>
+          {enrollmentRequired ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Sign in again with your password and the code from that app. If you lost the phone it was on, ask your
+              platform administrator to reset your authenticator.
+            </p>
+          ) : (
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (currentCode.trim().length === 6) void startSetup(currentCode.trim());
+              }}
+            >
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                To replace it, enter the current 6-digit code from that app. Lost the phone? Ask your platform
+                administrator to reset your authenticator.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="current-totp">Current code</Label>
+                <Input
+                  id="current-totp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={currentCode}
+                  onChange={(e) => setCurrentCode(e.target.value.replace(/\D/g, ''))}
+                />
+              </div>
+              <Button type="submit" disabled={isLoading || currentCode.trim().length !== 6}>
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Continue'}
+              </Button>
+            </form>
+          )}
+        </div>
+      )}
+
       {/* Step 1: Scan QR Code */}
-      {step === 'scan' && (
+      {step === 'scan' && !replacing && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -273,7 +360,7 @@ export default function TwoFactorSetupPage() {
             ) : (
               <div className="text-center py-8 text-slate-500">
                 Failed to generate QR code.{' '}
-                <button onClick={startSetup} className="text-primary font-medium hover:underline">
+                <button onClick={() => void startSetup()} className="text-primary font-medium hover:underline">
                   Try again
                 </button>
               </div>
@@ -444,11 +531,18 @@ export default function TwoFactorSetupPage() {
 
           <div className="flex justify-end">
             <Button
-              onClick={() => router.push('/dashboard/security')}
+              onClick={() => (enrollmentRequired ? finishRequiredSetup() : router.push('/dashboard/security'))}
+              disabled={finishing}
               className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold"
             >
-              Done
-              <ArrowRight className="w-4 h-4 ml-2" />
+              {finishing ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  {enrollmentRequired ? MFA_COPY.enrollDone : 'Done'}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
             </Button>
           </div>
         </motion.div>

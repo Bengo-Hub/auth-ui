@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
+import { mfaEnrollmentHref } from '@/lib/mfa-enrollment';
 import { Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
@@ -15,6 +16,13 @@ function CallbackHandler() {
 
     if (user) {
       const returnTo = searchParams.get('return_to') || '/dashboard';
+      // A social sign-in covered by the organisation's MFA policy, with no authenticator app yet:
+      // set it up first, then sign in again and come back to the same destination.
+      if (user.mfa_enrollment_required) {
+        const back = `/login?return_to=${encodeURIComponent(returnTo)}`;
+        router.replace(mfaEnrollmentHref(back));
+        return;
+      }
       if (/^https:\/\//i.test(returnTo)) {
         // The API already validated this at sign-in start; check again before leaving the origin.
         try {

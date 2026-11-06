@@ -51,6 +51,11 @@ export interface User {
   // server-side for these accounts — the UI hides those controls too.
   is_demo?: boolean;
   mfa_enabled?: boolean;
+  // Set on an enrolment-only session: the organisation's MFA policy covers this member and no
+  // authenticator app is set up yet. Only the setup page works until they sign in again.
+  mfa_enrollment_required?: boolean;
+  // How this session signed in (pwd, otp, fed, hwk, totp, mfa).
+  amr?: string[];
   // Set when an admin-provisioned/reset account must pick a new password before
   // using the dashboard. Cleared once the password is changed.
   must_change_password?: boolean;

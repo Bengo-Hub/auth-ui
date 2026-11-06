@@ -9,6 +9,7 @@ import { VerifyEmailPrompt } from '@/components/auth/VerifyEmailPrompt';
 import { TenantBrandScope } from '@/components/providers/tenant-brand-scope';
 import { useAuth } from '@/hooks/useAuth';
 import { DEVELOPER_PORTAL_ROLES } from '@/hooks/useDashboardNav';
+import { MFA_SETUP_PATH, mfaEnrollmentHref } from '@/lib/mfa-enrollment';
 import { useAuthStore } from '@/store/auth-store';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -87,15 +88,24 @@ export default function DashboardLayout({
     }
   }, [user, pathname, router, isPlatformOwner, meLoading, hasAnyRole]);
 
+  // An enrolment-only session (the organisation's MFA policy covers this member and no
+  // authenticator app is set up) opens only the setup page; everything else would answer 403.
+  const enrolling = !!user?.mfa_enrollment_required;
+  const onMfaSetup = pathname === MFA_SETUP_PATH;
+  useEffect(() => {
+    if (meLoading || !enrolling || onMfaSetup) return;
+    router.replace(mfaEnrollmentHref('/login'));
+  }, [enrolling, onMfaSetup, router, meLoading]);
+
   // Admin-provisioned / reset accounts must set a new password before using the
   // dashboard. Gate everything except the Security tab where they change it.
   useEffect(() => {
-    if (meLoading || !user?.must_change_password) return;
+    if (meLoading || enrolling || !user?.must_change_password) return;
     const onSecurity = pathname === '/dashboard/profile' || pathname?.startsWith('/dashboard/profile');
     if (!onSecurity) {
       router.replace('/dashboard/profile?tab=security&force=1');
     }
-  }, [user?.must_change_password, pathname, router, meLoading]);
+  }, [user?.must_change_password, pathname, router, meLoading, enrolling]);
 
   if (isLoading || meLoading) {
     return <AppSplash />;
@@ -103,6 +113,16 @@ export default function DashboardLayout({
 
   if (!isAuthenticated && !user) {
     return null;
+  }
+
+  // The setup page alone, without the navigation (whose calls the session cannot make).
+  if (enrolling) {
+    if (!onMfaSetup) return <AppSplash />;
+    return (
+      <div className="min-h-screen bg-muted/40 overflow-y-auto p-6 lg:p-12">
+        <div className="max-w-6xl mx-auto">{children}</div>
+      </div>
+    );
   }
 
   return (

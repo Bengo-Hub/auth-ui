@@ -1088,3 +1088,74 @@ export function useUpdatePasswordPolicy() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: passwordPolicyKeys.all() }),
   });
 }
+
+// ── Security: MFA policy (platform owners only) ───────────────────────────────
+// Which members must sign in with an authenticator app: a platform default, and each tenant's
+// own rule (or none, to follow the default). auth-api: GET/PATCH /admin/mfa-policy and
+// /admin/tenants/{id}/mfa-policy.
+
+export interface MfaPolicy {
+  required_roles: string[];
+  all_accounts: boolean;
+}
+
+export interface MfaPolicyView {
+  policy: MfaPolicy;
+  inherited: boolean;
+  effective: MfaPolicy;
+  available_roles: string[];
+}
+
+export interface MfaPolicyUpdate extends MfaPolicy {
+  inherit?: boolean;
+}
+
+export const mfaPolicyKeys = {
+  platform: () => ['admin', 'mfa-policy', 'platform'] as const,
+  tenant: (tenantId: string) => ['admin', 'mfa-policy', 'tenant', tenantId] as const,
+};
+
+function mfaPolicyPath(tenantId?: string) {
+  return tenantId ? `/api/v1/admin/tenants/${encodeURIComponent(tenantId)}/mfa-policy` : '/api/v1/admin/mfa-policy';
+}
+
+function normalizeMfaPolicyView(body: any): MfaPolicyView {
+  const policy = (p: any): MfaPolicy => ({
+    required_roles: Array.isArray(p?.required_roles) ? p.required_roles : [],
+    all_accounts: !!p?.all_accounts,
+  });
+  return {
+    policy: policy(body?.policy),
+    inherited: !!body?.inherited,
+    effective: policy(body?.effective),
+    available_roles: Array.isArray(body?.available_roles) ? body.available_roles : [],
+  };
+}
+
+/** The platform default (tenantId omitted) or one tenant's rule. */
+export function useMfaPolicy(tenantId?: string) {
+  return useQuery({
+    queryKey: tenantId ? mfaPolicyKeys.tenant(tenantId) : mfaPolicyKeys.platform(),
+    queryFn: async () => {
+      const response = await apiClient.get(mfaPolicyPath(tenantId));
+      return normalizeMfaPolicyView((response as any).data);
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+export function useUpdateMfaPolicy(tenantId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: MfaPolicyUpdate) => {
+      const body = tenantId ? payload : { required_roles: payload.required_roles, all_accounts: payload.all_accounts };
+      const response = await apiClient.patch(mfaPolicyPath(tenantId), body);
+      return normalizeMfaPolicyView((response as any).data);
+    },
+    onSuccess: (view) => {
+      queryClient.setQueryData(tenantId ? mfaPolicyKeys.tenant(tenantId) : mfaPolicyKeys.platform(), view);
+      // A platform default change moves every tenant that follows it.
+      if (!tenantId) queryClient.invalidateQueries({ queryKey: ['admin', 'mfa-policy', 'tenant'] });
+    },
+  });
+}

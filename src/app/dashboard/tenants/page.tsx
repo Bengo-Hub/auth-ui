@@ -39,6 +39,8 @@ import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
 import { buildTenantColumns } from './tenants-columns';
 import { DomainsTab } from '../my-tenant/domains-tab';
 import { suggestTenantSlug } from '@/lib/tenant-slug';
+import { MfaPolicyEditor } from '@/components/settings/MfaPolicyEditor';
+import { MFA_COPY } from '@/lib/mfa-enrollment';
 
 function slugify(text: string): string {
   return text
@@ -416,6 +418,7 @@ export default function TenantsPage() {
 
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [domainsTenant, setDomainsTenant] = useState<Tenant | null>(null);
+  const [mfaPolicyTenant, setMfaPolicyTenant] = useState<Tenant | null>(null);
   const [deletingTenant, setDeletingTenant] = useState<Tenant | null>(null);
 
   const handleSwitch = (tenant: Tenant) => {
@@ -458,6 +461,7 @@ export default function TenantsPage() {
         onDelete: setDeletingTenant,
         onProvisionRedirects: handleProvisionRedirects,
         onDomains: setDomainsTenant,
+        onMfaPolicy: setMfaPolicyTenant,
         provisionPending: provisionRedirects.isPending,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -516,8 +520,20 @@ export default function TenantsPage() {
         </Dialog>
       )}
 
+      {mfaPolicyTenant && (
+        <Dialog open={!!mfaPolicyTenant} onOpenChange={(open) => !open && setMfaPolicyTenant(null)}>
+          <DialogContent className="sm:max-w-lg rounded-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">{MFA_COPY.policyTitle}: {mfaPolicyTenant.name}</DialogTitle>
+              <DialogDescription>{MFA_COPY.policyTenantBody}</DialogDescription>
+            </DialogHeader>
+            <MfaPolicyEditor tenantId={mfaPolicyTenant.id} onSaved={() => setMfaPolicyTenant(null)} />
+          </DialogContent>
+        </Dialog>
+      )}
+
       {editingTenant && (
-        <EditOrgDialog 
+        <EditOrgDialog
           tenant={editingTenant} 
           open={!!editingTenant} 
           onOpenChange={(open) => !open && setEditingTenant(null)} 

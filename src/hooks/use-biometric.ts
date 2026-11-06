@@ -161,7 +161,9 @@ export function useBiometric(options: UseBiometricOptions = {}) {
 
         if (!finishRes.ok) {
           const body = await finishRes.json().catch(() => ({}));
-          throw new Error(body.message || 'Biometric authentication failed');
+          // auth-api errors carry the readable text in `error` (for example the MFA policy asking
+          // for the authenticator code).
+          throw new Error(body.message || body.error || 'Biometric authentication failed');
         }
 
         const raw = await finishRes.json();

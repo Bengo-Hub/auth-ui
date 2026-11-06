@@ -11,6 +11,7 @@ import { useBiometric } from '@/hooks/use-biometric';
 import apiClient from '@/lib/api-client';
 import { changePassword } from '@/lib/api/profile';
 import { authFlowHref } from '@/lib/auth-context';
+import { MFA_COPY, currentSignInPath, mfaEnrollmentHref } from '@/lib/mfa-enrollment';
 import { rewriteTenantInUrl } from '@/lib/tenant-url';
 import { getSafeReturnUrl, isValidReturnUrl } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
@@ -86,6 +87,9 @@ export function LoginForm() {
   // Only the explicit tenant param. Empty: auth-api then resolves the user's primary tenant.
   const tenantSlug = flow.loginTenant;
   const notice = searchParams.get('message');
+  // Set by the authorize endpoint when the organisation's MFA policy asks for a second step the
+  // current session did not prove.
+  const mfaReason = searchParams.get('reason') === 'mfa_required';
 
   const [email, setEmail] = useState(searchParams.get('login_hint') ?? '');
   const [password, setPassword] = useState('');
@@ -106,6 +110,21 @@ export function LoginForm() {
 
   const { authenticate: biometricAuth, isSupported: biometricSupported, hasRegisteredCredential, isLoading: biometricLoading } = useBiometric({
     onAuthSuccess: async (_tokens, raw) => {
+      // The MFA policy covers this member and the account has an authenticator app: the passkey
+      // was the first step, the code is the second, on the same page social sign-ins use.
+      const rawChallenge = raw?.mfa_challenge;
+      const challenge = typeof rawChallenge === 'string' ? rawChallenge : '';
+      if (challenge) {
+        let next = '/dashboard';
+        if (returnTo && isValidReturnUrl(returnTo)) next = returnTo;
+        else if (clientId && redirectUri) next = buildAuthorizeUrl(tenantSlug, (u) => u);
+        router.push(`/auth/mfa?challenge=${encodeURIComponent(challenge)}&return_to=${encodeURIComponent(next)}`);
+        return;
+      }
+      if (raw?.mfa_enrollment_required === true) {
+        router.push(mfaEnrollmentHref(currentSignInPath()));
+        return;
+      }
       // The WebAuthn finish response carries user/roles/permissions like password login.
       const user = (raw?.user ?? {}) as Record<string, unknown>;
       if (user?.id) {
@@ -213,6 +232,7 @@ export function LoginForm() {
       const response = await apiClient.post('/api/v1/auth/login', payload);
       const data = response.data as {
         mfa_required?: boolean;
+        mfa_enrollment_required?: boolean;
         access_token?: string;
         user?: LoginUser;
         roles?: string[];
@@ -223,6 +243,14 @@ export function LoginForm() {
         setMfaRequired(true);
         setIsLoading(false);
         setTimeout(() => totpInputRef.current?.focus(), 100);
+        return;
+      }
+
+      // The organisation's MFA policy covers this member and there is no authenticator app yet:
+      // the session opens only the setup page, which brings the person back here afterwards.
+      if (data.mfa_enrollment_required) {
+        if (data.user) setUser({ ...data.user, roles: [], permissions: [], tenants: [] });
+        router.push(mfaEnrollmentHref(currentSignInPath()));
         return;
       }
 
@@ -443,6 +471,7 @@ export function LoginForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {notice && <AuthNotice tone="success">{notice}</AuthNotice>}
+        {mfaReason && !notice && <AuthNotice tone="info">{MFA_COPY.signInAgain}</AuthNotice>}
         {error && <AuthNotice>{error}</AuthNotice>}
 
         <div className="space-y-1.5">
