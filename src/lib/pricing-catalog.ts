@@ -1,4 +1,4 @@
-import type { Plan } from '@/lib/subscription-api';
+import type { Plan, PublicFeature } from '@/lib/subscription-api';
 
 // Turns subscriptions-api's flat public plan list into the pricing page's shape:
 // category > product > tier, each tier pairing its monthly plan with its perpetual licence.
@@ -15,6 +15,9 @@ export interface Tier {
   limits: { value: string; label: string }[];
   /** Usage charges on top of the price, such as a per-subscriber fee. */
   notes: string[];
+  /** Included features by catalog category, in catalog order. Empty when the catalog is unavailable. */
+  features: { category: string; labels: string[] }[];
+  featureCount: number;
 }
 
 export interface Product {
@@ -122,6 +125,23 @@ function usageNotes(p: Plan): string[] {
   return notes;
 }
 
+/**
+ * A plan's included features named from the public catalog, grouped by category. Codes the
+ * catalog does not list (internal gateway access) are left out rather than shown as raw codes.
+ */
+function tierFeatures(p: Plan, catalog: PublicFeature[]): Tier['features'] {
+  if (!catalog.length) return [];
+  const included = new Set((p.features ?? []).filter((f) => f.is_included !== false).map((f) => f.code));
+  const groups = new Map<string, string[]>();
+  for (const f of catalog) {
+    if (f.kind !== 'FEATURE' || !included.has(f.featureCode)) continue;
+    const list = groups.get(f.category) ?? [];
+    if (!list.includes(f.label)) list.push(f.label);
+    groups.set(f.category, list);
+  }
+  return [...groups.entries()].map(([category, labels]) => ({ category: category || 'General', labels }));
+}
+
 export const isLicence = (p: Plan) => p.billing_cycle === 'ONE_TIME' || /_ONE_TIME$|LICENSE/.test(p.plan_code);
 const baseCode = (code: string) => code.replace(/_ONE_TIME$/, '');
 
@@ -137,7 +157,7 @@ const fallbackName = (p: Plan) => p.name.split(/\s+[—–-]\s+/)[0].replace(/\s
  * Public, active, non-annual plans grouped for display. Annual rows are retired (the period is
  * picked at checkout) and is_public=false rows such as support contracts are sold by the team.
  */
-export function buildCatalog(plans: Plan[]): Category[] {
+export function buildCatalog(plans: Plan[], catalog: PublicFeature[] = []): Category[] {
   const visible = plans.filter((p) => p.is_public !== false && p.is_active !== false && p.billing_cycle !== 'ANNUAL');
 
   const byProduct = new Map<string, { def: ProductDef; plans: Plan[] }>();
@@ -155,13 +175,15 @@ export function buildCatalog(plans: Plan[]): Category[] {
     const tiers = new Map<string, Tier>();
     for (const p of [...list].sort((a, b) => a.tier_order - b.tier_order || a.base_price - b.base_price)) {
       const key = baseCode(p.plan_code);
-      const tier = tiers.get(key) ?? { code: key, label: tierLabel(p.plan_code, def.prefix), description: '', limits: [], notes: [] };
+      const tier = tiers.get(key) ?? { code: key, label: tierLabel(p.plan_code, def.prefix), description: '', limits: [], notes: [], features: [], featureCount: 0 };
       if (isLicence(p)) tier.licence = p;
       else tier.monthly = p;
       tier.code = tier.monthly?.plan_code ?? p.plan_code;
       tier.description = tier.monthly?.description || tier.licence?.description || '';
       tier.limits = tierLimits(tier.monthly ?? p, def.key);
       tier.notes = usageNotes(tier.monthly ?? p);
+      tier.features = tierFeatures(tier.monthly ?? p, catalog);
+      tier.featureCount = tier.features.reduce((n, g) => n + g.labels.length, 0);
       tiers.set(key, tier);
     }
     const ordered = [...tiers.values()];

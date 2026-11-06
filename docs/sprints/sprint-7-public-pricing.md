@@ -32,17 +32,16 @@ lowercased (subscriptions-api treats codes as case sensitive, so `/plans/code/er
 - [x] The plan client normalises `setupFee`, `freeTrialDays`, `isPublic` and `useCase`.
 - [x] Checked at 1366 px and 390 px wide with no sideways scroll; price amounts and units no
   longer break mid-phrase in the narrow price columns.
+- [x] Each tier has a "See all N features" list grouped by category, named from subscriptions-api's
+  public `GET /api/v1/catalog/features`. If the catalog cannot load, prices and limits still show.
 - [x] Sign-up no longer promises "a free STARTER plan". It says the organisation starts on a free
   trial and a plan can be picked from Billing.
 
 ## Open items
-- Feature names: `GET /api/v1/features/catalog` needs sign-in (401), so the public page shows plan
-  limits, not features. Making the catalog public in subscriptions-api would let the page list
-  features and drop the local limit labels in `pricing-catalog.ts`.
 - The comparison page in subscriptions-ui needs a session, so signed-out visitors are asked to
   sign in first. A public, read-only comparison would remove that step.
 - Local dev cannot load prices: subscriptions-api's CORS allows `accounts.codevertexafrica.com`
   but not `localhost`, so the page shows its error state there. Screenshots were taken with the
   plans request answered from a saved copy of the live catalogue.
-- ISP Billing's plan description already spells out the usage charges, so its row repeats them
-  under the limits. Shortening that description in the subscriptions-api seed would fix it.
+- The shorter ISP Billing description is in the subscriptions-api seed and shows once the seed
+  runs against production (see subscriptions-api `docs/sprints/2026-11-public-feature-catalog.md`).

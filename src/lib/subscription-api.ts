@@ -67,6 +67,18 @@ export interface PlanFeature {
   is_included: boolean;
 }
 
+/** One entry of subscriptions-api's public feature catalog (GET /catalog/features). */
+export interface PublicFeature {
+  featureCode: string;
+  serviceTag: string;
+  category: string;
+  label: string;
+  description?: string;
+  kind: 'FEATURE' | 'LIMIT';
+  unit?: string;
+  sortOrder: number;
+}
+
 export interface ServiceChargePlan {
   id: string;
   code: string;
@@ -121,6 +133,16 @@ export const subscriptionApi = {
     const raw = response.data;
     const arr: any[] = Array.isArray(raw) ? raw : (raw.data ?? raw.plans ?? []);
     return arr.map(normalizePlan);
+  },
+
+  /** Feature names for pricing pages. Empty when the catalog cannot be read, so prices still show. */
+  getFeatureCatalog: async (): Promise<PublicFeature[]> => {
+    try {
+      const response = await axios.get(`${SUBSCRIPTION_API_BASE}/catalog/features`);
+      return response.data?.features ?? [];
+    } catch {
+      return [];
+    }
   },
 
   getPlanByCode: async (code: string): Promise<Plan> => {

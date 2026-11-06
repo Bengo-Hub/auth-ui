@@ -573,7 +573,6 @@ image: ghcr.io/bengo-hub/auth-ui:v1.2.3
 - Load testing & scalability validation
 
 ### Known issues (Nov 2026)
-- `/pricing` shows plan limits, not feature names: the feature catalog in subscriptions-api needs sign-in.
 - `/pricing` cannot load prices on localhost: subscriptions-api CORS allows the accounts domain only.
 
 ### Planned Features (Future)

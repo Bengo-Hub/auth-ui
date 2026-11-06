@@ -25,7 +25,13 @@ export default function PricingPage() {
     queryFn: () => subscriptionApi.getPlans(),
     staleTime: 10 * 60_000,
   });
-  const categories = useMemo(() => buildCatalog(data ?? []), [data]);
+  // Feature names are optional: prices render first and the lists fill in when the catalog loads.
+  const { data: featureCatalog } = useQuery({
+    queryKey: ['public-feature-catalog'],
+    queryFn: () => subscriptionApi.getFeatureCatalog(),
+    staleTime: 30 * 60_000,
+  });
+  const categories = useMemo(() => buildCatalog(data ?? [], featureCatalog ?? []), [data, featureCatalog]);
 
   // Checkout needs a session; sign-up hands the visitor back to checkout for the same plan.
   const buyHref = (code: string) =>
@@ -182,6 +188,29 @@ function TierRow({ tier, split, buyHref, signedIn }: { tier: Tier; split: boolea
         {tier.notes.map((n) => (
           <p key={n} className="mt-2 text-sm text-muted-foreground">{n}</p>
         ))}
+        {tier.featureCount > 0 && (
+          <details className="group mt-3">
+            <summary className="cursor-pointer list-none text-sm font-medium text-primary hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden">
+              <span className="group-open:hidden">See all {tier.featureCount} features</span>
+              <span className="hidden group-open:inline">Hide features</span>
+            </summary>
+            <div className="mt-3 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+              {tier.features.map((g) => (
+                <div key={g.category}>
+                  <p className="text-xs font-semibold text-muted-foreground">{g.category}</p>
+                  <ul className="mt-1 space-y-1 text-sm">
+                    {g.labels.map((label) => (
+                      <li key={label} className="flex gap-1.5">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
       </div>
 
       {monthly && (

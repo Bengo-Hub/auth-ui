@@ -213,7 +213,8 @@ See treasury-ui and notifications-ui docs for full UX/UI and API details.
   bar jumps between the groups.
 - One block per product, with its "from" price and trial length, then one row per tier. Where a
   tier has both, the row shows "Pay monthly" and "Or buy once" side by side.
-- Each tier lists at most four plain limits (branches, cashiers, products), never raw keys.
+- Each tier lists at most four plain limits (branches, cashiers, products), never raw keys, and a
+  collapsed "See all N features" list grouped by category from the public feature catalog.
 - Buttons say what happens: "Start free trial", "Buy licence", or "Choose plan" when signed in.
   They open subscriptions-ui checkout with the exact plan code, through sign-up when signed out.
 - "Compare every feature and limit" opens the subscriptions-ui plan picker on that product.
