@@ -522,7 +522,7 @@ export default function TenantsPage() {
 
       {mfaPolicyTenant && (
         <Dialog open={!!mfaPolicyTenant} onOpenChange={(open) => !open && setMfaPolicyTenant(null)}>
-          <DialogContent className="sm:max-w-lg rounded-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl rounded-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">{MFA_COPY.policyTitle}: {mfaPolicyTenant.name}</DialogTitle>
               <DialogDescription>{MFA_COPY.policyTenantBody}</DialogDescription>

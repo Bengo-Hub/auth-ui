@@ -28,6 +28,10 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+/** Staff roles a tenant admin sets here; the API refuses the others. */
+const EDITABLE_ROLES = ['admin', 'viewer', 'editor'];
+const roleLabel = (role?: string) => (role ? role[0].toUpperCase() + role.slice(1) : 'No role');
+
 interface TenantMembersDialogProps {
   tenantId: string;
   tenantName: string;
@@ -250,18 +254,24 @@ export function TenantMembersDialog({ tenantId, tenantName }: TenantMembersDialo
                         </div>
                       ) : (
                         <>
-                          <select
-                            value={member.roles[0] || 'admin'}
-                            onChange={(e) => {
-                              setEditingUserId(member.user_id);
-                              setEditingRole(e.target.value);
-                            }}
-                            className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium cursor-pointer"
-                          >
-                            <option value="admin">Admin</option>
-                            <option value="viewer">Viewer</option>
-                            <option value="editor">Editor</option>
-                          </select>
+                          {EDITABLE_ROLES.includes(member.roles[0]) ? (
+                            <select
+                              value={member.roles[0]}
+                              onChange={(e) => {
+                                setEditingUserId(member.user_id);
+                                setEditingRole(e.target.value);
+                              }}
+                              className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium cursor-pointer"
+                            >
+                              {EDITABLE_ROLES.map((r) => <option key={r} value={r}>{roleLabel(r)}</option>)}
+                            </select>
+                          ) : (
+                            // Superuser, customer, member and others: not a staff role set here. A select
+                            // has no option for them and would show its first one, "Admin".
+                            <span className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                              {roleLabel(member.roles[0])}
+                            </span>
+                          )}
                           <PermissionActionButton
                             permission="auth.users.manage"
                             icon={Trash2}
