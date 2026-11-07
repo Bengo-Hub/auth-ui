@@ -58,8 +58,10 @@ export function TenantMembersDialog({ tenantId, tenantName }: TenantMembersDialo
 
     setIsLoading(true);
     try {
+      // The field takes an email or a user id; the API reads them from different keys.
+      const who = invitingUserId.trim();
       await addMember.mutateAsync({
-        user_id: invitingUserId.trim(),
+        ...(who.includes('@') ? { email: who } : { user_id: who }),
         roles: [selectedRole],
       });
 
