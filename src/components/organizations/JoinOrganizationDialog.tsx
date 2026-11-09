@@ -20,6 +20,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { isAbortError, useDebouncedValue } from '@bengo-hub/shared-ui-lib/search';
 
 export function JoinOrganizationDialog() {
   const [query, setQuery] = useState('');
@@ -28,28 +29,26 @@ export function JoinOrganizationDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
+  // Search after a 300 ms pause; a newer term aborts the request before it.
+  const debouncedQuery = useDebouncedValue(query.trim());
   useEffect(() => {
-    const search = async () => {
-      if (query.length < 3) {
-        setResults([]);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        // We'll update the backend to support this search parameter
-        const res = await api.get(`/api/v1/admin/tenants?search=${encodeURIComponent(query)}`);
-        setResults(res.data || []);
-      } catch (error) {
-        console.error('Search failed', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const timer = setTimeout(search, 300);
-    return () => clearTimeout(timer);
-  }, [query]);
+    if (debouncedQuery.length < 3) {
+      setResults([]);
+      return;
+    }
+    const controller = new AbortController();
+    setIsLoading(true);
+    api
+      .get(`/api/v1/admin/tenants?search=${encodeURIComponent(debouncedQuery)}`, { signal: controller.signal })
+      .then((res) => setResults(res.data || []))
+      .catch((error) => {
+        if (!isAbortError(error)) console.error('Search failed', error);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false);
+      });
+    return () => controller.abort();
+  }, [debouncedQuery]);
 
   const handleJoin = async (tenantId: string) => {
     try {

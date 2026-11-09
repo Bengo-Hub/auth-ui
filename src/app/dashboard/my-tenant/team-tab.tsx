@@ -19,6 +19,7 @@ import {
 } from '@/hooks/use-dashboard-api';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
+import { useDebouncedValue } from '@bengo-hub/shared-ui-lib/search';
 import { Loader2, Plus, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { outletsPath, type TenantOutlet } from './shared';
@@ -32,7 +33,7 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
   const [page, setPage] = useState(1);
   const LIMIT = 20;
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search.trim());
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [outletFilter, setOutletFilter] = useState('');
@@ -61,11 +62,6 @@ export function TeamTab({ tenantId, tenantSlug, useCase }: { tenantId: string; t
   const setMemberPin = useSetMemberPin(tenantId);
   const resetPassword = useAdminResetPassword();
   const sendResetEmail = useAdminSendResetEmail();
-
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(t);
-  }, [search]);
 
   const resetPage = useCallback(() => setPage(1), []);
 

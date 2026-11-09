@@ -13,11 +13,13 @@ import { useAdminUsers, useTenants } from '@/hooks/use-dashboard-api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
+import { useDebouncedSearch } from '@bengo-hub/shared-ui-lib/search';
 import { buildUserColumns } from './users-columns';
 import { CreateUserDialog, SSO_ROLES } from './user-dialogs';
 
 export default function UsersPage() {
-  const [search, setSearch] = useState('');
+  // The box updates on every key; the request waits for a 300 ms pause (or Enter).
+  const search = useDebouncedSearch({ onTermChange: () => setPage(1) });
   const [status, setStatus] = useState('');
   const [tenantId, setTenantId] = useState('');
   const [role, setRole] = useState('');
@@ -32,7 +34,7 @@ export default function UsersPage() {
   );
 
   const { data, isLoading, isError, refetch } = useAdminUsers({
-    search: search || undefined,
+    search: search.term || undefined,
     status: status || undefined,
     tenant_id: tenantId || undefined,
     role: role || undefined,
@@ -42,10 +44,10 @@ export default function UsersPage() {
 
   const users = data?.users ?? [];
   const pagination = data?.pagination;
-  const hasFilters = !!(search || status || tenantId || role);
+  const hasFilters = !!(search.value || status || tenantId || role);
 
   const clearFilters = () => {
-    setSearch(''); setStatus(''); setTenantId(''); setRole(''); setPage(1);
+    search.clear(); setStatus(''); setTenantId(''); setRole(''); setPage(1);
   };
 
   const columns = useMemo(() => buildUserColumns({ tenantName }), [tenantName]);
@@ -93,8 +95,7 @@ export default function UsersPage() {
               <Input
                 placeholder="Search by name or email…"
                 className="pl-8"
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                {...search.inputProps}
               />
             </div>
             <div className="relative min-w-[200px]">

@@ -41,6 +41,7 @@ import { DomainsTab } from '../my-tenant/domains-tab';
 import { suggestTenantSlug } from '@/lib/tenant-slug';
 import { MfaPolicyEditor } from '@/components/settings/MfaPolicyEditor';
 import { MFA_COPY } from '@/lib/mfa-enrollment';
+import { useDebouncedSearch } from '@bengo-hub/shared-ui-lib/search';
 
 function slugify(text: string): string {
   return text
@@ -407,8 +408,9 @@ function PendingApprovalsSection() {
 export default function TenantsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [search, setSearch] = useState('');
-  const { data: tenantsPage, isLoading, isError, refetch } = useTenantsPage({ page, limit: pageSize, search });
+  // The box updates on every key; the request waits for a 300 ms pause (or Enter).
+  const search = useDebouncedSearch({ onTermChange: () => setPage(1) });
+  const { data: tenantsPage, isLoading, isError, refetch } = useTenantsPage({ page, limit: pageSize, search: search.term });
   const tenants = tenantsPage?.data ?? [];
   const totalPages = tenantsPage ? Math.max(1, Math.ceil(tenantsPage.total / tenantsPage.limit)) : 1;
   const deleteTenant = useDeleteTenant();
@@ -489,13 +491,12 @@ export default function TenantsPage() {
         loading={isLoading}
         error={isError}
         onRetry={() => refetch()}
-        emptyText={search ? `No organizations match "${search}".` : "You haven't added any organizations yet. Create one to get started."}
+        emptyText={search.term ? `No organizations match "${search.term}".` :"You haven't added any organizations yet. Create one to get started."}
         storageKey="dashboard-tenants-col-prefs"
         toolbar={
           <Input
             placeholder="Search by name or slug..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            {...search.inputProps}
             className="h-10 max-w-xs rounded-xl"
           />
         }

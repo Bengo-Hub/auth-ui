@@ -152,10 +152,11 @@ export function useTenantsPage(params: { page?: number; limit?: number; search?:
   const { page = 1, limit = 20, search = '' } = params;
   return useQuery({
     queryKey: [...tenantKeys.all(), { page, limit, search }] as const,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (search) qs.set('search', search);
-      const response = await apiClient.get(`/api/v1/admin/tenants?${qs.toString()}`);
+      // The signal aborts this request when the search term changes before it returns.
+      const response = await apiClient.get(`/api/v1/admin/tenants?${qs.toString()}`, { signal });
       const body = (response as any).data;
       const items = body?.data ?? body ?? [];
       return {
@@ -673,8 +674,8 @@ export function useAdminUsers(params: { status?: string; tenant_id?: string; rol
 
   return useQuery({
     queryKey: userKeys.all(Object.fromEntries(q)),
-    queryFn: async () => {
-      const response = await apiClient.get(`/api/v1/admin/users${qs ? '?' + qs : ''}`);
+    queryFn: async ({ signal }) => {
+      const response = await apiClient.get(`/api/v1/admin/users${qs ? '?' + qs : ''}`, { signal });
       // API returns pagination wrapper: { data: PlatformUser[], total, limit, page, hasMore }
       // Transform into UsersResponse shape that the users page expects.
       const body = (response as any).data;
@@ -691,6 +692,8 @@ export function useAdminUsers(params: { status?: string; tenant_id?: string; rol
       } as UsersResponse;
     },
     staleTime: STALE_MS,
+    // Keep the current rows on screen while the next search loads.
+    placeholderData: (prev) => prev,
   });
 }
 

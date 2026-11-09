@@ -26,6 +26,7 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { resolveAuthContext } from '@/lib/auth-context';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useDebouncedValue } from '@bengo-hub/shared-ui-lib/search';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -187,12 +188,10 @@ export function SignupForm() {
     }
   }, []);
 
+  const debouncedOrgSearch = useDebouncedValue(orgSearch.trim());
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (orgAction === 'join_existing') searchOrg(orgSearch);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [orgSearch, orgAction, searchOrg]);
+    if (orgAction === 'join_existing') searchOrg(debouncedOrgSearch);
+  }, [debouncedOrgSearch, orgAction, searchOrg]);
 
   // Auto-resolve tenant from defaultTenant slug on mount (background, skip Step 2)
   useEffect(() => {
