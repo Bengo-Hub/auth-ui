@@ -60,7 +60,8 @@ export function isValidReturnUrl(url: string | null | undefined): boolean {
     // interceptor + login flow would keep echoing that broken path back,
     // bouncing the user into the same 404 forever instead of recovering.
     const path = url.split(/[?#]/)[0];
-    return path === '/dashboard' || path.startsWith('/dashboard/');
+    // /invitations: the invite email's link signs the person in and lands them here (audit H4).
+    return path === '/dashboard' || path.startsWith('/dashboard/') || path === '/invitations';
   }
 
   // Allow absolute URLs that start with our SSO issuer (for OIDC / service-originated login return_to)
