@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "docs:capture": "playwright test e2e/docs-capture --project=chromium --headed"
+    "docs:capture": "playwright test e2e/docs-capture --project=chromium --headed",
+    "test": "vitest run"
   },
   "dependencies": {
     "@bengo-hub/shared-ui-lib": "github:Bengo-Hub/shared-ui-lib#v0.1.139",
@@ -64,8 +65,10 @@
     "@types/react-dom": "^19.2.3",
     "eslint": "^8.57.1",
     "eslint-config-next": "16.3.8",
+    "jsdom": "31.0.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "5.1.0"
   }
 }

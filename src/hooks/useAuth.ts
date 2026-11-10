@@ -2,8 +2,9 @@
 
 import apiClient from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth-store';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { resolveUser } from './resolve-user';
 
 const ME_STALE_MS = 5 * 60 * 1000; // 5 min TTL
 
@@ -93,8 +94,14 @@ export function useAuth(enabled = true) {
     }
   }, [query.isError, enabled, storeUser, logout]);
 
-  // Derive the resolved user: prefer fresh query data, fall back to store.
-  const user = (query.data ?? storeUser) as User | null;
+  // Derive the resolved user: prefer fresh query data, fall back to store, and never show a
+  // cached /me that belongs to someone other than the person who just signed in.
+  const queryClient = useQueryClient();
+  const { user: resolved, stale } = resolveUser(query.data as User | undefined, storeUser as User | null);
+  useEffect(() => {
+    if (stale) void queryClient.invalidateQueries({ queryKey: ['me'] });
+  }, [stale, queryClient]);
+  const user = resolved;
 
   // isLoading should only be true while we have no data and the query is still "loading"
   // query.isLoading in v5 is equivalent to isPending && isFetching
