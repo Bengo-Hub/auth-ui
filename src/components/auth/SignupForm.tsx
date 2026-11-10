@@ -128,7 +128,7 @@ export function SignupForm() {
   const [codeSending, setCodeSending] = useState(false);
 
   // Step 2 — Organisation
-  const [orgAction, setOrgAction] = useState<'join_existing' | 'create_new'>('join_existing');
+  const [orgAction, setOrgAction] = useState<'join_existing' | 'create_new'>('create_new');
   const [orgSearch, setOrgSearch] = useState(defaultTenant);
   const [searchResults, setSearchResults] = useState<TenantResult[]>([]);
   const [selectedTenant, setSelectedTenant] = useState<TenantResult | null>(null);
@@ -920,6 +920,9 @@ function Step1({
 
       {orgAction === 'join_existing' ? (
         <div className="space-y-4">
+          <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+            To work in an existing organisation, ask its admin to invite you. You will get an email to join. Self sign-up works only where the organisation allows it.
+          </p>
           <div className="space-y-2">
             <Label>Find your organisation</Label>
             <div className="relative">
