@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Apps linked to /register for years (MarketFlow until 2026-11-11). There is no such page: it
+  // fell into [orgSlug] and landed on sign-in. Send it to sign-up with the query kept.
+  async redirects() {
+    return [{ source: '/register', destination: '/signup', permanent: false }];
+  },
 };
 
 export default nextConfig;

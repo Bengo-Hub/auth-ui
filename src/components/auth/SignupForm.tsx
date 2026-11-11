@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { resolveAuthContext } from '@/lib/auth-context';
+import { readInvitePrefill } from '@/lib/business-invite';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDebouncedValue } from '@bengo-hub/shared-ui-lib/search';
 
@@ -104,6 +105,12 @@ export function SignupForm() {
   const oauthToken = searchParams.get('oauth_token') || ''; // short-lived token for account link
   const isOAuthFlow = !!oauthProvider;
 
+  // A platform owner's business invite (auth-api business invites): prefills the email and the
+  // organisation name from the token's public part and is sent with the registration, where
+  // auth-api checks the signature. A valid invite creates the organisation active at once.
+  const inviteToken = searchParams.get('invite') || '';
+  const invitePrefill = readInvitePrefill(inviteToken);
+
   // ── Step state ──────────────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -116,7 +123,7 @@ export function SignupForm() {
 
   // Step 1 — Account
   const [name, setName] = useState(oauthPrefillName);
-  const [email, setEmail] = useState(oauthPrefillEmail);
+  const [email, setEmail] = useState(oauthPrefillEmail || invitePrefill.email);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -133,7 +140,7 @@ export function SignupForm() {
   const [searchResults, setSearchResults] = useState<TenantResult[]>([]);
   const [selectedTenant, setSelectedTenant] = useState<TenantResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [newOrgName, setNewOrgName] = useState('');
+  const [newOrgName, setNewOrgName] = useState(invitePrefill.orgName);
   const [newOrgSlug, setNewOrgSlug] = useState('');
   // Tracks whether the org creator has typed their own slug so the
   // auto-suggestion (derived from the org name below) stops overwriting it.
@@ -361,6 +368,7 @@ export function SignupForm() {
       // Lets auth-api give a customer-facing app's own role (customer, driver, student).
       client_id: clientId || undefined,
       terms_accepted: termsAccepted,
+      invite_token: inviteToken || undefined,
       profile: {
         name,
         org_size: orgSize || undefined,

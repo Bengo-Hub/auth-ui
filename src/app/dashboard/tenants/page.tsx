@@ -39,6 +39,7 @@ import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
 import { buildTenantColumns } from './tenants-columns';
 import { DomainsTab } from '../my-tenant/domains-tab';
 import { suggestTenantSlug } from '@/lib/tenant-slug';
+import { InviteBusinessDialog } from '@/components/tenants/invite-business-dialog';
 import { MfaPolicyEditor } from '@/components/settings/MfaPolicyEditor';
 import { MFA_COPY } from '@/lib/mfa-enrollment';
 import { useDebouncedSearch } from '@bengo-hub/shared-ui-lib/search';
@@ -479,7 +480,10 @@ export default function TenantsPage() {
             Manage your organizations, switch context, and control team memberships.
           </p>
         </div>
-        <CreateOrgDialog />
+        <div className="flex flex-wrap gap-3">
+          <InviteBusinessDialog />
+          <CreateOrgDialog />
+        </div>
       </header>
 
       <PendingApprovalsSection />
