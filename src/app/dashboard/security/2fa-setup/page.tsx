@@ -21,7 +21,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 type SetupStep = 'scan' | 'verify' | 'backup' | 'complete';
@@ -57,6 +57,8 @@ export default function TwoFactorSetupPage() {
 
   // Step 3: Backup codes
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  // Shown on the last step when no new backup codes were made (the account keeps earlier ones).
+  const [backupNotice, setBackupNotice] = useState<string | null>(null);
   const [copiedSecret, setCopiedSecret] = useState(false);
   const [copiedBackup, setCopiedBackup] = useState(false);
 
@@ -89,9 +91,13 @@ export default function TwoFactorSetupPage() {
     }
   }, []);
 
-  // Initialize on mount, unless this session belongs to the restricted demo account.
+  // Initialize on mount, unless this session belongs to the restricted demo account. Once only:
+  // every start makes a new secret on the server, so a second start (a token refresh flipping the
+  // loading flag) would silently invalidate the QR code already scanned.
+  const started = useRef(false);
   useEffect(() => {
-    if (authLoading || demoRestricted) return;
+    if (authLoading || demoRestricted || started.current) return;
+    started.current = true;
     startSetup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, demoRestricted]);
@@ -104,23 +110,42 @@ export default function TwoFactorSetupPage() {
     }
     setIsLoading(true);
     setError(null);
+    // Two calls with their own failures: only a refused confirm is a wrong code. Reporting every
+    // failure as "Invalid verification code" made a successful setup look rejected (2026-11-12:
+    // the authenticator was on, but the backup code step answered 409 backup_codes_exist).
     try {
       await apiClient.post('/api/v1/auth/mfa/totp/confirm', {
         code: verificationCode,
       });
-      // Invalidate /me cache so profile page reflects mfa_enabled=true
-      queryClient.invalidateQueries({ queryKey: ['me'] });
-      // Generate backup codes
+    } catch (err: any) {
+      const status = err?.response?.status;
+      setError(
+        status === 401 || status === 400
+          ? 'That code is not right. Use the newest code for this account in your authenticator app.'
+          : 'We could not check the code right now. Please try again in a moment.',
+      );
+      setIsLoading(false);
+      return;
+    }
+    // The authenticator is on from here, whatever happens to the backup codes.
+    queryClient.invalidateQueries({ queryKey: ['me'] });
+    try {
       const backupResponse = await apiClient.post('/api/v1/auth/mfa/backup-codes/regenerate', {
         count: 10,
       });
       setBackupCodes(backupResponse.data.backup_codes);
-      setStep('backup');
     } catch (err: any) {
-      setError('Invalid verification code. Please try again.');
-    } finally {
-      setIsLoading(false);
+      // The account already holds unused backup codes from an earlier setup, which a setup-only
+      // sign-in may not replace: keep them, and say so instead of reporting a failure.
+      setBackupCodes([]);
+      setBackupNotice(
+        err?.response?.status === 409
+          ? 'Your authenticator app is set up. You already have backup codes from an earlier setup; they still work. You can replace them after you sign in again.'
+          : 'Your authenticator app is set up, but we could not make backup codes. You can make them after you sign in again.',
+      );
     }
+    setStep('backup');
+    setIsLoading(false);
   };
 
   const copyToClipboard = async (text: string, type: 'secret' | 'backup') => {
@@ -478,14 +503,22 @@ export default function TwoFactorSetupPage() {
                   Two-factor authentication enabled!
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Save these backup codes in a safe place
+                  {backupCodes.length > 0 ? 'Save these backup codes in a safe place' : 'Sign in again with the code from your authenticator app'}
                 </p>
               </div>
             </div>
 
+            {backupNotice && (
+              <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <p className="text-sm text-slate-700 dark:text-slate-300">{backupNotice}</p>
+              </div>
+            )}
+
+            {backupCodes.length > 0 && (
+            <>
             <div className="mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-900/30">
               <p className="text-sm text-amber-800 dark:text-amber-400 font-medium">
-                Each backup code can only be used once. Store them securely — you won&apos;t be able to see them again.
+                Each backup code can only be used once. Store them securely, you won&apos;t be able to see them again.
               </p>
             </div>
 
@@ -527,6 +560,8 @@ export default function TwoFactorSetupPage() {
                 Download
               </Button>
             </div>
+            </>
+            )}
           </div>
 
           <div className="flex justify-end">
