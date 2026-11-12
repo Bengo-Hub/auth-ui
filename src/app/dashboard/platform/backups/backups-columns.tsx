@@ -3,6 +3,7 @@
 import type { DataTableColumn } from '@bengo-hub/shared-ui-lib/data-table';
 import { Button } from '@/components/ui/button';
 import { Clock, Download, FileArchive, Loader2 } from 'lucide-react';
+import { formatDateTime } from '@/lib/user-timezone';
 
 export interface BackupEntry {
   filename: string;
@@ -22,7 +23,7 @@ export interface DownloadProgress {
 const SIX_DAYS_SECS = 6 * 24 * 3600;
 
 export function formatDate(unixTimestamp: number): string {
-  return new Date(unixTimestamp * 1000).toLocaleString();
+  return formatDateTime(unixTimestamp * 1000);
 }
 
 export function timeAgo(unixTimestamp: number): string {

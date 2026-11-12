@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { resolveUser } from './resolve-user';
+import { applyUserTimeZone, type TimeZoneTenant } from '@/lib/user-timezone';
 
 const ME_STALE_MS = 5 * 60 * 1000; // 5 min TTL
 
@@ -71,6 +72,8 @@ export function useAuth(enabled = true) {
     queryFn: async () => {
       const response = await apiClient.get<User>('/api/v1/auth/me');
       const data = response.data as User;
+      // Screens show times in the user's zone (profile.timezone), then the tenant's.
+      applyUserTimeZone(data, (data as { tenant?: TimeZoneTenant }).tenant);
       setUser(data);
       return data;
     },

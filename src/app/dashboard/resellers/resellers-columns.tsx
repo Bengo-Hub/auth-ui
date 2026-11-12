@@ -3,6 +3,7 @@
 import type { DataTableColumn } from '@bengo-hub/shared-ui-lib/data-table';
 import type { ResellerApplication } from '@/hooks/use-dashboard-api';
 import { Handshake } from 'lucide-react';
+import { formatDate as formatInUserZone } from '@/lib/user-timezone';
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Submitted',
@@ -29,7 +30,7 @@ const TIER_LABELS: Record<string, string> = {
 };
 
 function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return formatInUserZone(d, undefined, { locale: 'en-US', year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 export function buildResellerApplicationColumns(): DataTableColumn<ResellerApplication>[] {

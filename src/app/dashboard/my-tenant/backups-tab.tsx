@@ -6,6 +6,7 @@ import { AlertCircle, CheckCircle2, DatabaseBackup, Download, Loader2, MinusCirc
 import api from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { formatDateTime } from '@/lib/user-timezone';
 
 // ── Backups ───────────────────────────────────────────────────────────────────
 // A tenant backup collects this organization's data from the services its plan covers into one
@@ -44,7 +45,7 @@ function formatBytes(n?: number): string {
 }
 
 function formatDate(s?: string): string {
-  return s ? new Date(s).toLocaleString() : '';
+  return formatDateTime(s);
 }
 
 const resultLabel: Record<ResultStatus, string> = {

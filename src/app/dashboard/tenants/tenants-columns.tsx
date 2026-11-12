@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Trash2,
 } from 'lucide-react';
+import { formatDate as formatInUserZone } from '@/lib/user-timezone';
 
 const USE_CASE_LABELS: Record<string, string> = {
   ordering: 'Food Ordering',
@@ -44,7 +45,7 @@ const STATUS_CLS: Record<string, string> = {
 };
 
 function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return formatInUserZone(d, undefined, { locale: 'en-US', year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 export interface TenantColumnCallbacks {

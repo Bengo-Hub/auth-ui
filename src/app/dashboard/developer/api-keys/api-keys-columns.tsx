@@ -3,6 +3,7 @@
 import type { DataTableColumn } from '@bengo-hub/shared-ui-lib/data-table';
 import { Button } from '@/components/ui/button';
 import { Check, Copy, Trash2 } from 'lucide-react';
+import { formatDate as formatInUserZone } from '@/lib/user-timezone';
 
 export interface APIKey {
   id: string;
@@ -17,7 +18,7 @@ export interface APIKey {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return formatInUserZone(dateStr, undefined, { locale: 'en-US', year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function formatRelativeDate(dateStr: string) {

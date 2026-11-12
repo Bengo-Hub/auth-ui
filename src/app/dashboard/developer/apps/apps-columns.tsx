@@ -4,6 +4,7 @@ import type { DataTableColumn } from '@bengo-hub/shared-ui-lib/data-table';
 import { Button } from '@/components/ui/button';
 import { Coins, KeyRound, Pause, Play, RefreshCw, ShieldOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { formatDate as formatInUserZone } from '@/lib/user-timezone';
 
 export interface App {
   id: string;
@@ -42,7 +43,7 @@ export function appTokenServiceTag(a: Pick<App, 'scopes'>): string | null {
 const SUBSCRIPTIONS_UI_URL = process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL || 'https://pricing.codevertexafrica.com';
 
 function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return formatInUserZone(d, undefined, { locale: 'en-US', year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 const STATUS_CLS: Record<string, string> = {
