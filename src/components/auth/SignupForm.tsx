@@ -26,6 +26,8 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { resolveAuthContext } from '@/lib/auth-context';
 import { readInvitePrefill } from '@/lib/business-invite';
+import { detectTimeZone } from '@/lib/timezone';
+import { TimezoneSelect } from '@/components/auth/TimezoneSelect';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDebouncedValue } from '@bengo-hub/shared-ui-lib/search';
 
@@ -148,6 +150,9 @@ export function SignupForm() {
   const [orgSize, setOrgSize] = useState('');
   const [useCases, setUseCases] = useState<string[]>([]);
   const [hqBranchName, setHqBranchName] = useState('Main/HQ');
+  // The organisation's and the person's time zone, prefilled from the browser; SSO keeps it and
+  // every app shows dates in it. Changeable later in Organisation settings and on the Profile page.
+  const [timezone, setTimezone] = useState(() => detectTimeZone());
   const [distribId, setDistribId] = useState(''); // FLP distributor ID (used as slug for FBO tenants)
   const [phoneNumber, setPhoneNumber] = useState(''); // Required for FBO
   const isFBO = useCases.includes('fbo');
@@ -371,6 +376,7 @@ export function SignupForm() {
       invite_token: inviteToken || undefined,
       profile: {
         name,
+        timezone,
         org_size: orgSize || undefined,
         use_cases: useCases.length > 0 ? useCases : undefined,
       },
@@ -403,6 +409,7 @@ export function SignupForm() {
         use_case: primaryUseCase,
         use_cases: useCases,
         hq_branch_name: hqBranchName,
+        timezone,
         // Tax / KRA details (synced to treasury for the invoice issuer block).
         tax_pin: taxPin.trim() || undefined,
         vat_registered: vatRegistered,
@@ -560,6 +567,8 @@ export function SignupForm() {
           toggleUseCase={toggleUseCase}
           hqBranchName={hqBranchName}
           setHqBranchName={setHqBranchName}
+          timezone={timezone}
+          setTimezone={setTimezone}
           distribId={distribId}
           setDistribId={setDistribId}
           isFBO={isFBO}
@@ -913,7 +922,7 @@ function Step1({
   orgAction, setOrgAction, orgSearch, setOrgSearch, searchResults,
   selectedTenant, setSelectedTenant, isSearching, newOrgName, setNewOrgName,
   newOrgSlug, setNewOrgSlug, slugManuallyEdited, setSlugManuallyEdited, orgSize, setOrgSize, useCases, toggleUseCase,
-  hqBranchName, setHqBranchName, distribId, setDistribId, isFBO,
+  hqBranchName, setHqBranchName, timezone, setTimezone, distribId, setDistribId, isFBO,
   phoneNumber, setPhoneNumber,
   isISP, isHotspot, ispProviderName, setIspProviderName, ispLicenceNumber, setIspLicenceNumber,
   ispWhatsapp, setIspWhatsapp, ispCoverageArea, setIspCoverageArea,
@@ -1066,6 +1075,11 @@ function Step1({
               <Input placeholder="Main/HQ" value={hqBranchName} onChange={(e) => setHqBranchName(e.target.value)} className="pl-10 h-11 rounded-xl" />
             </div>
             <p className="text-[10px] text-slate-500">The name of your primary location (e.g. Main/HQ, Downtown, etc.)</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="signup-timezone">Time zone</Label>
+            <TimezoneSelect id="signup-timezone" value={timezone} onChange={setTimezone} className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm" />
+            <p className="text-[10px] text-slate-500">Picked from your device. Your apps and documents show times in this zone; you can change it later.</p>
           </div>
 
           {/* Tax & Compliance — KRA PIN + VAT registration (Zoho Books-style). */}

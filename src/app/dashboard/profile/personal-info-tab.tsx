@@ -11,14 +11,8 @@ import { useAuthStore } from '@/store/auth-store';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, CheckCircle, Globe, Loader2, Phone, Save, User as UserIcon } from 'lucide-react';
 import { FieldCard } from './field-card';
-
-const TIMEZONES = [
-  'UTC', 'Africa/Nairobi', 'Africa/Lagos', 'Africa/Johannesburg', 'Africa/Cairo',
-  'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
-  'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Moscow',
-  'Asia/Dubai', 'Asia/Kolkata', 'Asia/Singapore', 'Asia/Tokyo',
-  'Australia/Sydney', 'Pacific/Auckland',
-];
+import { TimezoneSelect } from '@/components/auth/TimezoneSelect';
+import { detectTimeZone } from '@/lib/timezone';
 
 const GENDERS = [
   { value: '', label: "Prefer not to say" },
@@ -50,7 +44,7 @@ export function PersonalInfoTab() {
   const [bio, setBio] = useState(profile.bio ?? '');
   const [country, setCountry] = useState(profile.country ?? '');
   const [gender, setGender] = useState(profile.gender ?? '');
-  const [timezone, setTimezone] = useState(profile.timezone ?? 'UTC');
+  const [timezone, setTimezone] = useState(profile.timezone || detectTimeZone());
   const [locale, setLocale] = useState(profile.locale ?? 'en');
   const [avatarUrl, setAvatarUrl] = useState(profile.profile_picture_url ?? '');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -163,15 +157,11 @@ export function PersonalInfoTab() {
                 <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
                   <Globe className="h-3 w-3" /> Timezone
                 </Label>
-                <select
+                <TimezoneSelect
                   value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
+                  onChange={setTimezone}
                   className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40"
-                >
-                  {TIMEZONES.map((tz) => (
-                    <option key={tz} value={tz}>{tz}</option>
-                  ))}
-                </select>
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Language / Locale</Label>
