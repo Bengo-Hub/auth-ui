@@ -10,6 +10,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { SUBSCRIPTIONS_BASE } from './shared';
 import { PlanSection, ServiceChargePlanCard } from './billing-plan-card';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 const SERVICE_TAG_LABELS: Record<string, string> = {
   ordering: 'Ordering',
@@ -143,7 +144,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
               <p className="text-lg font-black text-slate-900 dark:text-white">{current?.plan_name ?? current?.plan_code}</p>
               {current?.current_period_end && (
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Renews {new Date(current.current_period_end).toLocaleDateString()}
+                  Renews {new Date(current.current_period_end).toLocaleDateString(undefined, { timeZone: getActiveTimeZone() })}
                 </p>
               )}
             </div>
@@ -186,7 +187,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
               <p className="text-lg font-black text-slate-900 dark:text-white">{current?.plan_name ?? current?.plan_code}</p>
               {current?.current_period_end && (
                 <p className="text-xs text-red-500 mt-0.5">
-                  Expired {new Date(current.current_period_end).toLocaleDateString()}
+                  Expired {new Date(current.current_period_end).toLocaleDateString(undefined, { timeZone: getActiveTimeZone() })}
                 </p>
               )}
             </div>
@@ -208,7 +209,7 @@ export function BillingTab({ tenantSlug, user }: { tenantSlug: string; user: Ret
               <p className="text-lg font-black text-slate-900 dark:text-white">{current?.plan_name ?? current?.plan_code}</p>
               {current?.current_period_end && (
                 <p className="text-xs text-amber-500 mt-0.5">
-                  Access until {new Date(current.current_period_end).toLocaleDateString()}
+                  Access until {new Date(current.current_period_end).toLocaleDateString(undefined, { timeZone: getActiveTimeZone() })}
                 </p>
               )}
             </div>

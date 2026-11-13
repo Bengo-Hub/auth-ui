@@ -2,6 +2,7 @@
 
 import type { DataTableColumn } from '@bengo-hub/shared-ui-lib/data-table';
 import type { AuditLogItem } from '@/hooks/use-dashboard-api';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 export function buildAuditColumns(): DataTableColumn<AuditLogItem>[] {
   return [
@@ -11,7 +12,7 @@ export function buildAuditColumns(): DataTableColumn<AuditLogItem>[] {
       sortable: true,
       accessor: (l) => l.occurred_at,
       cellClassName: 'text-muted-foreground whitespace-nowrap text-xs',
-      render: (l) => new Date(l.occurred_at).toLocaleString(),
+      render: (l) => new Date(l.occurred_at).toLocaleString(undefined, { timeZone: getActiveTimeZone() }),
     },
     {
       key: 'action',

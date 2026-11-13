@@ -43,6 +43,7 @@ import { InviteBusinessDialog } from '@/components/tenants/invite-business-dialo
 import { MfaPolicyEditor } from '@/components/settings/MfaPolicyEditor';
 import { MFA_COPY } from '@/lib/mfa-enrollment';
 import { useDebouncedSearch } from '@bengo-hub/shared-ui-lib/search';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 function slugify(text: string): string {
   return text
@@ -374,7 +375,7 @@ function PendingApprovalsSection() {
             <div>
               <p className="font-bold text-slate-900 dark:text-white">{t.name}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                /{t.slug} · registered {new Date(t.created_at).toLocaleDateString()}
+                /{t.slug} · registered {new Date(t.created_at).toLocaleDateString(undefined, { timeZone: getActiveTimeZone() })}
                 {t.contact_email ? ` · ${t.contact_email}` : ''}
               </p>
             </div>

@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import apiClient from '@/lib/api-client';
 import { CheckCircle, Fingerprint, Loader2, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 const SSO_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com';
 
@@ -53,7 +54,7 @@ function timeAgo(date: string): string {
   if (diffDays < 1) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 30) return `${diffDays} days ago`;
-  return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(past);
+  return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric', timeZone: getActiveTimeZone() }).format(past);
 }
 
 export function PasskeysSection() {

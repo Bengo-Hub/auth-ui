@@ -21,6 +21,7 @@ import {
   Server,
   XCircle,
 } from 'lucide-react';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 interface NodeStat {
   name: string;
@@ -425,7 +426,7 @@ export default function PlatformMonitoringPage() {
             Live cluster and VPS state — replaces the removed Prometheus/Grafana stack.
             {data && (
               <span className="ml-1 text-xs">
-                Last updated {new Date(data.generated_at).toLocaleTimeString()}
+                Last updated {new Date(data.generated_at).toLocaleTimeString(undefined, { timeZone: getActiveTimeZone() })}
               </span>
             )}
           </p>

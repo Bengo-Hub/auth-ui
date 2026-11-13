@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Building2, Inbox, Loader2, Mail, Phone } from 'lucide-react';
 import { useState } from 'react';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 interface IntegrationRequest {
   id: string;
@@ -72,7 +73,7 @@ function RequestCard({ req }: { req: IntegrationRequest }) {
             {req.requester_phone && <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{req.requester_phone}</span>}
           </div>
         </div>
-        <span className="text-xs text-slate-400 shrink-0">{new Date(req.created_at).toLocaleDateString()}</span>
+        <span className="text-xs text-slate-400 shrink-0">{new Date(req.created_at).toLocaleDateString(undefined, { timeZone: getActiveTimeZone() })}</span>
       </div>
 
       {req.notes && (

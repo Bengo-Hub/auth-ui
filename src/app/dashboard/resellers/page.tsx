@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
 import { buildResellerApplicationColumns } from './resellers-columns';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 // The next legal forward transition per stage (mirrors isValidResellerTransition's own
 // pending → kyb_pending → kyb_approved → agreement_pending → approved chain exactly — see
@@ -172,7 +173,7 @@ function PendingApplicationsSection() {
               <div>
                 <p className="font-bold text-slate-900 dark:text-white">{a.business_name}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {a.contact_email} · submitted {new Date(a.created_at).toLocaleDateString()}
+                  {a.contact_email} · submitted {new Date(a.created_at).toLocaleDateString(undefined, { timeZone: getActiveTimeZone() })}
                 </p>
                 {next && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{next.description}</p>}
               </div>

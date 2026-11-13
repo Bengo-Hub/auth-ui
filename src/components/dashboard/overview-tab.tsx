@@ -16,6 +16,7 @@ import {
   Smartphone,
   User,
 } from 'lucide-react';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 function parseDevice(userAgent: string): { label: string; icon: React.ComponentType<{ className?: string }> } {
   if (!userAgent) return { label: 'Unknown device', icon: Monitor };
@@ -38,7 +39,7 @@ function formatRelative(dateStr: string): string {
   if (diffMins < 60) return `${diffMins}m ago`;
   const diffHrs = Math.floor(diffMins / 60);
   if (diffHrs < 24) return `${diffHrs}h ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: getActiveTimeZone() });
 }
 
 /** Account-level stats every signed-in user sees (sessions, organizations,

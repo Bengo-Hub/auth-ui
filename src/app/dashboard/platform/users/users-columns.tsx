@@ -35,6 +35,7 @@ import {
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EditUserDialog, SetPinDialog } from './user-dialogs';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'bg-green-100 text-green-800',
@@ -206,7 +207,7 @@ export function buildUserColumns(cb: UserColumnCallbacks): DataTableColumn<Platf
       sortable: true,
       cellClassName: 'text-xs text-muted-foreground',
       accessor: (u) => u.last_login_at ?? '',
-      render: (u) => (u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : 'Never'),
+      render: (u) => (u.last_login_at ? new Date(u.last_login_at).toLocaleDateString(undefined, { timeZone: getActiveTimeZone() }) : 'Never'),
     },
     {
       key: 'created_at',
@@ -215,7 +216,7 @@ export function buildUserColumns(cb: UserColumnCallbacks): DataTableColumn<Platf
       sortable: true,
       cellClassName: 'text-xs text-muted-foreground',
       accessor: (u) => u.created_at,
-      render: (u) => new Date(u.created_at).toLocaleDateString(),
+      render: (u) => new Date(u.created_at).toLocaleDateString(undefined, { timeZone: getActiveTimeZone() }),
     },
     {
       key: 'actions',

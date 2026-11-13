@@ -6,6 +6,7 @@ import { AlertCircle, CheckCircle2, Copy, ExternalLink, Globe, Loader2, RefreshC
 import api from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 // ── Domains ───────────────────────────────────────────────────────────────────
 // A tenant's own hostname for one platform service (its online store, TruLoad, the ERP, ...).
@@ -203,7 +204,7 @@ export function DomainsTab({ tenantId }: { tenantId: string }) {
               )}
               {d.status === 'active' && (
                 <p className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Secure and live{d.activated_at ? ` since ${new Date(d.activated_at).toLocaleDateString()}` : ''}.
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Secure and live{d.activated_at ? ` since ${new Date(d.activated_at).toLocaleDateString(undefined, { timeZone: getActiveTimeZone() })}` : ''}.
                 </p>
               )}
 

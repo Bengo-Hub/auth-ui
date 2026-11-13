@@ -12,6 +12,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 interface ServiceHealthResult {
   id: string;
@@ -184,7 +185,7 @@ export default function StatusPage() {
                 {healthData && (
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     Last checked:{' '}
-                    {new Date(healthData.checkedAt).toLocaleString()}
+                    {new Date(healthData.checkedAt).toLocaleString(undefined, { timeZone: getActiveTimeZone() })}
                   </p>
                 )}
               </div>

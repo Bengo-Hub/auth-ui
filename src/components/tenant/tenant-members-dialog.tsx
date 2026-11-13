@@ -27,6 +27,7 @@ import {
   Users
 } from 'lucide-react';
 import { useState } from 'react';
+import { getActiveTimeZone } from '@/lib/user-timezone';
 
 /** Staff roles a tenant admin sets here; the API refuses the others. */
 const EDITABLE_ROLES = ['admin', 'viewer', 'editor'];
@@ -222,7 +223,7 @@ export function TenantMembersDialog({ tenantId, tenantName }: TenantMembersDialo
                       </p>
                       <p className="text-xs text-slate-500 truncate">
                         {member.email && member.name ? member.email : member.user_id}
-                        {' · '}Added {new Date(member.created_at).toLocaleDateString()}
+                        {' · '}Added {new Date(member.created_at).toLocaleDateString(undefined, { timeZone: getActiveTimeZone() })}
                       </p>
                     </div>
 
