@@ -112,6 +112,9 @@ export function SignupForm() {
   // auth-api checks the signature. A valid invite creates the organisation active at once.
   const inviteToken = searchParams.get('invite') || '';
   const invitePrefill = readInvitePrefill(inviteToken);
+  // A gift a friend link's code (?ref=CV-...), sent with the registration; auth-api keeps it
+  // only when well formed and passes it to the new organisation's subscription.
+  const referralCode = (searchParams.get('ref') || '').trim().slice(0, 32);
 
   // ── Step state ──────────────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>(0);
@@ -374,6 +377,7 @@ export function SignupForm() {
       client_id: clientId || undefined,
       terms_accepted: termsAccepted,
       invite_token: inviteToken || undefined,
+      referral_code: referralCode || undefined,
       profile: {
         name,
         timezone,

@@ -13,7 +13,7 @@ import {
     Store,
     Users,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TenantOverview } from './overview-tab';
 import { BranchesTab } from './branches-tab';
 import { TeamTab } from './team-tab';
@@ -27,6 +27,12 @@ type Tab = 'overview' | 'branding' | 'branches' | 'team' | 'billing' | 'domains'
 export default function MyTenantPage() {
   const { user, isTenantAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  // A link such as an email's "manage your domain" opens a tab directly (?tab=domains).
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('tab');
+    const known: Tab[] = ['overview', 'branding', 'branches', 'team', 'billing', 'domains', 'backups', 'support'];
+    if (wanted && (known as string[]).includes(wanted)) setActiveTab(wanted as Tab);
+  }, []);
 
   // The platform owner (codevertex) is itself a real business tenant. It manages
   // its OWN organization here exactly like any tenant; cross-tenant administration
