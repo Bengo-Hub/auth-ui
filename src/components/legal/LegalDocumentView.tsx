@@ -17,6 +17,8 @@ export function LegalDocumentView({
   notice,
   empty,
   versions,
+  meta,
+  footer,
 }: {
   title: string;
   badge: string;
@@ -25,6 +27,10 @@ export function LegalDocumentView({
   notice?: ReactNode;
   empty?: ReactNode;
   versions: LegalDocumentVersion[];
+  /** Replaces the "Version X, in effect from" line (the draft preview has no date in force yet). */
+  meta?: ReactNode;
+  /** Shown under the body, before the version list (the draft preview's Publish form). */
+  footer?: ReactNode;
 }) {
   return (
     <main className="min-h-screen bg-white py-16 dark:bg-[#0a0a0a] sm:py-24">
@@ -34,7 +40,9 @@ export function LegalDocumentView({
             <FileText className="h-3.5 w-3.5" /> {badge}
           </div>
           <h1 className="mb-4 text-4xl font-black text-slate-900 dark:text-white sm:text-5xl">{title}</h1>
-          {doc && (
+          {meta ? (
+            <div className="text-sm text-slate-500">{meta}</div>
+          ) : doc && (
             <p className="text-sm text-slate-500">
               Version <strong>{doc.version}</strong>, in effect from <strong>{formatLegalDate(doc.effective_at)}</strong>
             </p>
@@ -56,6 +64,8 @@ export function LegalDocumentView({
             {empty}
           </div>
         )}
+
+        {footer}
 
         {versions.length > 0 && (
           <nav aria-label="Versions" className="mt-12 border-t border-slate-200 pt-8 dark:border-white/10">
