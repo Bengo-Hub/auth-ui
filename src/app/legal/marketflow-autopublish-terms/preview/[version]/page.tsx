@@ -208,8 +208,14 @@ function PublishForm({ doc, onPublished }: { doc: AdminLegalVersion; onPublished
               type="checkbox"
               checked={skipNotice}
               onChange={(e) => {
-                setSkipNotice(e.target.checked);
+                const skip = e.target.checked;
+                setSkipNotice(skip);
                 setConfirming(false);
+                // Skipping the notice means "in force now": move the date to today (UTC), and
+                // back to the earliest allowed date when the box is cleared (owner report
+                // 2026-11-15: the version stayed upcoming because the proposed date was kept).
+                if (skip) setDate(new Date().toISOString().slice(0, 10));
+                else if (earliest && (!date || date < earliest)) setDate(earliest);
               }}
               className="mt-0.5 h-4 w-4"
             />

@@ -18,6 +18,35 @@ export const LEGAL_REVALIDATE_SECONDS = 300;
 
 export const MARKETFLOW_AUTOPUBLISH_TERMS = 'marketflow-autopublish-terms';
 
+/**
+ * Platform policies managed from the dashboard (owner 2026-11-15). Each public page shows the
+ * version published in auth-api and falls back to the text built into the page until a first
+ * version is published there.
+ */
+export interface LegalPolicy {
+  /** auth-api type in URL form. */
+  slug: string;
+  /** auth-api type as stored. */
+  docType: string;
+  /** Public page. */
+  path: string;
+  title: string;
+}
+
+export const LEGAL_POLICIES: LegalPolicy[] = [
+  { slug: 'terms-of-service', docType: 'TERMS_OF_SERVICE', path: '/terms-of-service', title: 'Terms of Service' },
+  { slug: 'privacy-policy', docType: 'PRIVACY_POLICY', path: '/privacy', title: 'Privacy Policy' },
+  { slug: 'cookie-policy', docType: 'COOKIE_POLICY', path: '/cookies', title: 'Cookie Policy' },
+  { slug: 'refund-policy', docType: 'REFUND_POLICY', path: '/refund-policy', title: 'Refund Policy' },
+  { slug: 'data-requests', docType: 'DATA_REQUESTS', path: '/data-requests', title: 'Data Requests' },
+];
+
+export function legalPolicy(slug: string): LegalPolicy {
+  const p = LEGAL_POLICIES.find((x) => x.slug === slug);
+  if (!p) throw new Error(`unknown legal policy ${slug}`);
+  return p;
+}
+
 export interface LegalDocumentVersion {
   id: string;
   doc_type: string;
@@ -26,6 +55,9 @@ export interface LegalDocumentVersion {
   effective_at: string;
   in_force?: boolean;
   html_content?: string;
+  title?: string;
+  summary?: string;
+  material?: boolean;
 }
 
 /** The document in force and the upcoming one. `unavailable` means auth-api did not answer. */

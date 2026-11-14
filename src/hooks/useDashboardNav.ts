@@ -15,6 +15,7 @@ import {
   KeyRound,
   KeySquare,
   LayoutDashboard,
+  Scale,
   ScrollText,
   ShieldCheck,
   Store,
@@ -83,6 +84,7 @@ const PLATFORM_ITEMS: NavItem[] = [
   { title: 'Certified Resellers', href: '/dashboard/resellers', icon: Handshake },
   { title: 'Users', href: '/dashboard/platform/users', icon: Users },
   { title: 'Integration Requests', href: '/dashboard/platform/integration-requests', icon: Inbox },
+  { title: 'Legal Documents', href: '/dashboard/platform/legal', icon: Scale },
   { title: 'DB Backups', href: '/dashboard/platform/backups', icon: Database },
   { title: 'Infra Monitor', href: '/dashboard/platform/monitoring', icon: Activity },
   {

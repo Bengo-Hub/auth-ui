@@ -15,6 +15,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import type { Metadata } from 'next';
+import { PolicyPage } from '@/components/legal/PolicyPage';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -47,7 +48,14 @@ const TOC = [
   { id: 'contact', label: '18. Contact' },
 ];
 
+export const revalidate = 300;
+
+/** The version published from the dashboard, or the text below until one is (owner 2026-11-15). */
 export default function TermsOfServicePage() {
+  return <PolicyPage slug="terms-of-service" fallback={<BuiltInTermsOfService />} />;
+}
+
+function BuiltInTermsOfService() {
   return (
     <main className="bg-slate-50 dark:bg-[#0a0a0a] min-h-screen py-24">
       <div className="container mx-auto max-w-6xl px-6">

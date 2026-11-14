@@ -6,6 +6,7 @@ import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 import { DashboardTopNav } from '@/components/layout/DashboardTopNav';
 import { VeraWidget } from '@/components/vera/VeraWidget';
 import { VerifyEmailPrompt } from '@/components/auth/VerifyEmailPrompt';
+import { LegalConsentPrompt } from '@/components/auth/LegalConsentPrompt';
 import { TenantBrandScope } from '@/components/providers/tenant-brand-scope';
 import { useAuth } from '@/hooks/useAuth';
 import { DEVELOPER_PORTAL_ROLES } from '@/hooks/useDashboardNav';
@@ -134,6 +135,8 @@ export default function DashboardLayout({
         {/* Graduated email-verification prompt. Non-blocking: notification-bearing roles
             escalate (warning → forced wait), everyone else just sees a standing reminder. */}
         <VerifyEmailPrompt />
+        {/* Re-acceptance after a material Terms of Service or Privacy Policy change. */}
+        <LegalConsentPrompt />
         <main className="flex-1 overflow-y-auto p-6 lg:p-12 pb-20 md:pb-12">
           <div className="max-w-6xl mx-auto">
             {children}

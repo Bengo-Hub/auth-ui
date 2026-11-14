@@ -1,5 +1,6 @@
 import { Cookie, HardDrive, Settings2, ShieldCheck, Users } from 'lucide-react';
 import type { Metadata } from 'next';
+import { PolicyPage } from '@/components/legal/PolicyPage';
 import Link from 'next/link';
 import { LegalPageShell, LEGAL_CONTACT, type LegalSection } from '@/components/legal/LegalPageShell';
 import { CookieSettingsButton } from '@/components/legal/CookieSettingsButton';
@@ -113,7 +114,14 @@ const sections: LegalSection[] = [
   },
 ];
 
+export const revalidate = 300;
+
+/** The version published from the dashboard, or the text below until one is (owner 2026-11-15). */
 export default function CookiePolicyPage() {
+  return <PolicyPage slug="cookie-policy" fallback={<BuiltInCookiePolicy />} />;
+}
+
+function BuiltInCookiePolicy() {
   return (
     <LegalPageShell
       badge="Cookie Policy"
