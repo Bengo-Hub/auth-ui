@@ -39,6 +39,7 @@ const PUBLIC_ROUTES = [
   '/terms-of-service',
   '/cookies',
   '/refund-policy',
+  '/legal',           // Versioned legal documents (MarketFlow Autopilot terms)
   '/data-requests',
   '/about',
   '/equity-holder',   // Equity portal — token-authenticated, no session cookie

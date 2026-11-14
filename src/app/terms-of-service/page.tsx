@@ -586,6 +586,7 @@ export default function TermsOfServicePage() {
         <div className="mt-16 pt-8 border-t border-slate-200 dark:border-white/5 flex flex-wrap gap-6 text-sm text-slate-500">
           <Link href="/" className="hover:text-primary transition-colors">← Back to home</Link>
           <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+          <Link href="/legal/marketflow-autopublish-terms" className="hover:text-primary transition-colors">MarketFlow Autopilot terms</Link>
           <Link href="/about" className="hover:text-primary transition-colors">About Us</Link>
         </div>
       </div>

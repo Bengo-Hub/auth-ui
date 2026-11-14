@@ -20,6 +20,7 @@ const COLUMNS = [
       { label: 'Terms of service', href: '/terms-of-service' },
       { label: 'Cookie policy', href: '/cookies' },
       { label: 'Refund policy', href: '/refund-policy' },
+      { label: 'MarketFlow Autopilot terms', href: '/legal/marketflow-autopublish-terms' },
       { label: 'Your data', href: '/data-requests' },
     ],
   },

@@ -14,13 +14,15 @@ export const LEGAL_CONTACT = {
   company: 'Codevertex Africa Limited',
 };
 
-const RELATED = [
+export const LEGAL_RELATED = [
   { href: '/privacy', label: 'Privacy Policy' },
   { href: '/terms-of-service', label: 'Terms of Service' },
   { href: '/cookies', label: 'Cookie Policy' },
   { href: '/refund-policy', label: 'Refund Policy' },
   { href: '/data-requests', label: 'Your data and your rights' },
+  { href: '/legal/marketflow-autopublish-terms', label: 'MarketFlow Autopilot terms' },
 ];
+const RELATED = LEGAL_RELATED;
 
 /**
  * Layout shared by the legal pages: title block, a sticky contents list on desktop, numbered
