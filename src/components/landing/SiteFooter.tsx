@@ -2,6 +2,7 @@
 
 import { openCookieSettings } from '@bengo-hub/shared-ui-lib/legal';
 import Link from 'next/link';
+import { CONTACT_EMAILS } from '@/config/contact-emails';
 
 const COLUMNS = [
   {
@@ -55,7 +56,8 @@ export function SiteFooter() {
         <nav aria-label="Contact" className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Help</p>
           <ul className="space-y-2 text-sm">
-            <li><a href="mailto:support@codevertexafrica.com" className="text-foreground/80 transition-colors hover:text-primary">support@codevertexafrica.com</a></li>
+            <li><a href={`mailto:${CONTACT_EMAILS.support}`} className="text-foreground/80 transition-colors hover:text-primary">{CONTACT_EMAILS.support}</a></li>
+            <li><a href={`mailto:${CONTACT_EMAILS.sales}`} className="text-foreground/80 transition-colors hover:text-primary">{CONTACT_EMAILS.sales}</a></li>
             <li><a href="https://codevertexafrica.com" className="text-foreground/80 transition-colors hover:text-primary">codevertexafrica.com</a></li>
           </ul>
         </nav>

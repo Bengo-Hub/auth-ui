@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { subscriptionApi, type Plan } from '@/lib/subscription-api';
 import { buildCatalog, compareUrl, fromPrice, subscribeUrl, type Product, type Tier } from '@/lib/pricing-catalog';
 import { cn } from '@/lib/utils';
+import { CONTACT_EMAILS } from '@/config/contact-emails';
 
 const money = (amount: number, currency = 'KES') =>
   `${currency} ${amount.toLocaleString('en-KE', { maximumFractionDigits: 0 })}`;
@@ -77,7 +78,7 @@ export default function PricingPage() {
           <div className="mt-10 rounded-2xl border border-border bg-card p-8">
             <p className="font-semibold">Prices did not load.</p>
             <p className="mt-1 text-muted-foreground">
-              Try again, or email <a className="font-medium text-primary hover:underline" href="mailto:info@codevertexafrica.com">info@codevertexafrica.com</a> for a quote.
+              Try again, or email <a className="font-medium text-primary hover:underline" href={`mailto:${CONTACT_EMAILS.sales}`}>{CONTACT_EMAILS.sales}</a> for a quote.
             </p>
             <Button className="mt-5" onClick={() => refetch()} disabled={isFetching}>
               {isFetching ? 'Loading' : 'Try again'}
@@ -110,7 +111,7 @@ export default function PricingPage() {
             </p>
           </div>
           <Button asChild size="lg">
-            <a href="mailto:info@codevertexafrica.com?subject=Pricing%20enquiry">Ask for a quote</a>
+            <a href={`mailto:${CONTACT_EMAILS.sales}?subject=Pricing%20enquiry`}>Ask for a quote</a>
           </Button>
         </aside>
       </main>

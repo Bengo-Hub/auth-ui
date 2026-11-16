@@ -227,7 +227,7 @@ function AlertSettingsCard() {
           <Input
             id="alert-email-to"
             type="email"
-            placeholder={configured ? '••••••••  (leave blank to keep current)' : 'ops@codevertexafrica.com'}
+            placeholder={configured ? '••••••••  (leave blank to keep current)' : 'admin@codevertexafrica.com'}
             value={alertEmailTo}
             onChange={(e) => setAlertEmailTo(e.target.value)}
           />
@@ -257,7 +257,7 @@ function AlertSettingsCard() {
             <Input
               id="etims-support-email-to"
               type="email"
-              placeholder="etims-support@codevertexafrica.com"
+              placeholder="support@codevertexafrica.com"
               value={etimsSupportEmailTo}
               onChange={(e) => setEtimsSupportEmailTo(e.target.value)}
             />

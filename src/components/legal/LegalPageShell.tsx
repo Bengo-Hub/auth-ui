@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from 'react';
 import Link from 'next/link';
+import { CONTACT_EMAILS } from '@/config/contact-emails';
 
 export interface LegalSection {
   id: string;
@@ -9,7 +10,7 @@ export interface LegalSection {
 }
 
 export const LEGAL_CONTACT = {
-  email: 'info@codevertexafrica.com',
+  email: CONTACT_EMAILS.legal,
   address: 'Pioneer House, 2nd Floor, Oginga Street, Kisumu, Kenya',
   company: 'Codevertex Africa Limited',
 };

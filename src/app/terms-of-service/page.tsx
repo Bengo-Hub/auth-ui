@@ -17,6 +17,7 @@ import {
 import type { Metadata } from 'next';
 import { PolicyPage } from '@/components/legal/PolicyPage';
 import Link from 'next/link';
+import { CONTACT_EMAILS } from '@/config/contact-emails';
 
 export const metadata: Metadata = {
   title: 'Terms of Service | Codevertex Africa Limited',
@@ -106,10 +107,10 @@ function BuiltInTermsOfService() {
             <div className="mt-8 p-4 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/5">
               <p className="text-xs font-bold text-slate-500 mb-2">Legal Contact</p>
               <a
-                href="mailto:legal@codevertexafrica.com"
+                href={`mailto:${CONTACT_EMAILS.legal}`}
                 className="text-xs text-primary hover:underline"
               >
-                legal@codevertexafrica.com
+                {CONTACT_EMAILS.legal}
               </a>
               <p className="text-xs text-slate-400 mt-2">Pioneer House, 2nd Floor,<br />Oginga Street, Kisumu, Kenya</p>
             </div>
@@ -138,8 +139,8 @@ function BuiltInTermsOfService() {
               <p>
                 <strong>Codevertex Africa Limited</strong> is registered and operating from Pioneer House, 2nd
                 Floor, Oginga Street, Kisumu, Kenya. Corporate email:{' '}
-                <a href="mailto:info@codevertexafrica.com" className="text-primary">
-                  info@codevertexafrica.com
+                <a href={`mailto:${CONTACT_EMAILS.info}`} className="text-primary">
+                  {CONTACT_EMAILS.info}
                 </a>
                 . Website:{' '}
                 <a href="https://codevertexafrica.com" target="_blank" rel="noopener noreferrer" className="text-primary">
@@ -187,7 +188,7 @@ function BuiltInTermsOfService() {
               <h3>3.2 Account Security</h3>
               <ul>
                 <li>You are responsible for maintaining the confidentiality of your credentials, including any multi-factor authentication (MFA) devices or passkeys.</li>
-                <li>You must notify us immediately at <a href="mailto:support@codevertexafrica.com" className="text-primary">support@codevertexafrica.com</a> if you suspect unauthorised access to your account.</li>
+                <li>You must notify us immediately at <a href={`mailto:${CONTACT_EMAILS.support}`} className="text-primary">{CONTACT_EMAILS.support}</a> if you suspect unauthorised access to your account.</li>
                 <li>You are liable for all activity that occurs under your account, whether or not authorised, until you notify us and we take corrective action.</li>
               </ul>
               <h3>3.3 Account Accuracy</h3>
@@ -568,9 +569,9 @@ function BuiltInTermsOfService() {
               </p>
               <div className="not-prose grid sm:grid-cols-2 gap-4 mt-6">
                 {[
-                  { icon: Mail, label: 'Legal & Terms', value: 'legal@codevertexafrica.com', href: 'mailto:legal@codevertexafrica.com' },
-                  { icon: Mail, label: 'General Support', value: 'support@codevertexafrica.com', href: 'mailto:support@codevertexafrica.com' },
-                  { icon: Mail, label: 'Corporate Enquiries', value: 'info@codevertexafrica.com', href: 'mailto:info@codevertexafrica.com' },
+                  { icon: Mail, label: 'Legal & Terms', value: CONTACT_EMAILS.legal, href: `mailto:${CONTACT_EMAILS.legal}` },
+                  { icon: Mail, label: 'General Support', value: CONTACT_EMAILS.support, href: `mailto:${CONTACT_EMAILS.support}` },
+                  { icon: Mail, label: 'Corporate Enquiries', value: CONTACT_EMAILS.info, href: `mailto:${CONTACT_EMAILS.info}` },
                   { icon: MapPin, label: 'Registered Address', value: 'Pioneer House, 2nd Floor, Oginga Street, Kisumu, Kenya', href: null },
                 ].map(({ icon: Icon, label, value, href }) => (
                   <div key={label} className="flex gap-4 p-5 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/5">

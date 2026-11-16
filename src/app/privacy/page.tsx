@@ -18,6 +18,7 @@ import {
 import type { Metadata } from 'next';
 import { PolicyPage } from '@/components/legal/PolicyPage';
 import Link from 'next/link';
+import { CONTACT_EMAILS } from '@/config/contact-emails';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | Codevertex Africa Limited',
@@ -105,10 +106,10 @@ function BuiltInPrivacyPolicy() {
             <div className="mt-8 p-4 rounded-2xl bg-slate-50 dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/5">
               <p className="text-xs font-bold text-slate-500 mb-2">Data Protection</p>
               <a
-                href="mailto:info@codevertexafrica.com"
+                href={`mailto:${CONTACT_EMAILS.legal}`}
                 className="text-xs text-primary hover:underline break-all"
               >
-                info@codevertexafrica.com
+                {CONTACT_EMAILS.legal}
               </a>
               <p className="text-xs text-slate-400 mt-1">Pioneer House, 2nd Floor,<br />Oginga Street, Kisumu, Kenya</p>
             </div>
@@ -316,7 +317,7 @@ function BuiltInPrivacyPolicy() {
                 <li><strong>What we store.</strong> The identifier, email, name and picture URL, linked to your Codevertex account. We do not store your Google access token or refresh token after sign-in completes, and we never read your Google data again in the background.</li>
                 <li><strong>Sharing.</strong> We do not sell your Google user data, we do not use it for advertising, and we do not share it with third parties. It is available only to the organisation whose app you sign in to, as the account holder details for your login, and to our service providers acting on our instructions to run the platform.</li>
                 <li><strong>No humans read it.</strong> Staff do not read Google user data except where you ask for support, where required for security, or where the law requires it.</li>
-                <li><strong>Deletion and revocation.</strong> You can remove the Google link or delete your account from your account settings, or email <a href="mailto:info@codevertexafrica.com">info@codevertexafrica.com</a>, and we delete the stored Google data. You can also revoke access any time at <a href="https://myaccount.google.com/permissions" rel="noopener noreferrer">myaccount.google.com/permissions</a>.</li>
+                <li><strong>Deletion and revocation.</strong> You can remove the Google link or delete your account from your account settings, or email <a href={`mailto:${CONTACT_EMAILS.legal}`}>{CONTACT_EMAILS.legal}</a>, and we delete the stored Google data. You can also revoke access any time at <a href="https://myaccount.google.com/permissions" rel="noopener noreferrer">myaccount.google.com/permissions</a>.</li>
               </ul>
               <p>
                 Codevertex&apos;s use and transfer of information received from Google APIs to any other app
@@ -346,7 +347,7 @@ function BuiltInPrivacyPolicy() {
                 <li><strong>What we never do.</strong> We do not sell Meta Platform Data, use it to build profiles of people, share it with other businesses on MarketFlow, use it to train AI models, or use it for any purpose other than the features the business uses.</li>
                 <li><strong>Storage and security.</strong> Access tokens are encrypted with AES-256-GCM and are never logged or shown to staff. Data is kept in the business&apos;s own account and isolated from every other business.</li>
                 <li><strong>Retention.</strong> Tokens are kept while the connection is active and deleted when the business disconnects or the person removes the app. Leads and messages become the business&apos;s customer records and follow the retention in Section 8.</li>
-                <li><strong>Deletion.</strong> Removing MarketFlow in your Facebook settings (Settings, Apps and websites) deletes the tokens you granted automatically, through our data deletion callback, and gives you a confirmation code you can check at <a href="https://marketflow.codevertexafrica.com/data-deletion" rel="noopener noreferrer">marketflow.codevertexafrica.com/data-deletion</a>. You can also email <a href="mailto:info@codevertexafrica.com">info@codevertexafrica.com</a>. See <Link href="/data-requests" className="text-primary underline">Your data and your rights</Link>.</li>
+                <li><strong>Deletion.</strong> Removing MarketFlow in your Facebook settings (Settings, Apps and websites) deletes the tokens you granted automatically, through our data deletion callback, and gives you a confirmation code you can check at <a href="https://marketflow.codevertexafrica.com/data-deletion" rel="noopener noreferrer">marketflow.codevertexafrica.com/data-deletion</a>. You can also email <a href={`mailto:${CONTACT_EMAILS.legal}`}>{CONTACT_EMAILS.legal}</a>. See <Link href="/data-requests" className="text-primary underline">Your data and your rights</Link>.</li>
               </ul>
               <p>
                 Our use of Meta Platform Data follows the <strong>Meta Platform Terms</strong> and the{' '}
@@ -444,8 +445,8 @@ function BuiltInPrivacyPolicy() {
               <p>
                 While we apply industry-leading security practices, no system is 100% secure. If you discover
                 a security vulnerability, please disclose it responsibly to{' '}
-                <a href="mailto:developers@codevertexafrica.com" className="text-primary">
-                  developers@codevertexafrica.com
+                <a href={`mailto:${CONTACT_EMAILS.security}`} className="text-primary">
+                  {CONTACT_EMAILS.security}
                 </a>
                 .
               </p>
@@ -515,8 +516,8 @@ function BuiltInPrivacyPolicy() {
                 How to exercise these rights, and what deletion means, is explained on{' '}
                 <Link href="/data-requests" className="text-primary underline">Your data and your rights</Link>. You
                 can also email{' '}
-                <a href="mailto:info@codevertexafrica.com" className="text-primary">
-                  info@codevertexafrica.com
+                <a href={`mailto:${CONTACT_EMAILS.legal}`} className="text-primary">
+                  {CONTACT_EMAILS.legal}
                 </a>{' '}
                 with the subject line <strong>&quot;Data Rights Request: [Your Name]&quot;</strong>. You may also
                 complain to the Office of the Data Protection Commissioner (odpc.go.ke).
@@ -555,8 +556,8 @@ function BuiltInPrivacyPolicy() {
                 Our services are not directed to individuals under the age of 18. We do not knowingly collect
                 personal data from children. If you believe we have inadvertently collected information from
                 a minor, please contact us immediately at{' '}
-                <a href="mailto:info@codevertexafrica.com" className="text-primary">
-                  info@codevertexafrica.com
+                <a href={`mailto:${CONTACT_EMAILS.legal}`} className="text-primary">
+                  {CONTACT_EMAILS.legal}
                 </a>{' '}
                 and we will delete it promptly.
               </p>
@@ -599,9 +600,9 @@ function BuiltInPrivacyPolicy() {
               </p>
               <div className="not-prose grid sm:grid-cols-2 gap-4 mt-6">
                 {[
-                  { icon: Mail, label: 'General & Privacy Enquiries', value: 'info@codevertexafrica.com', href: 'mailto:info@codevertexafrica.com' },
-                  { icon: Mail, label: 'Legal & Compliance', value: 'legal@codevertexafrica.com', href: 'mailto:legal@codevertexafrica.com' },
-                  { icon: Mail, label: 'Developer / API', value: 'developers@codevertexafrica.com', href: 'mailto:developers@codevertexafrica.com' },
+                  { icon: Mail, label: 'Privacy & Data Protection', value: CONTACT_EMAILS.legal, href: `mailto:${CONTACT_EMAILS.legal}` },
+                  { icon: Mail, label: 'General Enquiries', value: CONTACT_EMAILS.info, href: `mailto:${CONTACT_EMAILS.info}` },
+                  { icon: Mail, label: 'Developer / API Support', value: CONTACT_EMAILS.support, href: `mailto:${CONTACT_EMAILS.support}` },
                   { icon: MapPin, label: 'Registered Office', value: 'Pioneer House, 2nd Floor, Oginga Street, Kisumu, Kenya', href: null },
                 ].map(({ icon: Icon, label, value, href }) => (
                   <div key={label} className="flex gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/5">

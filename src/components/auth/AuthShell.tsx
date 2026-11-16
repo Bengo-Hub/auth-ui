@@ -15,6 +15,7 @@ import { AppLauncher } from '@/components/landing/AppLauncher';
 import { useAuthBrand, type AuthBrand } from '@/components/auth/AuthBrand';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { cn } from '@/lib/utils';
+import { CONTACT_EMAILS } from '@/config/contact-emails';
 import { MediaImage } from '@bengo-hub/shared-ui-lib/media';
 
 function Logo({ brand, className, invert }: { brand: AuthBrand; className?: string; invert?: boolean }) {
@@ -224,7 +225,7 @@ export function AuthShell({
             <span>Codevertex</span>
             <Link href="/terms-of-service" className="hover:text-foreground">Terms</Link>
             <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-            <a href="mailto:support@codevertexafrica.com" className="hover:text-foreground">Help</a>
+            <a href={`mailto:${CONTACT_EMAILS.support}`} className="hover:text-foreground">Help</a>
           </footer>
         </div>
       </div>

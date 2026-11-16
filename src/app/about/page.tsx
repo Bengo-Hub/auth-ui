@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { CONTACT_EMAILS } from '@/config/contact-emails';
 
 export const metadata: Metadata = {
   title: 'About Us — Codevertex Africa Limited',
@@ -205,7 +206,7 @@ export default function AboutUsPage() {
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
-              href="mailto:info@codevertexafrica.com"
+              href={`mailto:${CONTACT_EMAILS.info}`}
               className="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-primary text-white font-bold text-sm hover:-translate-y-0.5 transition-all shadow-[0_8px_30px_rgba(var(--primary),0.3)]"
             >
               <Mail className="w-4 h-4" /> Contact Us
@@ -505,17 +506,17 @@ export default function AboutUsPage() {
                   <div>
                     <p className="font-bold text-slate-900 dark:text-white mb-1">Corporate Email</p>
                     <a
-                      href="mailto:info@codevertexafrica.com"
+                      href={`mailto:${CONTACT_EMAILS.info}`}
                       className="text-primary text-sm hover:underline"
                     >
-                      info@codevertexafrica.com
+                      {CONTACT_EMAILS.info}
                     </a>
                     <br />
                     <a
-                      href="mailto:support@codevertexafrica.com"
+                      href={`mailto:${CONTACT_EMAILS.support}`}
                       className="text-slate-500 text-sm hover:underline"
                     >
-                      support@codevertexafrica.com
+                      {CONTACT_EMAILS.support}
                     </a>
                   </div>
                 </div>
@@ -567,10 +568,10 @@ export default function AboutUsPage() {
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Developer Contact</p>
                     <a
-                      href="mailto:developers@codevertexafrica.com"
+                      href={`mailto:${CONTACT_EMAILS.support}`}
                       className="text-sm font-bold text-slate-900 dark:text-white hover:text-primary transition-colors"
                     >
-                      developers@codevertexafrica.com
+                      {CONTACT_EMAILS.support}
                     </a>
                   </div>
                 </div>
@@ -579,10 +580,10 @@ export default function AboutUsPage() {
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Legal & Compliance</p>
                     <a
-                      href="mailto:legal@codevertexafrica.com"
+                      href={`mailto:${CONTACT_EMAILS.legal}`}
                       className="text-sm font-bold text-slate-900 dark:text-white hover:text-primary transition-colors"
                     >
-                      legal@codevertexafrica.com
+                      {CONTACT_EMAILS.legal}
                     </a>
                   </div>
                 </div>

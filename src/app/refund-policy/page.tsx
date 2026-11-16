@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { PolicyPage } from '@/components/legal/PolicyPage';
 import Link from 'next/link';
 import { LegalPageShell, LEGAL_CONTACT, type LegalSection } from '@/components/legal/LegalPageShell';
+import { CONTACT_EMAILS } from '@/config/contact-emails';
 
 export const metadata: Metadata = {
   title: 'Refund Policy | Codevertex Africa Limited',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const UPDATED = '6 October 2026';
-const SUPPORT = 'support@codevertexafrica.com';
+const BILLING = CONTACT_EMAILS.billing;
 
 const sections: LegalSection[] = [
   {
@@ -139,7 +140,7 @@ const sections: LegalSection[] = [
     icon: Mail,
     body: (
       <p>
-        Email <a href={`mailto:${SUPPORT}?subject=Refund%20request`}>{SUPPORT}</a> with your organisation name, the
+        Email <a href={`mailto:${BILLING}?subject=Refund%20request`}>{BILLING}</a> with your organisation name, the
         invoice or payment reference and the reason. We will reply with our decision and, if a refund is approved, how
         and when it will be paid.
       </p>
