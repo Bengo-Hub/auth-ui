@@ -11,6 +11,15 @@ import { INTERNAL_SERVICE_KEY_SCOPE } from './apps-columns';
 
 const SCOPE_PRESETS = ['s2s:*', INTERNAL_SERVICE_KEY_SCOPE, 'etims:read', 'etims:write', 'treasury:read'];
 
+// Scopes a tenant app can hold (auth-api allowedTenantScopePrefixes), one service per app.
+const TENANT_SCOPE_PRESETS = [
+  'etims:read', 'etims:write', 'notifications:read', 'notifications:write', 'sso:read', 'subscriptions:read',
+];
+
+function isPlatformOnlyScope(s: string) {
+  return s === INTERNAL_SERVICE_KEY_SCOPE || s === 'admin' || s === 'auth.admin' || s === 's2s' || s.startsWith('s2s:') || s.startsWith('s2s.');
+}
+
 // A tenant app is tied to ONE service surface — never a platform-wide grant. Mirrors the
 // server-side allow-list in auth-api's validateTenantAppScopes (app_handler.go); s2s:*/
 // internal_service_key are platform-admin-only and deliberately excluded here.
@@ -119,9 +128,17 @@ function PlatformCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppForm
   // s2s:*/internal_service_key are platform-app-only server-side (see validateTenantAppScopes
   // in auth-api) — don't offer them as presets once "Tenant (scoped)" is selected, so a
   // platform admin scoping an app to a tenant doesn't hit a confusing 400 on submit.
-  const scopePresets = form.app_type === 'tenant'
-    ? SCOPE_PRESETS.filter((s) => s !== 's2s:*' && s !== INTERNAL_SERVICE_KEY_SCOPE)
-    : SCOPE_PRESETS;
+  const scopePresets = form.app_type === 'tenant' ? TENANT_SCOPE_PRESETS : SCOPE_PRESETS;
+  // Switching to "Tenant (scoped)" drops platform-only scopes already in the field (the default
+  // is s2s:*), which the server would otherwise reject with a 400.
+  const setAppType = (appType: string) =>
+    setForm((f) => ({
+      ...f,
+      app_type: appType,
+      scopes: appType === 'tenant'
+        ? f.scopes.split(',').map((s) => s.trim()).filter((s) => s && !isPlatformOnlyScope(s)).join(', ')
+        : f.scopes,
+    }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,7 +155,7 @@ function PlatformCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppForm
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-      <FormHeader title="Create App" subtitle="Generates a bng_app_* token shown once." onCancel={onCancel} />
+      <FormHeader title="Create App" subtitle="Platform apps get an API key. Tenant apps also get a consumer key and secret. Every secret is shown once; tenant apps start in sandbox." onCancel={onCancel} />
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -147,7 +164,7 @@ function PlatformCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppForm
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Type</Label>
-            <select value={form.app_type} onChange={(e) => setForm((f) => ({ ...f, app_type: e.target.value }))} className="w-full h-14 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
+            <select value={form.app_type} onChange={(e) => setAppType(e.target.value)} className="w-full h-14 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
               <option value="platform">Platform (cross-tenant S2S)</option>
               <option value="tenant">Tenant (scoped)</option>
             </select>
@@ -178,7 +195,7 @@ function PlatformCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppForm
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Allowed IPs <span className="font-normal text-slate-400">(optional)</span></Label>
-            <Input value={form.allowed_ips} onChange={(e) => setForm((f) => ({ ...f, allowed_ips: e.target.value }))} placeholder="10.0.0.0/8, 192.168.1.1" className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+            <Input value={form.allowed_ips} onChange={(e) => setForm((f) => ({ ...f, allowed_ips: e.target.value }))} placeholder="41.90.12.0/24, 102.68.1.5" className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Expires In <span className="font-normal text-slate-400">(days, 0 = never)</span></Label>
