@@ -20,15 +20,8 @@ function isPlatformOnlyScope(s: string) {
   return s === INTERNAL_SERVICE_KEY_SCOPE || s === 'admin' || s === 'auth.admin' || s === 's2s' || s.startsWith('s2s:') || s.startsWith('s2s.');
 }
 
-// A tenant app is tied to ONE service surface — never a platform-wide grant. Mirrors the
-// server-side allow-list in auth-api's validateTenantAppScopes (app_handler.go); s2s:*/
-// internal_service_key are platform-admin-only and deliberately excluded here.
-//
-// `value` becomes the scope prefix submitted as `${value}:${readWrite}` — it is NOT always the
-// same as the display label. "Treasury API" submits `etims:*`, not `treasury:*`: the only real,
-// scope-checking external credential consumer today is treasury-api's ExternalAPIKeyAuth on
-// /external/etims/*, which requires `etims:read`/`etims:write` specifically — a `treasury:*` scope
-// isn't checked by anything and would silently issue a non-functional credential.
+// Services a tenant app can be scoped to, one per app (auth-api validateTenantAppScopes).
+// "Treasury API" submits etims:* because the external eTIMS routes check those scopes.
 const TENANT_SERVICES = [
   { value: 'etims', label: 'Treasury API', hint: 'Invoicing, payments, KRA eTIMS' },
   { value: 'notifications', label: 'Notifications API', hint: 'Email, SMS, push, WhatsApp' },
@@ -53,10 +46,7 @@ export interface CreateAppFormProps {
   onCancel: () => void;
 }
 
-/** Two real variants, not one form pretending to be simple: platform owners get the
- * full form (type/tenant assignment/scope presets/allowed IPs/expiry/description) they
- * had at platform/apps; tenant admins get the simple name+scopes form they had at
- * developer/page.tsx. Preserves each role's exact existing capability set. */
+/** Platform owners get the full form; tenant developers pick a service and access level. */
 export function CreateAppForm({ isPlatformOwner, creating, onCreate, onCancel }: CreateAppFormProps) {
   return isPlatformOwner ? (
     <PlatformCreateForm creating={creating} onCreate={onCreate} onCancel={onCancel} />
@@ -90,7 +80,7 @@ function TenantCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppFormPr
             <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Service</Label>
             <select value={service} onChange={(e) => setService(e.target.value)} className="w-full h-14 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
               {TENANT_SERVICES.map((s) => (
-                <option key={s.value} value={s.value}>{s.label} — {s.hint}</option>
+                <option key={s.value} value={s.value}>{s.label}: {s.hint}</option>
               ))}
             </select>
           </div>
@@ -104,7 +94,7 @@ function TenantCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppFormPr
               ))}
             </div>
             <p className="text-xs text-slate-400 pt-1">
-              An app is always limited to one service and never carries platform-wide (<code>s2s.*</code>) access — that tier is platform-admin-only.
+              Each app works with one service. New apps start in sandbox; request go-live when you are ready.
             </p>
           </div>
         </div>
@@ -125,9 +115,6 @@ function PlatformCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppForm
     const next = activeScopes.includes(scope) ? activeScopes.filter((s) => s !== scope) : [...activeScopes, scope];
     setForm((f) => ({ ...f, scopes: next.join(', ') }));
   };
-  // s2s:*/internal_service_key are platform-app-only server-side (see validateTenantAppScopes
-  // in auth-api) — don't offer them as presets once "Tenant (scoped)" is selected, so a
-  // platform admin scoping an app to a tenant doesn't hit a confusing 400 on submit.
   const scopePresets = form.app_type === 'tenant' ? TENANT_SCOPE_PRESETS : SCOPE_PRESETS;
   // Switching to "Tenant (scoped)" drops platform-only scopes already in the field (the default
   // is s2s:*), which the server would otherwise reject with a 400.
@@ -172,7 +159,7 @@ function PlatformCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppForm
           {form.app_type === 'tenant' && (
             <div className="space-y-2">
               <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                Tenant <span className="font-normal text-slate-400">(optional — defaults to your own)</span>
+                Tenant <span className="font-normal text-slate-400">(optional, defaults to your own)</span>
               </Label>
               <select value={form.tenant_id} onChange={(e) => setForm((f) => ({ ...f, tenant_id: e.target.value }))} className="w-full h-14 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
                 <option value="">My own tenant</option>

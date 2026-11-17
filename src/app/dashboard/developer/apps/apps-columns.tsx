@@ -28,13 +28,11 @@ export interface App {
 
 export const INTERNAL_SERVICE_KEY_SCOPE = 'internal_service_key';
 
-// Maps an App scope prefix to the ApiTokenWallet service_tag it draws from — mirrors
-// subscriptions-api's consumers/app_promotion.go scopePrefixToServiceTag. Extend this
-// alongside that map as more external APIs get their own token-metered product.
+// Scope prefix to token wallet service_tag. Keep in step with subscriptions-api's
+// scopePrefixToServiceTag (consumers/app_promotion.go).
 const SCOPE_PREFIX_TO_SERVICE_TAG: Record<string, string> = { etims: 'etims_api' };
 
-/** The token-wallet service_tag this App draws from, or null if it isn't scoped to a
- * metered external API at all (most Apps aren't — only ones with e.g. `etims:*` scopes). */
+/** The token wallet service_tag this app draws from, or null when its scopes are not metered. */
 export function appTokenServiceTag(a: Pick<App, 'scopes'>): string | null {
   for (const s of a.scopes ?? []) {
     const prefix = s.split(':')[0];
@@ -74,10 +72,8 @@ export interface AppColumnCallbacks {
   onRequestGoLive: (app: App) => void;
 }
 
-/** Shared by both the tenant and platform-owner views of /dashboard/developer/apps —
- * role differences (hard delete vs soft revoke, unconditional vs go-live-request-gated
- * promote, suspend/resume) are handled entirely inside the actions renderer, per row,
- * rather than two separate column-def files, since every other column is identical. */
+/** Columns for both views. Role differences (delete or revoke, promote or request go-live,
+ * suspend and resume) live in the actions column. */
 export function buildAppColumns(cb: AppColumnCallbacks): DataTableColumn<App>[] {
   return [
     {

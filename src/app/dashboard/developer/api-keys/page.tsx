@@ -10,8 +10,7 @@ import apiClient from '@/lib/api-client';
 import { AlertTriangle, Check, ClipboardCopy, Key, Loader2, Plus } from 'lucide-react';
 import { buildAPIKeyColumns, type APIKey } from './api-keys-columns';
 
-/** Extracted from developer/page.tsx's inline APIKeySection (Phase 11) into
- * its own route, rebuilt on DataTable. CRUD logic unchanged. */
+/** Legacy platform API keys (platform owners only). */
 export default function APIKeysPage() {
   const [keys, setKeys] = useState<APIKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,10 +101,9 @@ export default function APIKeysPage() {
       <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800">
         <AlertTriangle className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          <strong className="text-slate-700 dark:text-slate-300">Deprecated.</strong> Plain API keys are being retired in favor of{' '}
-          <a href="/dashboard/developer/apps" className="text-primary font-semibold hover:underline">Apps</a> (<code>bng_app_*</code> tokens),
-          which carry a real sandbox/production distinction and a scope tied to one service. This page stays platform-owner-only until the
-          shared internal-service credential finishes migrating to an App secret — prefer creating an App instead.
+          <strong className="text-slate-700 dark:text-slate-300">Legacy.</strong> Use{' '}
+          <a href="/dashboard/developer/apps" className="text-primary font-semibold hover:underline">Apps</a> for new integrations.
+          Apps have sandbox and production, one service each, and a consumer key and secret.
         </p>
       </div>
 

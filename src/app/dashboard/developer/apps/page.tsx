@@ -37,15 +37,7 @@ function credentialRows(c: IssuedCredentials) {
   return rows;
 }
 
-/**
- * Unified Apps page (Phase 11) — replaces the two near-duplicate
- * implementations that used to live at /dashboard/developer (tenant-scoped,
- * app_type==='tenant' only) and /dashboard/platform/apps (platform-scoped,
- * all app_types, suspend/resume, hard delete). Same GET /api/v1/admin/apps
- * endpoint, same client-side filter for non-platform-owners preserving
- * exactly what each role could already do — now on one DataTable instead of
- * two hand-rolled card lists.
- */
+/** Apps list for platform owners (every app) and tenant developers (their tenant's apps). */
 export default function AppsPage() {
   const { user, isPlatformOwner } = useAuth();
   const { toast } = useToast();
@@ -75,9 +67,7 @@ export default function AppsPage() {
 
   useEffect(() => { fetchApps(); }, [fetchApps]);
 
-  // Token wallet balances, for Apps scoped to a metered external API (e.g. etims:*). Fetched
-  // separately from the App list itself, since auth-api has no notion of subscriptions-api's
-  // wallet — one request per (tenant, service_tag) pair actually present among loaded apps.
+  // Token wallet balance per app scoped to a metered API (etims:*), from subscriptions-api.
   useEffect(() => {
     const targets = apps
       .filter((a) => a.tenant_id && appTokenServiceTag(a))
@@ -93,8 +83,7 @@ export default function AppsPage() {
           setTokenBalances((prev) => ({ ...prev, [appId]: body.balance }));
         }
       } catch {
-        // leave undefined — the column shows a placeholder, not an error, since a missing
-        // balance for one app must never block the rest of the table from rendering
+        // Left undefined: the column shows a placeholder.
       }
     });
     return () => { cancelled = true; };
@@ -155,7 +144,7 @@ export default function AppsPage() {
     try {
       await apiClient.post(`/api/v1/admin/apps/${id}/suspend`);
       fetchApps();
-      toast({ title: 'App suspended', description: 'Its token is paused — resume it to reactivate.' });
+      toast({ title: 'App suspended', description: 'Its credentials stop working until you resume it.' });
     } catch {
       toast({ title: 'Suspend failed', variant: 'destructive' });
     }
@@ -193,8 +182,7 @@ export default function AppsPage() {
     }
   };
 
-  // Tenant admins can't self-promote (see AppHandler.PromoteToProduction) — this reuses
-  // the same integration-request workflow already built for eTIMS go-live.
+  // Only a platform admin promotes an app; a developer files a go-live request for review.
   const handleRequestGoLive = async (app: App) => {
     if (!user?.email) return;
     try {
@@ -243,7 +231,7 @@ export default function AppsPage() {
         <div>
           <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-1">Apps</h1>
           <p className="text-slate-500 dark:text-slate-400">
-            {isPlatformOwner ? 'GitHub-style service-to-service app tokens for platform integrations.' : 'App tokens for your own integrations.'}
+            {isPlatformOwner ? 'Credentials for platform services and partner integrations.' : 'Credentials for your integrations.'}
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="h-12 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 shrink-0">
