@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   ArrowUpRight,
   BellRing,
   Fingerprint,
@@ -13,7 +14,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import type { CSSProperties } from 'react';
+import type { ComponentType, CSSProperties } from 'react';
 
 import { AccountMap } from '@/components/landing/AccountMap';
 import { BooksScene, BrandPreview, OrderScene, PosScene, StockScene } from '@/components/landing/AppScenes';
@@ -21,6 +22,7 @@ import { HeroActions } from '@/components/landing/HeroActions';
 import { ServiceDirectory } from '@/components/landing/ServiceDirectory';
 import { Reveal } from '@/components/landing/reveal';
 import { Button } from '@/components/ui/button';
+import { enquiryUrl, type EnquiryTopic } from '@/lib/enquiry';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
@@ -31,26 +33,29 @@ export const metadata: Metadata = {
 
 const rise = (ms: number) => ({ '--rise-delay': `${ms}ms` }) as CSSProperties;
 
-const SCENES = [
-  { Scene: PosScene, title: 'Point of sale that keeps up', body: 'Tills, tabs and receipts for shops, cafes and restaurants. Payments by M-Pesa, cash or card land in the books as they happen.', span: 'lg:col-span-7' },
-  { Scene: OrderScene, title: 'Your own ordering app', body: 'Customers order and track deliveries in an app that carries your name and colours, not ours.', span: 'lg:col-span-5' },
-  { Scene: BooksScene, title: 'Books that reconcile themselves', body: 'Invoices, payments and accounts that match the till and the bank without anyone retyping a figure.', span: 'lg:col-span-5' },
-  { Scene: StockScene, title: 'Stock you can trust', body: 'Counts, purchasing and reorder alerts across every outlet, tied to what the tills actually sold.', span: 'lg:col-span-7' },
+// Each product card opens the website's enquiry form with that product chosen (lib/enquiry.ts).
+const SCENES: { Scene: ComponentType; title: string; body: string; span: string; topic: EnquiryTopic; ask: string }[] = [
+  { Scene: PosScene, title: 'Point of sale that keeps up', body: 'Tills, tabs and receipts for shops, cafes and restaurants. Payments by M-Pesa, cash or card land in the books as they happen.', span: 'lg:col-span-7', topic: 'pos', ask: 'Ask about POS' },
+  { Scene: OrderScene, title: 'Your own ordering app', body: 'Customers order and track deliveries in an app that carries your name and colours, not ours.', span: 'lg:col-span-5', topic: 'ordering', ask: 'Ask about ordering' },
+  { Scene: BooksScene, title: 'Books that reconcile themselves', body: 'Invoices, payments and accounts that match the till and the bank without anyone retyping a figure.', span: 'lg:col-span-5', topic: 'books', ask: 'Ask about Books' },
+  { Scene: StockScene, title: 'Stock you can trust', body: 'Counts, purchasing and reorder alerts across every outlet, tied to what the tills actually sold.', span: 'lg:col-span-7', topic: 'inventory', ask: 'Ask about Inventory' },
 ];
 
-const MORE = [
-  { icon: Users, title: 'HR and payroll', body: 'People, leave and pay, with M-Pesa payouts.' },
-  { icon: Truck, title: 'Logistics', body: 'Dispatch deliveries to riders who are online and nearby.' },
-  { icon: BellRing, title: 'Messaging', body: 'Email, SMS and WhatsApp from one place, in your voice.' },
+const MORE: { icon: typeof Users; title: string; body: string; topic: EnquiryTopic }[] = [
+  { icon: Users, title: 'HR and payroll', body: 'People, leave and pay, with M-Pesa payouts.', topic: 'erp' },
+  { icon: Truck, title: 'Logistics', body: 'Dispatch deliveries to riders who are online and nearby.', topic: 'logistics' },
+  { icon: BellRing, title: 'Messaging', body: 'Email, SMS and WhatsApp from one place, in your voice.', topic: 'notifications' },
 ];
 
-const PEOPLE = [
-  { icon: Users, title: 'Business teams', body: 'Owners, managers and staff. Roles and outlets decide what each person sees in every app.' },
-  { icon: ShoppingBag, title: 'Customers', body: 'They create an account under your name in your ordering app, and sign in to your branding.' },
-  { icon: Truck, title: 'Riders', body: 'Apply from the rider app, get approved, then go online to take deliveries.' },
-  { icon: GraduationCap, title: 'Students', body: 'Digitika learners get a login when their first payment clears: lessons, instalments and certificates.' },
-  { icon: HeartHandshake, title: 'Parents', body: 'A guardian account follows each child’s payments and progress, read only.' },
+const PEOPLE: { icon: typeof Users; title: string; body: string; topic: EnquiryTopic }[] = [
+  { icon: Users, title: 'Business teams', body: 'Owners, managers and staff. Roles and outlets decide what each person sees in every app.', topic: 'erp' },
+  { icon: ShoppingBag, title: 'Customers', body: 'They create an account under your name in your ordering app, and sign in to your branding.', topic: 'ordering' },
+  { icon: Truck, title: 'Riders', body: 'Apply from the rider app, get approved, then go online to take deliveries.', topic: 'logistics' },
+  { icon: GraduationCap, title: 'Students', body: 'Digitika learners get a login when their first payment clears: lessons, instalments and certificates.', topic: 'digitika' },
+  { icon: HeartHandshake, title: 'Parents', body: 'A guardian account follows each child’s payments and progress, read only.', topic: 'digitika' },
 ];
+
+const cardLink = 'group block h-full rounded-[1.75rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 
 const STEPS = [
   { n: '01', title: 'Create your organisation', body: 'Add your business name, colours and logo once. Every sign-in page and app carries them.' },
@@ -121,28 +126,35 @@ export default function LandingPage() {
             <p className="text-lg text-muted-foreground">Each app works on its own. They all share your people, your branches and your accounts.</p>
           </Reveal>
           <div className="grid gap-5 lg:grid-cols-12">
-            {SCENES.map(({ Scene, title, body, span }, i) => (
-              <Reveal key={title} delay={(i % 2) * 90} className={cn('group', span)}>
-                <article className="flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-border/60 bg-card shadow-soft">
-                  <div className="aspect-[16/10]"><Scene /></div>
-                  <div className="p-6 sm:p-7">
-                    <h3 className="text-lg font-semibold">{title}</h3>
-                    <p className="mt-1.5 leading-relaxed text-muted-foreground">{body}</p>
-                  </div>
-                </article>
+            {SCENES.map(({ Scene, title, body, span, topic, ask }, i) => (
+              <Reveal key={title} delay={(i % 2) * 90} className={span}>
+                <a href={enquiryUrl(topic)} className={cardLink}>
+                  <article className="flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-border/60 bg-card shadow-soft transition-[border-color,box-shadow] duration-300 group-hover:border-primary/30 group-hover:shadow-lift">
+                    <div className="aspect-[16/10]"><Scene /></div>
+                    <div className="flex flex-1 flex-col p-6 sm:p-7">
+                      <h3 className="text-lg font-semibold">{title}</h3>
+                      <p className="mt-1.5 flex-1 leading-relaxed text-muted-foreground">{body}</p>
+                      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                        {ask} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                      </span>
+                    </div>
+                  </article>
+                </a>
               </Reveal>
             ))}
           </div>
           <div className="mt-5 grid gap-5 sm:grid-cols-3">
             {MORE.map((f, i) => (
               <Reveal key={f.title} delay={i * 90}>
-                <div className="flex h-full gap-4 rounded-[1.75rem] border border-border/60 bg-paper p-6">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-card text-primary shadow-soft"><f.icon className="h-5 w-5" aria-hidden /></span>
-                  <div>
-                    <h3 className="font-semibold">{f.title}</h3>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{f.body}</p>
+                <a href={enquiryUrl(f.topic)} className={cardLink} aria-label={`Ask about ${f.title}`}>
+                  <div className="flex h-full gap-4 rounded-[1.75rem] border border-border/60 bg-paper p-6 transition-colors duration-300 group-hover:border-primary/30">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-card text-primary shadow-soft"><f.icon className="h-5 w-5" aria-hidden /></span>
+                    <div>
+                      <h3 className="font-semibold">{f.title}</h3>
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{f.body}</p>
+                    </div>
                   </div>
-                </div>
+                </a>
               </Reveal>
             ))}
           </div>
@@ -154,7 +166,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal className="mb-6 max-w-2xl space-y-3">
             <h2 className="font-serif-soft text-4xl leading-tight sm:text-5xl">Open an app</h2>
-            <p className="text-lg text-muted-foreground">Every Codevertex app on your account, with its live status. Pick one and you are signed in.</p>
+            <p className="text-lg text-muted-foreground">Every Codevertex app with its live status. Signed in, a card opens the app. New here? Pick one to ask us about it.</p>
           </Reveal>
           <ServiceDirectory />
         </div>
@@ -170,16 +182,18 @@ export default function LandingPage() {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-6">
             {PEOPLE.map((p, i) => (
               <Reveal key={p.title} delay={(i % 3) * 90} className={i < 3 ? 'lg:col-span-2' : 'lg:col-span-3'}>
-                <div className="flex h-full gap-5 rounded-[1.5rem] border border-border/60 bg-card p-6 shadow-soft sm:p-7">
-                  <span className="font-serif-soft text-3xl text-gold">{String(i + 1).padStart(2, '0')}</span>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p.icon className="h-4 w-4 text-primary" aria-hidden />
+                <a href={enquiryUrl(p.topic)} className={cn(cardLink, 'rounded-[1.5rem]')}>
+                  <div className="flex h-full gap-4 rounded-[1.5rem] border border-border/60 bg-card p-6 shadow-soft transition-[border-color,box-shadow] duration-300 group-hover:border-primary/30 group-hover:shadow-lift sm:p-7">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-secondary text-primary"><p.icon className="h-5 w-5" aria-hidden /></span>
+                    <div className="flex flex-col">
                       <h3 className="text-lg font-semibold">{p.title}</h3>
+                      <p className="mt-1.5 flex-1 leading-relaxed text-muted-foreground">{p.body}</p>
+                      <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                        Ask us about it <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                      </span>
                     </div>
-                    <p className="mt-1.5 leading-relaxed text-muted-foreground">{p.body}</p>
                   </div>
-                </div>
+                </a>
               </Reveal>
             ))}
           </div>
@@ -246,9 +260,14 @@ export default function LandingPage() {
                 <p className="max-w-md leading-relaxed text-muted-foreground">
                   Maskani handles service charge, water, visitors and repairs, with a portal for every owner, using the same account you already have.
                 </p>
-                <a href="https://maskaniapp.codevertexafrica.com" className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">
-                  See Maskani <ArrowUpRight className="h-4 w-4" aria-hidden />
-                </a>
+                <div className="flex flex-wrap items-center gap-3">
+                  <a href={enquiryUrl('maskani')} className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">
+                    Ask about Maskani <ArrowRight className="h-4 w-4" aria-hidden />
+                  </a>
+                  <a href="https://maskaniapp.codevertexafrica.com" className="inline-flex items-center gap-1.5 rounded-full px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary">
+                    Open Maskani <ArrowUpRight className="h-4 w-4" aria-hidden />
+                  </a>
+                </div>
               </div>
               <div className="photo-zoom relative min-h-64 lg:min-h-full">
                 <Image src="/images/maskani/tower-green.webp" alt="A residential tower with planted balconies" fill sizes="(min-width: 1024px) 560px, 100vw" className="object-cover" />

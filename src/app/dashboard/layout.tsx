@@ -60,25 +60,12 @@ export default function DashboardLayout({
     // can reach /dashboard/developer itself, but must not be able to land on these three
     // subpages (every call there would 403 anyway; better to redirect before rendering a
     // broken page). Integrations moved here from the old top-level /dashboard/integrations.
-    '/dashboard/developer/api-keys',
     '/dashboard/developer/oauth-clients',
     '/dashboard/developer/integrations',
   ];
-  // /dashboard/developer (and /dashboard/api-keys, which just redirects there) needs the
-  // explicit "developer" tenant role (or platform owner) — NOT a bare tenant admin/owner/
-  // superuser role string, and not just any authenticated member (a cashier/waiter shouldn't
-  // land on an integrations/API-credentials page either). DEVELOPER_PORTAL_ROLES is imported
-  // from useDashboardNav (not redeclared here) so the nav-visibility gate and this route guard
-  // can never drift apart again — they previously did, independently, in two different ways
-  // (see useDashboardNav's own history). It must also stay in sync with auth-api's
-  // tenantDeveloperRoles (app_handler.go), which enforces the same set server-side for tenant
-  // App CRUD — so this gate reflects who can actually act, not just who sees the page.
-  // Platform-only actions within it (OAuth clients, promoting an app to production) are
-  // separately gated by isPlatformOwner, authoritatively on the backend. Checked via
-  // hasAnyRole (not the active-tenant-scoped user.roles) since the role may live on a tenant
-  // membership other than the session's current active tenant — a real, hit bug where a user
-  // granted "developer" on one org still got bounced because their active org was another.
-  const DEVELOPER_PORTAL_ROUTES = ['/dashboard/developer', '/dashboard/api-keys'];
+  // The developer console needs the "developer" role (in any membership, hence hasAnyRole) or
+  // platform ownership; auth-api enforces the same rule (tenantDeveloperRoles).
+  const DEVELOPER_PORTAL_ROUTES = ['/dashboard/developer'];
 
   useEffect(() => {
     if (meLoading) return;

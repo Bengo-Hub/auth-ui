@@ -6,6 +6,7 @@ import { Suspense, useEffect } from 'react';
 
 import { AuthBrandScope } from '@/components/auth/AuthBrand';
 import { AuthShell } from '@/components/auth/AuthShell';
+import { DeveloperPanel } from '@/components/auth/DeveloperPanel';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { DEVELOPER_APPLY_PATH, DEVELOPER_HOME_PATH, DEVELOPER_LOGIN_PATH } from '@/lib/developer-access';
 
@@ -31,6 +32,7 @@ function DeveloperLoginCard() {
     <AuthShell
       title="Developer sign in"
       subtitle="Manage your apps, keys and sandbox for the Codevertex APIs."
+      aside={<DeveloperPanel />}
       below={
         <>
           No developer access yet?{' '}
@@ -47,7 +49,7 @@ function DeveloperLoginCard() {
 
 export default function DeveloperLoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-dvh bg-muted/40" />}>
+    <Suspense fallback={<div className="min-h-[calc(100dvh-4rem)] bg-paper" />}>
       <AuthBrandScope>
         <DeveloperLoginCard />
       </AuthBrandScope>

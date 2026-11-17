@@ -1,8 +1,9 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useDeveloperOnly } from '@/hooks/use-developer-only';
 import { cn } from '@/lib/utils';
-import { BookOpen, Code2, Cpu, Globe, Send, Terminal, Wrench } from 'lucide-react';
+import { BookOpen, Code2, Cpu, Globe, Send, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -16,7 +17,6 @@ interface DeveloperTab {
 const DEVELOPER_TABS: DeveloperTab[] = [
   { title: 'Overview', href: '/dashboard/developer', icon: Code2 },
   { title: 'Apps', href: '/dashboard/developer/apps', icon: Cpu },
-  { title: 'API Keys', href: '/dashboard/developer/api-keys', icon: Terminal, platformOnly: true },
   { title: 'OAuth Clients', href: '/dashboard/developer/oauth-clients', icon: Globe, platformOnly: true },
   { title: 'Integrations', href: '/dashboard/developer/integrations', icon: Wrench, platformOnly: true },
   { title: 'API Docs', href: '/dashboard/developer/docs', icon: BookOpen },
@@ -31,6 +31,7 @@ const TAB_CLS =
  */
 export default function DeveloperLayout({ children }: { children: React.ReactNode }) {
   const { isPlatformOwner } = useAuth();
+  const developerOnly = useDeveloperOnly();
   const pathname = usePathname();
   const tabs = DEVELOPER_TABS.filter((t) => !t.platformOnly || isPlatformOwner);
 
@@ -64,7 +65,7 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
             className={cn(TAB_CLS, 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}
           >
             <Send className="h-4 w-4" />
-            Apply for Access
+            {developerOnly ? 'Request another API' : 'Apply for Access'}
           </Link>
         </nav>
       </div>

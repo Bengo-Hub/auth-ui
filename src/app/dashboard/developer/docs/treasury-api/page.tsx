@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 import { CreditCard, ExternalLink, FileJson, FileText, Receipt, ScrollText, Webhook } from 'lucide-react';
 import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
 import { DocsAccessGate } from '@/components/docs/DocsAccessGate';
+import { useAuth } from '@/hooks/useAuth';
 
 const TREASURY_API_URL = process.env.NEXT_PUBLIC_TREASURY_API_URL || 'https://booksapi.codevertexafrica.com';
 
 export default function TreasuryApiDocsPage() {
+  const { isPlatformOwner } = useAuth();
   return (
     <DocsAccessGate resourceKey="treasury-api" serviceName="Treasury API">
     <div className="-mx-6 -mt-6 lg:-mx-12 lg:-mt-12">
@@ -121,14 +123,20 @@ export default function TreasuryApiDocsPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
             <SectionHeader icon={ScrollText} title="KRA eTIMS Tax Compliance" badge="27 endpoints" />
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 -mt-2">
-              KRA eTIMS integration for fiscalisation, code lists, and internal, S2S and external transmission.
+              {isPlatformOwner
+                ? 'KRA eTIMS integration for fiscalisation, code lists, and internal, S2S and external transmission.'
+                : 'KRA eTIMS code lists, credit notes and the external API your system sends sales through.'}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <EndpointCard method="GET" path="/api/v1/tax/etims/code-lists" description="List cached KRA eTIMS code lists" />
               <EndpointCard method="POST" path="/api/v1/tax/etims/code-lists/refresh" description="Refresh KRA eTIMS code lists" />
               <EndpointCard method="POST" path="/api/v1/tax/etims/credit-note" description="Transmit a sales credit note to eTIMS" />
-              <EndpointCard method="GET" path="/api/v1/s2s/{tenant}/etims-fiscal/{source}/{sourceID}" description="Get fiscalisation evidence by origin record (S2S)" />
-              <EndpointCard method="POST" path="/api/v1/s2s/{tenant}/etims/sign-pos-sale" description="Sign a POS sale synchronously (S2S)" />
+              {isPlatformOwner && (
+                <>
+                  <EndpointCard method="GET" path="/api/v1/s2s/{tenant}/etims-fiscal/{source}/{sourceID}" description="Get fiscalisation evidence by origin record (S2S)" />
+                  <EndpointCard method="POST" path="/api/v1/s2s/{tenant}/etims/sign-pos-sale" description="Sign a POS sale synchronously (S2S)" />
+                </>
+              )}
               <EndpointCard method="GET" path="/api/v1/external/etims/certification-status" description="Get external eTIMS API certification status" />
               <EndpointCard method="POST" path="/api/v1/external/etims/request-go-live" description="Request go-live for the external eTIMS API" />
               <EndpointCard method="POST" path="/api/v1/external/etims/sales" description="Transmit an external sale to eTIMS" />

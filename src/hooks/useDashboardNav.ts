@@ -19,7 +19,6 @@ import {
   ScrollText,
   ShieldCheck,
   Store,
-  Terminal,
   User,
   Users,
   Wrench,
@@ -62,11 +61,8 @@ const DEVELOPER_ITEMS: NavItem[] = [
   { title: 'API Docs', href: '/dashboard/developer/docs', icon: BookOpen },
 ];
 
-// Platform-wide surfaces (API Keys, OAuth Clients, Integrations are all platform-owner-gated
-// server-side) — appended only for isPlatformOwner, so a tenant developer never sees a nav link
-// that 403s the moment they click it.
+// Platform-owner-only developer pages (gated server-side too).
 const PLATFORM_DEVELOPER_ITEMS: NavItem[] = [
-  { title: 'API Keys', href: '/dashboard/developer/api-keys', icon: Terminal },
   { title: 'OAuth Clients', href: '/dashboard/developer/oauth-clients', icon: Key },
   { title: 'Integrations', href: '/dashboard/developer/integrations', icon: Wrench },
 ];

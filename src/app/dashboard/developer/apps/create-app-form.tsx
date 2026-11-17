@@ -39,23 +39,33 @@ export interface CreateAppPayload {
   expires_in?: number;
 }
 
+// The same services in the words a developer-only account sees on its request form and docs.
+const DEVELOPER_SERVICE_LABELS: Record<string, { label: string; hint: string }> = {
+  etims: { label: 'KRA eTIMS and payments', hint: 'Send invoices to KRA, take M-Pesa and card payments' },
+  notifications: { label: 'Notifications', hint: 'SMS, WhatsApp, email and push messages' },
+  sso: { label: 'Sign in with Codevertex', hint: 'People sign in to your app with their Codevertex account' },
+  subscriptions: { label: 'Plans and pricing', hint: 'Read Codevertex plans and what each one includes' },
+};
+
 export interface CreateAppFormProps {
   isPlatformOwner: boolean;
+  /** Account holds only developer roles: plain service names and integration-shaped examples. */
+  developerOnly?: boolean;
   creating: boolean;
   onCreate: (payload: CreateAppPayload) => Promise<void>;
   onCancel: () => void;
 }
 
 /** Platform owners get the full form; tenant developers pick a service and access level. */
-export function CreateAppForm({ isPlatformOwner, creating, onCreate, onCancel }: CreateAppFormProps) {
+export function CreateAppForm({ isPlatformOwner, developerOnly = false, creating, onCreate, onCancel }: CreateAppFormProps) {
   return isPlatformOwner ? (
     <PlatformCreateForm creating={creating} onCreate={onCreate} onCancel={onCancel} />
   ) : (
-    <TenantCreateForm creating={creating} onCreate={onCreate} onCancel={onCancel} />
+    <TenantCreateForm developerOnly={developerOnly} creating={creating} onCreate={onCreate} onCancel={onCancel} />
   );
 }
 
-function TenantCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppFormProps, 'isPlatformOwner'>) {
+function TenantCreateForm({ developerOnly = false, creating, onCreate, onCancel }: Omit<CreateAppFormProps, 'isPlatformOwner'>) {
   const [name, setName] = useState('');
   const [service, setService] = useState<string>(TENANT_SERVICES[0].value);
   const [readWrite, setReadWrite] = useState<'read' | 'write'>('read');
@@ -69,19 +79,36 @@ function TenantCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppFormPr
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-      <FormHeader title="Create App" subtitle="Issues a consumer key and secret (OAuth client credentials) plus a legacy API key, scoped to one service." onCancel={onCancel} />
+      <FormHeader
+        title={developerOnly ? 'New app' : 'Create App'}
+        subtitle={
+          developerOnly
+            ? 'You get a consumer key now and generate the secret from the app list. Each app talks to one API and starts in the sandbox.'
+            : 'Issues a consumer key and secret (OAuth client credentials) plus a legacy API key, scoped to one service.'
+        }
+        onCancel={onCancel}
+      />
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">App Name *</Label>
-            <Input required value={name} onChange={(e) => setName(e.target.value)} placeholder="My Integration App" className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+            <Label htmlFor="tenant-app-name" className="text-sm font-bold text-slate-700 dark:text-slate-300">{developerOnly ? 'App name' : 'App Name *'}</Label>
+            <Input
+              id="tenant-app-name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={developerOnly ? 'Main branch POS to eTIMS' : 'My Integration App'}
+              className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+            />
+            {developerOnly && <p className="text-xs text-slate-500 dark:text-slate-400">Name it after the system or site that will use it, so you can tell apps apart later.</p>}
           </div>
           <div className="space-y-2">
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Service</Label>
-            <select value={service} onChange={(e) => setService(e.target.value)} className="w-full h-14 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
-              {TENANT_SERVICES.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}: {s.hint}</option>
-              ))}
+            <Label htmlFor="tenant-app-service" className="text-sm font-bold text-slate-700 dark:text-slate-300">{developerOnly ? 'API' : 'Service'}</Label>
+            <select id="tenant-app-service" value={service} onChange={(e) => setService(e.target.value)} className="w-full h-14 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
+              {TENANT_SERVICES.map((s) => {
+                const shown = developerOnly ? DEVELOPER_SERVICE_LABELS[s.value] ?? s : s;
+                return <option key={s.value} value={s.value}>{shown.label}: {shown.hint}</option>;
+              })}
             </select>
           </div>
           <div className="space-y-2 md:col-span-2">
@@ -93,8 +120,10 @@ function TenantCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppFormPr
                 </button>
               ))}
             </div>
-            <p className="text-xs text-slate-400 pt-1">
-              Each app works with one service. New apps start in sandbox; request go-live when you are ready.
+            <p className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+              {developerOnly
+                ? 'Read lets your app look things up. Write also lets it create records, such as sending an invoice to KRA. Request go-live from the app list when your sandbox tests pass.'
+                : 'Each app works with one service. New apps start in sandbox; request go-live when you are ready.'}
             </p>
           </div>
         </div>

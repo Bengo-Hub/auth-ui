@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import { SERVICE_CATEGORIES, getServiceUrl } from '@/config/services';
 import { useAuth } from '@/hooks/useAuth';
 import { ServiceWithHealth, useServiceHealth } from '@/hooks/useServiceHealth';
+import { enquiryTopicForApp, enquiryUrl } from '@/lib/enquiry';
 import { cn } from '@/lib/utils';
 
 const STATUS_LABEL: Record<ServiceWithHealth['status'], string> = {
@@ -26,6 +27,9 @@ const STATUS_CLASS: Record<ServiceWithHealth['status'], string> = {
 function ServiceCard({ service, isAuthenticated }: { service: ServiceWithHealth; isAuthenticated: boolean }) {
   const Icon = service.icon;
   const available = service.status === 'live' || service.status === 'beta';
+  // Signed in: the card opens the app. Anyone else is asking about the product, so it goes to the
+  // website's enquiry form with this product chosen.
+  const opens = isAuthenticated && available;
   const body = (
     <>
       <div className="flex items-start justify-between gap-3">
@@ -36,26 +40,40 @@ function ServiceCard({ service, isAuthenticated }: { service: ServiceWithHealth;
       </div>
       <h3 className="mt-4 font-semibold">{service.name}</h3>
       <p className="mt-1 flex-1 text-sm leading-relaxed text-muted-foreground">{service.description}</p>
-      {available && (
+      {(opens || !isAuthenticated) && (
         <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
-          Open <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+          {opens ? 'Open' : `Ask about ${service.shortName ?? service.name}`}
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
         </span>
       )}
     </>
   );
   const className = 'group flex h-full flex-col rounded-[1.5rem] border border-border/60 bg-card p-5 shadow-soft transition-all';
-  if (!available) return <div className={cn(className, 'opacity-70')}>{body}</div>;
-  return (
-    <Link href={getServiceUrl(service.id, isAuthenticated)} className={cn(className, 'hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lift')}>
-      {body}
-    </Link>
+  const interactive = cn(
+    className,
+    'hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
   );
+  if (opens) {
+    return (
+      <Link href={getServiceUrl(service.id, isAuthenticated)} className={interactive}>
+        {body}
+      </Link>
+    );
+  }
+  if (!isAuthenticated) {
+    return (
+      <a href={enquiryUrl(enquiryTopicForApp(service.id))} className={interactive}>
+        {body}
+      </a>
+    );
+  }
+  return <div className={cn(className, 'opacity-70')}>{body}</div>;
 }
 
 /**
  * Every Codevertex app with its live status, filterable by category. Same data and links as
  * before the redesign (config/services.ts, /api/health, getServiceUrl): a signed-in person goes
- * straight to the app, anyone else is sent through sign-in and returned to it.
+ * straight to the app, anyone else goes to the website's enquiry form for that product.
  */
 export function ServiceDirectory() {
   const { isAuthenticated } = useAuth();

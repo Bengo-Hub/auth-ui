@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteNav } from '@/components/landing/SiteNav';
+import { SiteChromeProvider, siteVariantFor } from '@/components/layout/site-chrome';
 
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password', '/reset-password', '/select-organisation', '/auth'];
 
@@ -18,13 +19,15 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const isAuthPage = AUTH_ROUTES.some((r) => pathname === r || pathname?.startsWith(r + '/'));
   if (isAuthPage) return <>{children}</>;
 
+  const variant = siteVariantFor(pathname);
+  // AuthShell reads this to leave the logo and theme toggle to the site header.
   return (
-    <>
-      {!isStandalonePortal && <SiteNav />}
+    <SiteChromeProvider value={{ present: !isStandalonePortal, variant }}>
+      {!isStandalonePortal && <SiteNav variant={variant} />}
       <main className={!isStandalonePortal ? "flex-grow" : "h-screen"}>
         {children}
       </main>
-      {!isStandalonePortal && <SiteFooter />}
-    </>
+      {!isStandalonePortal && <SiteFooter variant={variant} />}
+    </SiteChromeProvider>
   );
 }

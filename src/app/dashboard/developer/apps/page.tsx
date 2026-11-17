@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@bengo-hub/shared-ui-lib/data-table';
 import apiClient from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
+import { useDeveloperOnly } from '@/hooks/use-developer-only';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Check, ClipboardCopy, Plus } from 'lucide-react';
 import { appTokenServiceTag, buildAppColumns, type App } from './apps-columns';
@@ -40,6 +41,7 @@ function credentialRows(c: IssuedCredentials) {
 /** Apps list for platform owners (every app) and tenant developers (their tenant's apps). */
 export default function AppsPage() {
   const { user, isPlatformOwner } = useAuth();
+  const developerOnly = useDeveloperOnly();
   const { toast } = useToast();
   const [apps, setApps] = useState<App[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +68,13 @@ export default function AppsPage() {
   }, [isPlatformOwner]);
 
   useEffect(() => { fetchApps(); }, [fetchApps]);
+
+  // The overview's "Create your first app" opens the form straight away (?new=1).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') setShowCreate(true);
+  }, []);
+
+  const showUsageBalance = useMemo(() => apps.some((a) => appTokenServiceTag(a) !== null), [apps]);
 
   // Token wallet balance per app scoped to a metered API (etims:*), from subscriptions-api.
   useEffect(() => {
@@ -211,6 +220,7 @@ export default function AppsPage() {
       goLiveRequested,
       revokeTarget,
       tokenBalances,
+      showUsageBalance,
       onSetRevokeTarget: setRevokeTarget,
       onRotate: handleRotate,
       onRotateSecret: handleRotateSecret,
@@ -222,7 +232,7 @@ export default function AppsPage() {
       onRequestGoLive: handleRequestGoLive,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isPlatformOwner, goLiveRequested, revokeTarget, tokenBalances],
+    [isPlatformOwner, goLiveRequested, revokeTarget, tokenBalances, showUsageBalance],
   );
 
   return (
@@ -231,7 +241,11 @@ export default function AppsPage() {
         <div>
           <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-1">Apps</h1>
           <p className="text-slate-500 dark:text-slate-400">
-            {isPlatformOwner ? 'Credentials for platform services and partner integrations.' : 'Credentials for your integrations.'}
+            {isPlatformOwner
+              ? 'Credentials for platform services and partner integrations.'
+              : developerOnly
+                ? 'One app per integration. Each gets its own consumer key and secret and starts in the sandbox.'
+                : 'Credentials for your integrations.'}
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="h-12 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 shrink-0">
@@ -271,7 +285,7 @@ export default function AppsPage() {
       )}
 
       {showCreate && (
-        <CreateAppForm isPlatformOwner={isPlatformOwner} creating={creating} onCreate={handleCreate} onCancel={() => setShowCreate(false)} />
+        <CreateAppForm isPlatformOwner={isPlatformOwner} developerOnly={developerOnly} creating={creating} onCreate={handleCreate} onCancel={() => setShowCreate(false)} />
       )}
 
       <DataTable<App>
@@ -281,7 +295,7 @@ export default function AppsPage() {
         loading={loading}
         error={false}
         onRetry={fetchApps}
-        emptyText="No apps yet."
+        emptyText={developerOnly ? 'No apps yet. Create one to get a sandbox consumer key.' : 'No apps yet.'}
         storageKey="developer-apps-col-prefs"
       />
     </div>

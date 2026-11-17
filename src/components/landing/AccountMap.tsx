@@ -1,6 +1,10 @@
+'use client';
+
 import { ShieldCheck } from 'lucide-react';
 
 import { LAUNCHER_APPS } from '@/config/launcher-apps';
+import { useAuth } from '@/hooks/useAuth';
+import { enquiryTopicForApp, enquiryUrl } from '@/lib/enquiry';
 
 /**
  * A mind map of the platform: one account at the centre, every app branching off it. Drawn with SVG
@@ -9,6 +13,8 @@ import { LAUNCHER_APPS } from '@/config/launcher-apps';
 const NODES = LAUNCHER_APPS.slice(0, 8);
 
 export function AccountMap() {
+  // Signed in, a node opens the app; otherwise it asks about the product on the website.
+  const { isAuthenticated } = useAuth();
   const points = NODES.map((_, i) => {
     const angle = (Math.PI * 2 * i) / NODES.length - Math.PI / 2;
     return { x: 50 + Math.cos(angle) * 40, y: 50 + Math.sin(angle) * 38 };
@@ -30,7 +36,7 @@ export function AccountMap() {
       {NODES.map((app, i) => (
         <a
           key={app.id}
-          href={`/login?return_to=${encodeURIComponent(app.url)}`}
+          href={isAuthenticated ? app.url : enquiryUrl(enquiryTopicForApp(app.id))}
           style={{ left: `${points[i].x}%`, top: `${points[i].y}%` }}
           className="absolute flex w-[22%] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-2xl border border-border/60 bg-card p-2 text-center shadow-soft transition-transform hover:-translate-y-[55%]"
         >

@@ -60,6 +60,8 @@ export interface AppColumnCallbacks {
   /** app.id -> current token balance, for Apps scoped to a metered external API. Undefined
    * while still loading; absent entirely for Apps with no matching scope. */
   tokenBalances: Record<string, number | undefined>;
+  /** True when at least one listed app has a metered scope; otherwise the column is left out. */
+  showUsageBalance: boolean;
   onSetRevokeTarget: (id: string | null) => void;
   onRotate: (app: App) => void;
   /** Issues (or re-issues) the consumer secret for the client_credentials grant. */
@@ -75,33 +77,7 @@ export interface AppColumnCallbacks {
 /** Columns for both views. Role differences (delete or revoke, promote or request go-live,
  * suspend and resume) live in the actions column. */
 export function buildAppColumns(cb: AppColumnCallbacks): DataTableColumn<App>[] {
-  return [
-    {
-      key: 'token_balance',
-      header: 'API Tokens',
-      hideBelow: 'md',
-      align: 'right',
-      render: (a) => {
-        const serviceTag = appTokenServiceTag(a);
-        if (!serviceTag) return <span className="text-muted-foreground text-xs">—</span>;
-        const balance = cb.tokenBalances[a.id];
-        return (
-          <div className="flex items-center justify-end gap-2">
-            {balance === undefined ? (
-              <span className="h-4 w-10 bg-slate-100 dark:bg-slate-800 rounded animate-pulse inline-block" />
-            ) : (
-              <span className="inline-flex items-center gap-1 text-sm font-bold text-slate-700 dark:text-slate-300">
-                <Coins className="h-3.5 w-3.5 text-amber-500" />
-                {balance.toLocaleString()}
-              </span>
-            )}
-            <Link href={`${SUBSCRIPTIONS_UI_URL}/usage`} target="_blank" className="text-xs text-primary hover:underline">
-              Top up
-            </Link>
-          </div>
-        );
-      },
-    },
+  const columns: DataTableColumn<App>[] = [
     {
       key: 'name',
       header: 'App',
@@ -113,7 +89,7 @@ export function buildAppColumns(cb: AppColumnCallbacks): DataTableColumn<App>[] 
         <div className="min-w-0">
           <div className="font-bold truncate">{a.name}</div>
           <div className="flex items-center gap-2 mt-0.5">
-            <code className="font-mono text-xs text-muted-foreground">{a.key_prefix}...</code>
+            <span className="text-xs text-muted-foreground">Key <code className="font-mono">{a.key_prefix}…</code></span>
             {a.scopes?.includes(INTERNAL_SERVICE_KEY_SCOPE) && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400">
                 <KeyRound className="h-2.5 w-2.5" /> Fleet Key
@@ -247,4 +223,37 @@ export function buildAppColumns(cb: AppColumnCallbacks): DataTableColumn<App>[] 
       },
     },
   ];
+  if (!cb.showUsageBalance) return columns;
+  // The prepaid balance of metered APIs (eTIMS) sits after Scopes, only when some app is metered.
+  const at = columns.findIndex((c) => c.key === 'scopes') + 1;
+  columns.splice(at, 0, usageColumn(cb));
+  return columns;
+}
+
+function usageColumn(cb: AppColumnCallbacks): DataTableColumn<App> {
+  return {
+    key: 'usage_balance',
+    header: 'Usage balance',
+    hideBelow: 'md',
+    align: 'right',
+    render: (a) => {
+      if (!appTokenServiceTag(a)) return <span className="text-xs text-muted-foreground">Not metered</span>;
+      const balance = cb.tokenBalances[a.id];
+      return (
+        <div className="flex items-center justify-end gap-2">
+          {balance === undefined ? (
+            <span className="h-4 w-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse inline-block" aria-label="Loading balance" />
+          ) : (
+            <span className="inline-flex items-center gap-1 text-sm font-semibold tabular-nums text-slate-700 dark:text-slate-300">
+              <Coins className="h-3.5 w-3.5 text-amber-500" aria-hidden />
+              {balance.toLocaleString('en-KE')} tokens
+            </span>
+          )}
+          <Link href={`${SUBSCRIPTIONS_UI_URL}/usage`} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary hover:underline">
+            Top up
+          </Link>
+        </div>
+      );
+    },
+  };
 }

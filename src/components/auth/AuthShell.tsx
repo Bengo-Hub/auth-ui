@@ -14,6 +14,7 @@ import type { ReactNode } from 'react';
 import { AppLauncher } from '@/components/landing/AppLauncher';
 import { useAuthBrand, type AuthBrand } from '@/components/auth/AuthBrand';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { useSiteChrome } from '@/components/layout/site-chrome';
 import { cn } from '@/lib/utils';
 import { CONTACT_EMAILS } from '@/config/contact-emails';
 import { MediaImage } from '@bengo-hub/shared-ui-lib/media';
@@ -160,6 +161,7 @@ export function AuthShell({
   below,
   wide = false,
   back,
+  aside,
 }: {
   title: ReactNode;
   subtitle?: ReactNode;
@@ -169,8 +171,15 @@ export function AuthShell({
   /** Wider form column for the multi-step organisation sign-up. */
   wide?: boolean;
   back?: { href: string; label: string };
+  /**
+   * Replaces the brand panel beside the form, e.g. the developer panel on /developer/*. It also
+   * shows under the form on phones and tablets, where the brand panel is hidden.
+   */
+  aside?: ReactNode;
 }) {
   const brand = useAuthBrand();
+  // Under the public site header the logo and theme toggle are already on screen once.
+  const { present: siteChrome } = useSiteChrome();
   const defaultSubtitle = brand.appName
     ? (
       <span className="inline-flex items-center gap-2">
@@ -186,52 +195,59 @@ export function AuthShell({
       : <>to <span className="font-medium text-foreground">{brand.name}</span></>;
 
   return (
-    <div className="flex min-h-dvh bg-paper">
+    <div className={cn('flex bg-paper', siteChrome ? 'min-h-[calc(100dvh-4rem)]' : 'min-h-dvh')}>
       <div className="flex w-full flex-col lg:w-[52%] lg:min-w-[34rem]">
-        {/* Phones and tablets: a short brand band above the form. */}
-        <div className="flex items-center gap-3 rounded-b-[2rem] bg-primary px-5 pb-6 pt-7 text-primary-foreground lg:hidden">
-          <div className={brand.isPlatform ? 'rounded-xl bg-white/95 px-3 py-2' : ''}><Logo brand={brand} className={brand.isPlatform ? 'h-9' : 'h-8'} /></div>
-          <div className="min-w-0">
-            <p className="truncate font-serif-soft text-lg leading-tight">{brand.appName ?? brand.name}</p>
-            {!brand.isPlatform && <p className="text-xs text-primary-foreground/70">Secured by Codevertex</p>}
+        {/* Phones and tablets: a short brand band above the form, unless the site header shows the brand. */}
+        {!siteChrome && (
+          <div className="flex items-center gap-3 rounded-b-[2rem] bg-primary px-5 pb-6 pt-7 text-primary-foreground lg:hidden">
+            <div className={brand.isPlatform ? 'rounded-xl bg-white/95 px-3 py-2' : ''}><Logo brand={brand} className={brand.isPlatform ? 'h-9' : 'h-8'} /></div>
+            <div className="min-w-0">
+              <p className="truncate font-serif-soft text-lg leading-tight">{brand.appName ?? brand.name}</p>
+              {!brand.isPlatform && <p className="text-xs text-primary-foreground/70">Secured by Codevertex</p>}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="flex flex-1 flex-col px-5 pb-6 pt-6 sm:px-10 lg:px-16 lg:pt-10 xl:px-20">
-          <div className="flex items-center justify-between gap-4">
-            {back ? (
-              <Link href={back.href} className="inline-flex items-center gap-1.5 rounded-full py-1.5 pr-3 text-sm text-muted-foreground transition-colors hover:text-foreground">
-                <ArrowLeft className="h-4 w-4" aria-hidden /> {back.label}
-              </Link>
-            ) : (
-              <Link href="/" className="hidden lg:block" aria-label="Codevertex accounts, home">
-                <Logo brand={brand} className={brand.isPlatform ? 'h-24 sm:h-28' : 'h-14'} />
-              </Link>
-            )}
-            <span className="lg:hidden" />
-            <ThemeToggle />
-          </div>
+        <div className={cn('flex flex-1 flex-col px-5 pb-6 sm:px-10 lg:px-16 xl:px-20', siteChrome ? 'pt-4 lg:pt-6' : 'pt-6 lg:pt-10')}>
+          {(!siteChrome || back) && (
+            <div className="flex items-center justify-between gap-4">
+              {back ? (
+                <Link href={back.href} className="inline-flex items-center gap-1.5 rounded-full py-1.5 pr-3 text-sm text-muted-foreground transition-colors hover:text-foreground">
+                  <ArrowLeft className="h-4 w-4" aria-hidden /> {back.label}
+                </Link>
+              ) : (
+                <Link href="/" className="hidden lg:block" aria-label="Codevertex accounts, home">
+                  <Logo brand={brand} className={brand.isPlatform ? 'h-24 sm:h-28' : 'h-14'} />
+                </Link>
+              )}
+              <span className="lg:hidden" />
+              {!siteChrome && <ThemeToggle />}
+            </div>
+          )}
 
           <div className={cn('mx-auto flex w-full flex-1 flex-col justify-center py-8 animate-rise', wide ? 'max-w-xl' : 'max-w-[30rem]')}>
             <div className="mb-8 space-y-2.5">
               <h1 className="font-serif-soft text-[2.1rem] leading-tight sm:text-[2.5rem]">{title}</h1>
-              <p className="text-[1rem] leading-relaxed text-muted-foreground">{subtitle ?? defaultSubtitle}</p>
+              <div className="text-[1rem] leading-relaxed text-muted-foreground">{subtitle ?? defaultSubtitle}</div>
             </div>
             {children}
             {below && <div className="mt-8 text-sm text-muted-foreground">{below}</div>}
+            {aside && <div className="mt-10 lg:hidden">{aside}</div>}
           </div>
 
-          <footer className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted-foreground">
-            <span>Codevertex</span>
-            <Link href="/terms-of-service" className="hover:text-foreground">Terms</Link>
-            <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-            <a href={`mailto:${CONTACT_EMAILS.support}`} className="hover:text-foreground">Help</a>
-          </footer>
+          {!siteChrome && (
+            <footer className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted-foreground">
+              <span>Codevertex</span>
+              <Link href="/terms-of-service" className="hover:text-foreground">Terms</Link>
+              <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+              <a href={`mailto:${CONTACT_EMAILS.support}`} className="hover:text-foreground">Help</a>
+            </footer>
+          )}
         </div>
       </div>
 
       <div className="relative hidden flex-1 p-4 lg:block">
-        <BrandPanel />
+        {aside ?? <BrandPanel />}
       </div>
     </div>
   );
