@@ -32,13 +32,12 @@ export default function IntegrationsClient() {
         </div>
         <p className="max-w-3xl text-sm text-muted-foreground">
           Enable SSO via Google, Microsoft, or GitHub. Credentials are encrypted with
-          AES-256-GCM and distributed centrally — no <code className="rounded bg-muted px-1 py-0.5 text-xs">.env</code> files
-          in downstream services. Only enabled providers appear on the login and
+          AES-256-GCM and shared centrally, so downstream services need no <code className="rounded bg-muted px-1 py-0.5 text-xs">.env</code> files. Only enabled providers appear on the login and
           signup pages.
         </p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <ShieldCheck className="h-3.5 w-3.5" />
-          <span>Platform-scope configuration — applies to every tenant unless overridden.</span>
+          <span>Platform settings. They apply to every tenant unless overridden.</span>
         </div>
       </header>
 

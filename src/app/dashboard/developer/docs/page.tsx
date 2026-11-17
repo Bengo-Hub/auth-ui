@@ -5,13 +5,7 @@ import { Bell, Book, Clock, CreditCard, Key, Receipt } from 'lucide-react';
 import { fadeInUp } from './docs-components';
 import { DocsServiceCard } from '@/components/docs/DocsServiceCard';
 
-/**
- * API Docs hub (Phase 12) — rebuilt from a single, 100% auth-api-scoped page
- * into a categorized landing hub. Only services with real, hosted API docs
- * get a live category page (confirmed via each service's own router.go);
- * everything else is an honest "coming soon" card rather than fabricated
- * content, per this phase's own explicit scope.
- */
+// Only services that host their own API docs get a live page; the rest show "coming soon".
 const LIVE_SERVICES = [
   {
     slug: 'auth-api',
@@ -38,7 +32,7 @@ const LIVE_SERVICES = [
     color: 'from-sky-500/20 to-primary/20',
     iconColor: 'text-sky-600 dark:text-sky-400',
     tagline: 'Email, SMS, push, and WhatsApp delivery.',
-    readme: 'Read this if you’re sending templated messages — reminders, receipts, or alerts — across any channel.',
+    readme: 'Read this if you’re sending templated messages such as reminders, receipts or alerts on any channel.',
   },
   {
     slug: 'subscriptions-api',

@@ -3,11 +3,6 @@
 import { Check, Copy, Lock } from 'lucide-react';
 import { useState } from 'react';
 
-// Shared visual primitives for every per-service docs page (Phase 12) —
-// extracted from the original single auth-api-only docs/page.tsx so
-// treasury-api (and future services) reuse the exact same components
-// instead of a second copy.
-
 export const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },

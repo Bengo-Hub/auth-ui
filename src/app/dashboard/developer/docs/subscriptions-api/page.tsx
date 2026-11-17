@@ -18,9 +18,6 @@ import Link from 'next/link';
 import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
 import { DocsAccessGate } from '@/components/docs/DocsAccessGate';
 
-// subscriptions-api docs page — content sourced directly from the service's own real,
-// populated swagger.json (unlike auth-api's own stub spec). This is the first public
-// docs surface for this service; there is no prior internal-docs page to diff against.
 const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_SUBSCRIPTIONS_API_URL || 'https://pricingapi.codevertexafrica.com';
 
 export default function SubscriptionsApiDocsPage() {
@@ -109,7 +106,7 @@ export default function SubscriptionsApiDocsPage() {
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-white mb-4">Authentication</h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
-                  The plan catalog below is fully public — no auth required. A Bearer token (SSO JWT) is only needed for tenant-specific or platform-admin endpoints (e.g. current subscription status, platform stats).
+                  The plan catalog below is public. A Bearer token (SSO JWT) is only needed for tenant or platform-admin endpoints such as subscription status and platform stats.
                 </p>
                 <CodeBlock
                   title="List public plans"
@@ -152,7 +149,7 @@ export default function SubscriptionsApiDocsPage() {
                 <h3 className="font-bold text-slate-900 dark:text-white mb-4">Billing cycle rule</h3>
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
                   Billing cycles are <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">MONTHLY</code> (1 month), <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">SEMI_ANNUAL</code> (6 months), or{' '}
-                  <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">ANNUAL</code> (12 months) on the same monthly plan row — committing to 6+ months waives any one-time setup fee.
+                  <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">ANNUAL</code> (12 months) on the same monthly plan row. Committing to 6 or more months waives any one-time setup fee.
                 </p>
               </div>
             </motion.div>
@@ -170,9 +167,9 @@ export default function SubscriptionsApiDocsPage() {
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
-            <SectionHeader icon={Tag} title="Plans" badge="Public — no auth" />
+            <SectionHeader icon={Tag} title="Plans" badge="Public, no auth" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <EndpointCard method="GET" path="/api/v1/plans" description="List plans — filter by ?active and ?service (pos, erp, inventory, ordering, truload, logistics, marketflow)" auth={false} />
+              <EndpointCard method="GET" path="/api/v1/plans" description="List plans. Filter by ?active and ?service (pos, erp, inventory, ordering, truload, logistics, marketflow)" auth={false} />
               <EndpointCard method="GET" path="/api/v1/plans/code/{code}" description="Get a plan by code, e.g. ERP_STARTER, POWERSUITE_DUKA_BASIC" auth={false} />
               <EndpointCard method="GET" path="/api/v1/plans/{id}" description="Get a plan by UUID" auth={false} />
             </div>
@@ -191,7 +188,7 @@ export default function SubscriptionsApiDocsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <EndpointCard method="GET" path="/api/v1/admin/plans" description="List all plans, including inactive/non-public ones" />
               <EndpointCard method="GET" path="/api/v1/admin/plans/{id}" description="Get full admin detail for a plan" />
-              <EndpointCard method="GET" path="/api/v1/platform/stats" description="Aggregated platform stats — total plans, subscriptions, MRR" />
+              <EndpointCard method="GET" path="/api/v1/platform/stats" description="Platform stats: total plans, subscriptions and MRR" />
             </div>
           </motion.div>
         </div>
@@ -209,7 +206,7 @@ export default function SubscriptionsApiDocsPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} transition={{ delay: 0.1 }}>
             <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-500" />
-              JavaScript / TypeScript &mdash; a public pricing page
+              JavaScript / TypeScript: a public pricing page
             </h3>
             <CodeBlock
               title="Fetch live plans for a pricing page"
@@ -218,7 +215,7 @@ export default function SubscriptionsApiDocsPage() {
 const { data: plans } = await res.json();
 
 // plans[].basePrice, .currency, .billingCycle, .tierLimits, .freeTrialDays
-// are all safe to render directly — this endpoint is public, no key needed.
+// are safe to render directly. This endpoint is public, no key needed.
 // Fetch this server-side (not from the browser) unless your domain is on
 // subscriptions-api's CORS allowlist.`}
             />
@@ -261,7 +258,7 @@ const { data: plans } = await res.json();
             <div className="relative z-10">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mb-4">Build a live pricing page</h2>
               <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-xl mx-auto leading-relaxed">
-                The plan catalog is public — pull real prices and tier limits straight into any storefront or quote tool.
+                The plan catalog is public. Pull real prices and tier limits straight into any storefront or quote tool.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { JoinOrganizationDialog } from '@/components/organizations/JoinOrganizationDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { isDeveloperOnly } from '@/lib/developer-access';
 import { useEntitledServiceTags } from '@/hooks/use-dashboard-api';
 import { isNavItemActive, useDashboardNav, type NavGroup } from '@/hooks/useDashboardNav';
 import { useLogout } from '@/hooks/useLogout';
@@ -92,6 +93,8 @@ export function DashboardTopNav() {
   const logout = useLogout();
   const brand = useShellBrand();
   const { isPlatformOwner, isTenantAdmin } = useAuth();
+  // Developer accounts have no organisation to join and no business apps to switch to.
+  const developerOnly = !!user && !isPlatformOwner && isDeveloperOnly(user.roles, user.tenants);
   const { accountGroup, orgGroup, developerGroup, securityGroup, platformGroup } = useDashboardNav();
   // Single source of truth shared with DashboardSidebar (see useDashboardNav) — previously
   // this drawer kept its own hard-coded MOBILE_PLATFORM_ITEMS gated on isPlatformOwner only,
@@ -236,12 +239,16 @@ export function DashboardTopNav() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-1 sm:gap-3">
-        <div className="hidden sm:block">
-          <JoinOrganizationDialog />
-        </div>
+        {!developerOnly && (
+          <div className="hidden sm:block">
+            <JoinOrganizationDialog />
+          </div>
+        )}
         <ThemeToggle />
 
-        <AppSwitcherTrigger services={services} className="relative inline-flex size-10 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors" />
+        {!developerOnly && (
+          <AppSwitcherTrigger services={services} className="relative inline-flex size-10 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors" />
+        )}
 
         <Button variant="ghost" size="icon" className="relative group rounded-xl">
           <Bell className="h-5 w-5 text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors" />

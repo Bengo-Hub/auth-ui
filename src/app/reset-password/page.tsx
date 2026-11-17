@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api-client';
 import { authFlowHref } from '@/lib/auth-context';
+import { DEVELOPER_LOGIN_PATH } from '@/lib/developer-access';
 
 const MIN_PASSWORD = 8;
 
@@ -39,7 +40,10 @@ function ResetPasswordCard() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const signIn = authFlowHref('/login', searchParams, email ? { login_hint: email } : undefined);
+  // Developer accounts (auth-api adds for=developer to their reset links) go back to the developer sign-in.
+  const signIn = searchParams.get('for') === 'developer'
+    ? `${DEVELOPER_LOGIN_PATH}${email ? `?login_hint=${encodeURIComponent(email)}` : ''}`
+    : authFlowHref('/login', searchParams, email ? { login_hint: email } : undefined);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

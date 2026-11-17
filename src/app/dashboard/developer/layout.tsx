@@ -26,11 +26,8 @@ const TAB_CLS =
   'flex items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-bold transition-all';
 
 /**
- * Shared shell for every page under the consolidated /dashboard/developer folder
- * (Overview/Apps/API Keys/OAuth Clients/Integrations) — a persistent tab strip so
- * moving between developer surfaces no longer means detouring back through the main
- * sidebar. Platform-only tabs (API Keys/OAuth Clients/Integrations) are hidden from a
- * tenant admin/developer the same way the sidebar hides them — see useDashboardNav.
+ * Tab strip shared by every developer page. Platform-only tabs are hidden from
+ * tenant users, matching useDashboardNav.
  */
 export default function DeveloperLayout({ children }: { children: React.ReactNode }) {
   const { isPlatformOwner } = useAuth();

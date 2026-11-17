@@ -20,10 +20,6 @@ import Link from 'next/link';
 import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
 import { DocsAccessGate } from '@/components/docs/DocsAccessGate';
 
-// Moved from docs/page.tsx (Phase 12) — this content was 100% auth-api-scoped
-// and is genuinely good, so it's kept as-is under its own category route
-// rather than deleted. PRODUCTION_API_URL is now env-driven instead of a
-// hardcoded string, per this phase's own scope.
 const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sso.codevertexafrica.com';
 
 export default function AuthApiDocsPage() {

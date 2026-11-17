@@ -20,9 +20,7 @@ import {
   Terminal,
 } from 'lucide-react';
 
-/** Developer Portal Overview (Phase 11) — replaces the old tabbed page.
- * Apps/API Keys/OAuth Clients each moved to their own real route; this is
- * now a real landing page with live counts instead of a static tab switcher. */
+/** Developer portal landing page with live counts. */
 export default function DeveloperPortalOverview() {
   const { isPlatformOwner } = useAuth();
   const [appCount, setAppCount] = useState<number | null>(null);
@@ -31,8 +29,7 @@ export default function DeveloperPortalOverview() {
   useEffect(() => {
     let cancelled = false;
     const requests: Promise<{ data: unknown[] }>[] = [apiClient.get<unknown[]>('/api/v1/admin/apps').catch(() => ({ data: [] }))];
-    // API Keys is a platform-owner-only surface (deprecated in favor of Apps) — skip the call
-    // entirely for a tenant developer rather than showing a stat card backed by a 403.
+    // API keys are platform-owner only, so tenant developers would get a 403 here.
     if (isPlatformOwner) requests.push(apiClient.get<unknown[]>('/api/v1/admin/api-keys').catch(() => ({ data: [] })));
     Promise.all(requests).then(([apps, keys]) => {
       if (cancelled) return;

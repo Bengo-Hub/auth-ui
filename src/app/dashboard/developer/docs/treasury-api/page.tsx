@@ -5,14 +5,6 @@ import { CreditCard, ExternalLink, FileJson, FileText, Receipt, ScrollText, Webh
 import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
 import { DocsAccessGate } from '@/components/docs/DocsAccessGate';
 
-// New category page (Phase 12), sourced from treasury-api's own swagger.json
-// (internal/http/docs/swagger.json) rather than guessing at module names —
-// its real tags are Invoicing/Invoices/Payments/Public Payments/Webhooks/
-// eTIMS/External eTIMS API/Health, not the generic "ledger/invoicing/
-// expenses" this plan originally speculated before checking. Swagger UI and
-// OpenAPI JSON routes confirmed from internal/http/router/router.go
-// (r.Get("/v1/docs/*", ...) and api.Get("/openapi.json", ...) — same shape
-// as auth-api, since both are built from the same Go service template).
 const TREASURY_API_URL = process.env.NEXT_PUBLIC_TREASURY_API_URL || 'https://booksapi.codevertexafrica.com';
 
 export default function TreasuryApiDocsPage() {
@@ -129,7 +121,7 @@ export default function TreasuryApiDocsPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
             <SectionHeader icon={ScrollText} title="KRA eTIMS Tax Compliance" badge="27 endpoints" />
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 -mt-2">
-              Kenya Revenue Authority electronic Tax Invoice Management System integration — fiscalisation, code lists, and both internal and S2S/external transmission paths.
+              KRA eTIMS integration for fiscalisation, code lists, and internal, S2S and external transmission.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <EndpointCard method="GET" path="/api/v1/tax/etims/code-lists" description="List cached KRA eTIMS code lists" />
@@ -140,6 +132,28 @@ export default function TreasuryApiDocsPage() {
               <EndpointCard method="GET" path="/api/v1/external/etims/certification-status" description="Get external eTIMS API certification status" />
               <EndpointCard method="POST" path="/api/v1/external/etims/request-go-live" description="Request go-live for the external eTIMS API" />
               <EndpointCard method="POST" path="/api/v1/external/etims/sales" description="Transmit an external sale to eTIMS" />
+            </div>
+
+            <div className="mt-8 space-y-4">
+              <h3 className="font-bold text-slate-900 dark:text-white">Authenticating the external eTIMS API</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Use OAuth client credentials. Send your app&apos;s consumer key and secret as HTTP Basic auth to the token endpoint. You get a Bearer access token that lasts 15 minutes. Send it on each call as{' '}
+                <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Authorization: Bearer</code>. The{' '}
+                <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">X-API-Key</code> header still works but is being retired.
+              </p>
+              <CodeBlock
+                title="Get an access token"
+                language="bash"
+                code={`curl -X POST "https://sso.codevertexafrica.com/api/v1/token" \\
+  -u "YOUR_CONSUMER_KEY:YOUR_CONSUMER_SECRET" \\
+  -d "grant_type=client_credentials"`}
+              />
+              <CodeBlock
+                title="Call the external eTIMS API"
+                language="bash"
+                code={`curl "${TREASURY_API_URL}/api/v1/external/etims/certification-status" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"`}
+              />
             </div>
           </motion.div>
         </div>

@@ -20,9 +20,6 @@ import Link from 'next/link';
 import { CodeBlock, EndpointCard, SectionHeader, fadeInUp } from '../docs-components';
 import { DocsAccessGate } from '@/components/docs/DocsAccessGate';
 
-// notifications-api docs page — built from a direct read of notifications-service's
-// router.go and provider implementations (not the service's own internal docs, which
-// are stale on the send-message path — see the Quick Start note below).
 const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_NOTIFICATIONS_API_URL || 'https://notificationsapi.codevertexafrica.com';
 
 export default function NotificationsApiDocsPage() {
@@ -113,7 +110,7 @@ export default function NotificationsApiDocsPage() {
                 <p className="text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
                   Sending a message requires either a Bearer token (SSO JWT) <em>or</em> a service-to-service{' '}
                   <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">X-API-Key</code> header. Every other endpoint below (templates,
-                  WhatsApp plans, docs, health) is public — no auth required.
+                  WhatsApp plans, docs, health) is public.
                 </p>
                 <CodeBlock
                   title="S2S Request"
@@ -147,10 +144,9 @@ export default function NotificationsApiDocsPage() {
                 />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white mb-4">A note on the route shape</h3>
+                <h3 className="font-bold text-slate-900 dark:text-white mb-4">Tenant</h3>
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
-                  Older internal docs describe this as <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">/v1/&#123;tenantId&#125;/notifications/messages</code>.
-                  The real route has no tenant path segment — tenant is resolved from the JWT claim, the request body&apos;s <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">tenant</code> field, or an{' '}
+                  The route has no tenant path segment. The tenant comes from the JWT claim, the request body&apos;s <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">tenant</code> field, or an{' '}
                   <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">X-Tenant-ID</code> header. Use the shape above.
                 </p>
               </div>
@@ -176,7 +172,7 @@ export default function NotificationsApiDocsPage() {
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
-            <SectionHeader icon={FileJson} title="Templates" badge="Public — no auth" />
+            <SectionHeader icon={FileJson} title="Templates" badge="Public, no auth" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <EndpointCard method="GET" path="/api/v1/templates" description="List available message templates" auth={false} />
               <EndpointCard method="GET" path="/api/v1/templates/{key}" description="Get a template's channel bodies and variables" auth={false} />
@@ -186,14 +182,14 @@ export default function NotificationsApiDocsPage() {
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10 sm:mb-14">
-            <SectionHeader icon={MessageSquareText} title="WhatsApp billing" badge="Public — no auth" />
+            <SectionHeader icon={MessageSquareText} title="WhatsApp billing" badge="Public, no auth" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <EndpointCard method="GET" path="/api/v1/billing/whatsapp/plans" description="List WhatsApp conversation-pricing plans" auth={false} />
             </div>
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
-            <SectionHeader icon={Zap} title="Service health" badge="Public — no auth" />
+            <SectionHeader icon={Zap} title="Service health" badge="Public, no auth" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <EndpointCard method="GET" path="/api/v1/healthz" description="Liveness probe" auth={false} />
               <EndpointCard method="GET" path="/api/v1/readyz" description="Readiness probe" auth={false} />

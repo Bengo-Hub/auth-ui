@@ -41,8 +41,11 @@ export const MFA_COPY = {
 
 /** The sign-in page to come back to. Only auth-ui's own /login is accepted. */
 export function safeSignInNext(next: string | null | undefined): string {
-  if (!next || !next.startsWith('/login') || next.startsWith('//')) return '/login';
-  const rest = next.slice('/login'.length);
+  if (!next || next.startsWith('//')) return '/login';
+  // The business sign-in and the developer sign-in are the only pages setup returns to.
+  const page = ['/developer/login', '/login'].find((p) => next.startsWith(p));
+  if (!page) return '/login';
+  const rest = next.slice(page.length);
   if (rest !== '' && !rest.startsWith('?') && !rest.startsWith('#')) return '/login';
   return next;
 }

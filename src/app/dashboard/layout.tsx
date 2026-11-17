@@ -10,6 +10,7 @@ import { LegalConsentPrompt } from '@/components/auth/LegalConsentPrompt';
 import { TenantBrandScope } from '@/components/providers/tenant-brand-scope';
 import { useAuth } from '@/hooks/useAuth';
 import { DEVELOPER_PORTAL_ROLES } from '@/hooks/useDashboardNav';
+import { DEVELOPER_LOGIN_PATH, isDeveloperOnly } from '@/lib/developer-access';
 import { MFA_SETUP_PATH, mfaEnrollmentHref } from '@/lib/mfa-enrollment';
 import { useAuthStore } from '@/store/auth-store';
 import { usePathname, useRouter } from 'next/navigation';
@@ -30,9 +31,21 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !meLoading) {
-      router.push('/login?return_to=/dashboard');
+      // Developer console links go to the developer sign-in, which never offers business sign-up.
+      const onDeveloperPages = pathname === '/dashboard/developer' || pathname?.startsWith('/dashboard/developer/');
+      router.push(onDeveloperPages
+        ? `${DEVELOPER_LOGIN_PATH}?return_to=${encodeURIComponent(pathname ?? '/dashboard/developer')}`
+        : '/login?return_to=/dashboard');
     }
-  }, [isAuthenticated, isLoading, meLoading, router]);
+  }, [isAuthenticated, isLoading, meLoading, router, pathname]);
+
+  // A developer-only account (every role it holds is a developer role) has nothing on the
+  // business dashboard, so its home is the developer console.
+  const developerOnly = !!user && !isPlatformOwner && isDeveloperOnly(user.roles, user.tenants);
+  useEffect(() => {
+    if (meLoading || !developerOnly) return;
+    if (pathname === '/dashboard' || pathname === '/dashboard/') router.replace('/dashboard/developer');
+  }, [developerOnly, pathname, meLoading, router]);
 
   // Platform-owner-only routes: every section under /dashboard/platform/*,
   // plus cross-tenant and platform-secret surfaces. Tenant-users should not
@@ -95,8 +108,8 @@ export default function DashboardLayout({
   const onMfaSetup = pathname === MFA_SETUP_PATH;
   useEffect(() => {
     if (meLoading || !enrolling || onMfaSetup) return;
-    router.replace(mfaEnrollmentHref('/login'));
-  }, [enrolling, onMfaSetup, router, meLoading]);
+    router.replace(mfaEnrollmentHref(developerOnly ? DEVELOPER_LOGIN_PATH : '/login'));
+  }, [enrolling, onMfaSetup, router, meLoading, developerOnly]);
 
   // Admin-provisioned / reset accounts must set a new password before using the
   // dashboard. Gate everything except the Security tab where they change it.
