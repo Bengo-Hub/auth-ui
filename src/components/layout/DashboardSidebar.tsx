@@ -5,7 +5,7 @@ import { PLATFORM_LOGO, useShellBrand } from '@/components/providers/tenant-bran
 import { useLogout } from '@/hooks/useLogout';
 import { isNavItemActive, useDashboardNav, type NavGroup, type NavItem } from '@/hooks/useDashboardNav';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronLeft, ChevronUp, ExternalLink, LogOut, Menu } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ExternalLink, LogOut, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -27,17 +27,23 @@ function NavLink({
       href={item.href}
       target={item.newTab ? '_blank' : undefined}
       rel={item.newTab ? 'noopener noreferrer' : undefined}
+      aria-current={isActive ? 'page' : undefined}
+      title={isCollapsed ? item.title : undefined}
       className={cn(
-        'flex items-center gap-3 px-5 py-3 rounded-2xl transition-all duration-300 group text-sm',
+        'relative flex items-center gap-3 rounded-xl text-sm transition-colors duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+        isCollapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2',
         isActive
-          ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02] font-semibold'
+          ? 'bg-primary/10 text-primary font-semibold'
           : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground font-medium',
       )}
     >
+      {isActive && !isCollapsed && (
+        <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-primary" aria-hidden />
+      )}
       <item.icon
         className={cn(
-          'h-4.5 w-4.5 shrink-0 transition-transform duration-300 group-hover:scale-110',
-          isActive ? 'text-primary-foreground' : 'group-hover:text-sidebar-foreground',
+          'h-4 w-4 shrink-0',
+          isActive ? 'text-primary' : 'text-sidebar-muted group-hover:text-sidebar-foreground',
         )}
       />
       {!isCollapsed && (
@@ -75,27 +81,23 @@ function SectionGroup({
   }
 
   return (
-    <div className="pt-2">
+    <div className="pt-4">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center justify-between w-full px-6 py-1.5 group rounded-xl hover:bg-sidebar-hover/50 transition-colors"
+        className="flex w-full items-center justify-between rounded-lg px-3 py-1 text-left transition-colors hover:bg-sidebar-hover/50"
         aria-expanded={open}
       >
-        <div className="flex items-center gap-2">
-          <group.icon className="h-3.5 w-3.5 text-sidebar-section" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-section">
-            {group.label}
-          </span>
-        </div>
-        {open ? (
-          <ChevronUp className="h-3 w-3 text-sidebar-section opacity-70" />
-        ) : (
-          <ChevronDown className="h-3 w-3 text-sidebar-section opacity-70" />
-        )}
+        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sidebar-section">
+          {group.label}
+        </span>
+        <ChevronDown
+          className={cn('h-3.5 w-3.5 text-sidebar-section opacity-60 transition-transform duration-200', !open && '-rotate-90')}
+          aria-hidden
+        />
       </button>
 
       {open && (
-        <div className="mt-1 space-y-0.5">
+        <div className="mt-1.5 space-y-0.5">
           {group.items.map((item) => (
             <NavLink key={item.href} item={item} isCollapsed={isCollapsed} pathname={pathname} />
           ))}
@@ -122,7 +124,7 @@ export function DashboardSidebar() {
       {/* Logo + collapse toggle */}
       <div
         className={cn(
-          'flex items-center px-6 pt-10 mb-6 shrink-0',
+          'flex h-16 items-center px-5 mb-2 shrink-0 border-b border-sidebar-border',
           isCollapsed ? 'justify-center' : 'justify-between',
         )}
       >
@@ -136,7 +138,7 @@ export function DashboardSidebar() {
               alt={brand.name}
               className={cn(
                 'object-contain transition-all duration-500',
-                isCollapsed ? 'h-10 w-auto' : 'h-14 w-auto',
+                isCollapsed ? 'h-8 w-auto' : 'h-10 w-auto',
               )}
             />
           ) : (
@@ -145,7 +147,7 @@ export function DashboardSidebar() {
               alt="Codevertex"
               className={cn(
                 'object-contain transition-all duration-500',
-                isCollapsed ? 'h-10 w-auto' : 'h-16 w-auto',
+                isCollapsed ? 'h-8 w-auto' : 'h-10 w-auto',
               )}
             />
           )}
@@ -177,7 +179,7 @@ export function DashboardSidebar() {
       )}
 
       {/* Nav groups */}
-      <nav className="flex-1 px-4 space-y-0.5 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 px-3 pb-4 space-y-0.5 overflow-y-auto custom-scrollbar">
         {/* Account group (always visible) */}
         <SectionGroup
           group={accountGroup}
@@ -228,11 +230,11 @@ export function DashboardSidebar() {
       </nav>
 
       {/* Sign out */}
-      <div className="p-6 border-t border-sidebar-border shrink-0">
+      <div className="p-3 border-t border-sidebar-border shrink-0">
         <button
           onClick={() => logout()}
           className={cn(
-            'flex items-center gap-3 w-full px-5 py-4 rounded-2xl text-rose-500 dark:text-rose-400 font-bold text-xs uppercase tracking-widest hover:bg-rose-500/10 transition-all duration-300',
+            'flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm font-medium text-sidebar-muted hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition-colors',
             isCollapsed ? 'justify-center' : '',
           )}
         >

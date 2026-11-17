@@ -1,85 +1,162 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useDeveloperOnly } from '@/hooks/use-developer-only';
-import apiClient from '@/lib/api-client';
-import { StatCard } from '@/components/dashboard/stat-card';
+import { useDeveloperApps, useOAuthClients, useOpenAccessRequests, type DeveloperAppSummary } from '@/hooks/use-dashboard-api';
 import {
   ArrowRight,
+  ArrowUpRight,
   BookOpen,
   Code2,
   Cpu,
-  ExternalLink,
+  FileCode2,
   Globe,
-  Package,
+  Inbox,
   Plus,
+  Rocket,
   Send,
-  ShieldAlert,
   Terminal,
+  Wrench,
 } from 'lucide-react';
 
-const ETIMS_GUIDE_URL = 'https://docs.codevertexafrica.com/integrations/etims-api/';
+const DOCS_SITE = 'https://docs.codevertexafrica.com';
 
-/** Developer portal landing page with live counts. */
+/** Developer console home: live counts, recent apps, and grouped docs and resources. */
 export default function DeveloperPortalOverview() {
   const { isPlatformOwner } = useAuth();
   const developerOnly = useDeveloperOnly();
-  const [appCount, setAppCount] = useState<number | null>(null);
+  const apps = useDeveloperApps();
+  const clients = useOAuthClients(isPlatformOwner);
+  const requests = useOpenAccessRequests(isPlatformOwner);
 
-  useEffect(() => {
-    let cancelled = false;
-    apiClient.get<unknown[]>('/api/v1/admin/apps').catch(() => ({ data: [] })).then((apps) => {
-      if (cancelled) return;
-      const appList = Array.isArray(apps.data) ? apps.data : [];
-      setAppCount(isPlatformOwner ? appList.length : appList.filter((a: any) => a.app_type === 'tenant').length);
-    });
-    return () => { cancelled = true; };
-  }, [isPlatformOwner]);
+  const list = (apps.data ?? []).filter((a) => isPlatformOwner || a.app_type === 'tenant');
+  const live = list.filter((a) => a.environment === 'production' && a.status === 'active').length;
+  const sandbox = list.filter((a) => a.environment === 'sandbox' && a.status === 'active').length;
 
   return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-1">
-          {developerOnly ? 'Developer console' : 'Developer Portal'}
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400">
-          {developerOnly
-            ? 'Create an app for each integration, test it in the sandbox, then request go-live.'
-            : `Manage your apps${isPlatformOwner ? ', API keys, and OAuth clients' : ''}.`}
-        </p>
+    <div className="space-y-10">
+      <header className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            {developerOnly ? 'Developer console' : 'Developer portal'}
+          </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+            {developerOnly ? 'Build on the Codevertex APIs' : 'Apps, clients and API access'}
+          </h1>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
+            {developerOnly
+              ? 'Create an app for each integration, test it in the free sandbox, then request go-live.'
+              : 'Every credential on the platform, the OAuth clients behind sign-in, and the requests waiting for review.'}
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-3">
+          <Link
+            href="/dashboard/developer/docs"
+            className="inline-flex h-11 items-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <BookOpen className="h-4 w-4" aria-hidden /> API reference
+          </Link>
+          <Link
+            href="/dashboard/developer/apps?new=1"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <Plus className="h-4 w-4" aria-hidden /> New app
+          </Link>
+        </div>
       </header>
 
-      {developerOnly && appCount === 0 ? (
+      {developerOnly && apps.isSuccess && list.length === 0 ? (
         <FirstAppSteps />
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <StatCard label="Apps" value={appCount ?? '—'} icon={Cpu} color="purple" />
-          {isPlatformOwner && <StatCard label="OAuth Clients" value="—" icon={Globe} color="green" helper="See OAuth Clients" />}
-        </div>
+        <section aria-label="Summary" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <Metric label="Apps" value={apps.isSuccess ? list.length : undefined} hint="All credentials" icon={Cpu} />
+          <Metric label="Live" value={apps.isSuccess ? live : undefined} hint="Active in production" icon={Rocket} />
+          <Metric label="Sandbox" value={apps.isSuccess ? sandbox : undefined} hint="Active for testing" icon={Terminal} />
+          {isPlatformOwner ? (
+            <Metric label="OAuth clients" value={clients.isSuccess ? clients.data.length : undefined} hint="Sign-in clients" icon={Globe} href="/dashboard/developer/oauth-clients" />
+          ) : (
+            <Metric label="Open requests" value={requests.isSuccess ? requests.data : undefined} hint="Access awaiting review" icon={Inbox} />
+          )}
+        </section>
       )}
 
-      <section className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <NavCard
-            href="/dashboard/developer/apps"
-            icon={Cpu}
-            color="purple"
-            title="Apps"
-            desc={developerOnly ? 'Consumer keys, secrets, sandbox and go-live for each integration.' : 'Every credential: platform services, partners and tenant integrations.'}
-          />
-          {isPlatformOwner && (
-            <NavCard href="/dashboard/developer/oauth-clients" icon={Globe} color="green" title="OAuth Clients" desc="Register and manage OAuth2 clients." />
-          )}
-          <NavCard href="/dashboard/developer/docs" icon={Code2} color="slate" title="API Docs" desc="Endpoints, authentication, and code examples." />
-        </div>
-      </section>
+      {list.length > 0 && <RecentApps apps={list} />}
 
-      <ResourcesSection developerOnly={developerOnly} />
+      <Resources developerOnly={developerOnly} isPlatformOwner={isPlatformOwner} pendingRequests={isPlatformOwner ? requests.data : undefined} />
     </div>
   );
+}
+
+function Metric({
+  label,
+  value,
+  hint,
+  icon: Icon,
+  href,
+}: {
+  label: string;
+  value: number | undefined;
+  hint: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href?: string;
+}) {
+  const body = (
+    <>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</span>
+        <Icon className="h-4 w-4 text-primary/70" aria-hidden />
+      </div>
+      <div className="mt-3 text-3xl font-bold tabular-nums text-slate-900 dark:text-white">
+        {value === undefined ? <span className="inline-block h-8 w-12 animate-pulse rounded-lg bg-muted" aria-label="Loading" /> : value.toLocaleString('en-KE')}
+      </div>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{hint}</p>
+    </>
+  );
+  const cls = 'block rounded-2xl border border-border/70 bg-card p-5 transition-colors';
+  return href ? (
+    <Link href={href} className={`${cls} hover:border-primary/40`}>{body}</Link>
+  ) : (
+    <div className={cls}>{body}</div>
+  );
+}
+
+function RecentApps({ apps }: { apps: DeveloperAppSummary[] }) {
+  const recent = [...apps].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? '')).slice(0, 5);
+  return (
+    <section aria-labelledby="recent-apps" className="rounded-2xl border border-border/70 bg-card">
+      <div className="flex items-center justify-between px-5 py-4">
+        <h2 id="recent-apps" className="text-sm font-semibold text-slate-900 dark:text-white">Recent apps</h2>
+        <Link href="/dashboard/developer/apps" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+          All apps <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+        </Link>
+      </div>
+      <ul className="divide-y divide-border/70">
+        {recent.map((a) => (
+          <li key={a.id} className="flex items-center justify-between gap-4 px-5 py-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-slate-900 dark:text-white">{a.name}</p>
+              <p className="truncate font-mono text-xs text-slate-500 dark:text-slate-400">{a.client_id}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Badge tone={a.environment === 'production' ? 'live' : 'sandbox'}>{a.environment === 'production' ? 'Production' : 'Sandbox'}</Badge>
+              {a.status !== 'active' && <Badge tone="muted">{a.status}</Badge>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function Badge({ tone, children }: { tone: 'live' | 'sandbox' | 'muted'; children: React.ReactNode }) {
+  const cls = {
+    live: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
+    sandbox: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
+    muted: 'bg-muted text-muted-foreground',
+  }[tone];
+  return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${cls}`}>{children}</span>;
 }
 
 const FIRST_APP_STEPS = [
@@ -100,7 +177,7 @@ function FirstAppSteps() {
         </div>
         <Link
           href="/dashboard/developer/apps?new=1"
-          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <Plus className="h-4 w-4" aria-hidden /> Create your first app
         </Link>
@@ -118,84 +195,88 @@ function FirstAppSteps() {
   );
 }
 
-const NAV_COLOR_MAP: Record<string, string> = {
-  purple: 'bg-purple-50 dark:bg-purple-500/10 text-purple-500',
-  blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-500',
-  green: 'bg-green-50 dark:bg-green-500/10 text-green-500',
-  slate: 'bg-slate-100 dark:bg-slate-800 text-slate-500',
-};
-
-function NavCard({ href, icon: Icon, color, title, desc }: { href: string; icon: React.ComponentType<{ className?: string }>; color: string; title: string; desc: string }) {
-  return (
-    <Link href={href} className="group p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:shadow-lg transition-all">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform ${NAV_COLOR_MAP[color]}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-      </div>
-      <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">{title}</h3>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{desc}</p>
-    </Link>
-  );
-}
-
 interface ResourceLink {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  color: string;
   title: string;
   desc: string;
   external?: boolean;
+  badge?: string;
 }
 
-function ResourcesSection({ developerOnly }: { developerOnly: boolean }) {
-  const links: ResourceLink[] = developerOnly ? [
-    { href: '/developer/apply', icon: Send, color: 'primary', title: 'Request another API', desc: 'Ask for access to eTIMS and payments, notifications or sign in with Codevertex.' },
-    { href: '/dashboard/developer/docs', icon: Code2, color: 'sky', title: 'API reference', desc: 'Endpoints, the token call and request examples for each API you can use.' },
-    { href: ETIMS_GUIDE_URL, icon: BookOpen, color: 'emerald', title: 'eTIMS API guide', desc: 'The public guide to sending invoices to KRA through the eTIMS API.', external: true },
-  ] : [
-    { href: '/developer/apply', icon: Send, color: 'primary', title: 'Apply for API Access', desc: 'Request a scoped credential for a service you don’t have access to yet (treasury, notifications, SSO).' },
-    { href: '/dashboard/developer/docs', icon: Code2, color: 'sky', title: 'API Documentation', desc: 'Complete API reference with endpoints, authentication, and code examples.' },
-    { href: 'https://github.com/Bengo-Hub/auth-api', icon: BookOpen, color: 'violet', title: 'Auth API', desc: 'Backend authentication service source code and implementation details.', external: true },
-    { href: 'https://github.com/Bengo-Hub/shared-auth-client', icon: Package, color: 'amber', title: 'Go SDK', desc: 'Shared Auth Client for Go services. JWT validation, middleware, and JWKS support.', external: true },
-    { href: 'https://github.com/Bengo-Hub/bengobox/blob/main/docs/RBAC_IMPLEMENTATION_GUIDE.md', icon: ShieldAlert, color: 'rose', title: 'RBAC Guide', desc: 'Role-based access control patterns and permission enforcement implementation.', external: true },
-    { href: 'https://sso.codevertexafrica.com/v1/docs/', icon: Terminal, color: 'emerald', title: 'Swagger UI', desc: 'Interactive API explorer with try-it-out functionality for all endpoints.', external: true },
-    { href: '/dashboard/developer/docs#quick-start', icon: Code2, color: 'primary', title: 'Quick Start', desc: 'Get started with example requests, authentication, and SDK integration.' },
+interface ResourceGroup {
+  title: string;
+  links: ResourceLink[];
+}
+
+function Resources({ developerOnly, isPlatformOwner, pendingRequests }: { developerOnly: boolean; isPlatformOwner: boolean; pendingRequests?: number }) {
+  const groups: ResourceGroup[] = [
+    {
+      title: 'Reference',
+      links: [
+        { href: '/dashboard/developer/docs', icon: Code2, title: 'API reference', desc: 'Endpoints, authentication and request examples for each API.' },
+        { href: '/dashboard/developer/docs#quick-start', icon: FileCode2, title: 'Quick start', desc: 'Your first token call and request, step by step.' },
+        { href: 'https://sso.codevertexafrica.com/v1/docs/', icon: Terminal, title: 'API explorer', desc: 'Try the public endpoints in the browser.', external: true },
+      ],
+    },
+    {
+      title: 'Guides',
+      links: [
+        { href: `${DOCS_SITE}/integrations/etims-api/`, icon: BookOpen, title: 'eTIMS API guide', desc: 'Send invoices to KRA, pricing, tokens and go-live.', external: true },
+        { href: `${DOCS_SITE}/integrations/developer-portal/`, icon: BookOpen, title: 'Developer portal guide', desc: 'Apps, consumer keys and secrets, sandbox and production.', external: true },
+      ],
+    },
+    {
+      title: 'Access',
+      links: [
+        { href: '/developer/apply', icon: Send, title: developerOnly ? 'Request another API' : 'Apply for API access', desc: 'eTIMS and payments, notifications, or sign in with Codevertex.' },
+        ...(isPlatformOwner
+          ? [
+              { href: '/dashboard/platform/integration-requests', icon: Inbox, title: 'Access requests', desc: 'Review and approve developer and integration requests.', badge: pendingRequests ? `${pendingRequests} pending` : undefined },
+              { href: '/dashboard/developer/oauth-clients', icon: Globe, title: 'OAuth clients', desc: 'Sign-in clients for Codevertex and partner apps.' },
+              { href: '/dashboard/developer/integrations', icon: Wrench, title: 'Integrations', desc: 'Platform provider settings and credentials.' },
+            ]
+          : []),
+      ],
+    },
   ];
-  const colorMap: Record<string, string> = {
-    sky: 'bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400',
-    violet: 'bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400',
-    amber: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    rose: 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400',
-    emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    primary: 'bg-primary/10 text-primary',
-  };
 
   return (
-    <section className="space-y-4">
-      <h2 className="text-lg font-black text-slate-900 dark:text-white">{developerOnly ? 'Guides and references' : 'Resources & Documentation'}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {links.map((l, i) => (
-          <motion.a
-            key={l.href}
-            href={l.href}
-            target={l.external ? '_blank' : undefined}
-            rel={l.external ? 'noopener noreferrer' : undefined}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:shadow-md transition-all"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorMap[l.color]}`}>
-                <l.icon className="h-5 w-5" />
-              </div>
-              <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
-            </div>
-            <h3 className="font-bold text-slate-900 dark:text-white mb-1 text-sm">{l.title}</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{l.desc}</p>
-          </motion.a>
+    <section aria-labelledby="resources" className="space-y-5">
+      <h2 id="resources" className="text-lg font-bold text-slate-900 dark:text-white">Docs and resources</h2>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {groups.map((g, gi) => (
+          <div key={g.title} className="space-y-3">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">{g.title}</h3>
+            <ul className="space-y-2">
+              {g.links.map((l, i) => (
+                <motion.li key={l.href} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (gi * 3 + i) * 0.04, ease: [0.22, 1, 0.36, 1] }}>
+                  <a
+                    href={l.href}
+                    target={l.external ? '_blank' : undefined}
+                    rel={l.external ? 'noopener noreferrer' : undefined}
+                    className="group flex items-start gap-3 rounded-xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                      <l.icon className="h-4 w-4" aria-hidden />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                        {l.title}
+                        {l.badge && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">{l.badge}</span>}
+                      </span>
+                      <span className="mt-0.5 block text-xs leading-relaxed text-slate-500 dark:text-slate-400">{l.desc}</span>
+                    </span>
+                    {l.external ? (
+                      <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-primary" aria-hidden />
+                    ) : (
+                      <ArrowRight className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden />
+                    )}
+                  </a>
+                </motion.li>
+              ))}
+            </ul>
+          </div>
         ))}
       </div>
     </section>

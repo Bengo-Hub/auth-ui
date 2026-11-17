@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Coins, KeyRound, Pause, Play, RefreshCw, ShieldOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate as formatInUserZone } from '@/lib/user-timezone';
+import { graceRemaining } from '@/lib/credential-rotation';
 
 export interface App {
   id: string;
@@ -24,6 +25,10 @@ export interface App {
   /** True once a consumer secret exists for the client_credentials grant. */
   has_client_secret?: boolean;
   client_secret_rotated_at?: string;
+  /** Set while a secret or key replaced by a rotation still works; the time it stops. */
+  previous_client_secret_expires_at?: string;
+  previous_key_expires_at?: string;
+  previous_key_prefix?: string;
 }
 
 export const INTERNAL_SERVICE_KEY_SCOPE = 'internal_service_key';
@@ -96,6 +101,16 @@ export function buildAppColumns(cb: AppColumnCallbacks): DataTableColumn<App>[] 
               </span>
             )}
           </div>
+          {graceRemaining(a.previous_key_expires_at) && (
+            <div className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
+              Old key{a.previous_key_prefix ? <> <code className="font-mono">{a.previous_key_prefix}…</code></> : null} stops working {graceRemaining(a.previous_key_expires_at)}
+            </div>
+          )}
+          {graceRemaining(a.previous_client_secret_expires_at) && (
+            <div className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
+              Old consumer secret stops working {graceRemaining(a.previous_client_secret_expires_at)}
+            </div>
+          )}
         </div>
       ),
     },
@@ -186,7 +201,7 @@ export function buildAppColumns(cb: AppColumnCallbacks): DataTableColumn<App>[] 
               <Button
                 variant="outline"
                 size="sm"
-                title={a.has_client_secret ? 'Issue a new consumer secret; tokens from the old one stop working' : 'Generate a consumer secret for OAuth client credentials'}
+                title={a.has_client_secret ? 'Issue a new consumer secret; you choose whether the old one keeps working for 24 hours' : 'Generate a consumer secret for OAuth client credentials'}
                 className="rounded-xl text-xs font-bold"
                 onClick={() => cb.onRotateSecret(a)}
               >

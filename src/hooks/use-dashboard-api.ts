@@ -578,15 +578,56 @@ export interface OAuthClient {
 
 export const oauthClientKeys = { all: () => ['admin', 'clients'] as const };
 
-export function useOAuthClients() {
+export function useOAuthClients(enabled = true) {
   return useQuery({
     queryKey: oauthClientKeys.all(),
+    enabled,
     queryFn: async () => {
       const response = await apiClient.get('/api/v1/admin/clients');
       // API returns pagination wrapper: { data: OAuthClient[], total, limit, page, hasMore }
       const body = (response as any).data;
       const items = body?.data ?? body ?? [];
       return Array.isArray(items) ? (items as OAuthClient[]) : [];
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+/** Developer apps the caller can see (platform owners: all; developers: their tenant's). */
+export interface DeveloperAppSummary {
+  id: string;
+  name: string;
+  app_type: string;
+  environment: string;
+  status: string;
+  client_id: string;
+  created_at: string;
+  last_used_at?: string;
+}
+
+export function useDeveloperApps() {
+  return useQuery({
+    queryKey: ['admin', 'apps'] as const,
+    queryFn: async () => {
+      const response = await apiClient.get<DeveloperAppSummary[]>('/api/v1/admin/apps');
+      return Array.isArray(response.data) ? response.data : [];
+    },
+    staleTime: STALE_MS,
+  });
+}
+
+/**
+ * Open API access requests: every pending request for a platform owner, or the caller's own
+ * requests otherwise. Returns the count still awaiting a decision.
+ */
+export function useOpenAccessRequests(isPlatformOwner: boolean) {
+  return useQuery({
+    queryKey: ['integration-requests', 'open', isPlatformOwner] as const,
+    queryFn: async () => {
+      const path = isPlatformOwner ? '/api/v1/admin/integration-requests?status=pending' : '/api/v1/integration-requests/mine';
+      const response = await apiClient.get<Array<{ status?: string }>>(path);
+      const rows = Array.isArray(response.data) ? response.data : [];
+      return rows.filter((r) => !r.status || r.status === 'pending' || r.status === 'in_review').length;
     },
     staleTime: STALE_MS,
   });

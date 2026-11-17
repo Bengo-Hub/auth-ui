@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { SettingsNote, SettingsPage } from '@/components/layout/SettingsPage';
 
 const DEFAULTS: PasswordPolicy = {
   min_length: 8,
@@ -63,16 +64,21 @@ export default function PasswordPolicyPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <KeyRound className="h-6 w-6" /> Password Policy
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Platform-wide password requirements. Rules are enforced on the next password set, change, or reset —
-          they never retroactively lock out existing users.
-        </p>
-      </div>
+    <SettingsPage
+      icon={KeyRound}
+      title="Password policy"
+      description="Password rules for every account on the platform. They apply the next time a password is set, changed or reset, so nobody is locked out by a change."
+      aside={
+        <>
+          <SettingsNote title="When rules apply">
+            <p>Existing passwords keep working. The new rules are checked the next time each person sets a password.</p>
+          </SettingsNote>
+          <SettingsNote title="Stronger than length">
+            <p>A long passphrase beats a short password full of symbols. An authenticator app on sign-in adds more protection than either.</p>
+          </SettingsNote>
+        </>
+      }
+    >
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
@@ -148,6 +154,6 @@ export default function PasswordPolicyPage() {
           </div>
         </div>
       )}
-    </div>
+    </SettingsPage>
   );
 }

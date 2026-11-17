@@ -106,11 +106,11 @@ export function MfaPolicyEditor({ tenantId, onSaved }: { tenantId?: string; onSa
             {data.available_roles.length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">{MFA_COPY.policyNoRoles}</p>
             ) : (
-              <div className="max-h-72 overflow-y-auto">
+              <div className="grid gap-x-8 sm:grid-cols-2 xl:grid-cols-3">
                 {data.available_roles.map((role) => (
                   <ToggleRow
                     key={role}
-                    label={role}
+                    label={role.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase())}
                     checked={allAccounts || roles.includes(role)}
                     disabled={allAccounts}
                     onChange={(on) => toggleRole(role, on)}

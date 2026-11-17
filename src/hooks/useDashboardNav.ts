@@ -141,7 +141,7 @@ export function useDashboardNav() {
     : null;
 
   const securityGroup: NavGroup | null = isPlatformOwner
-    ? { label: 'Security & Compliance', icon: ShieldCheck, items: SECURITY_ITEMS }
+    ? { label: 'Security', icon: ShieldCheck, items: SECURITY_ITEMS }
     : null;
 
   const platformGroup: NavGroup | null = isPlatformOwner

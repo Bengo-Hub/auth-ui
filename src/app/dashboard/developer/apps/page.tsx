@@ -11,22 +11,41 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Check, ClipboardCopy, Plus } from 'lucide-react';
 import { appTokenServiceTag, buildAppColumns, type App } from './apps-columns';
 import { CreateAppForm, type CreateAppPayload } from './create-app-form';
+import { RotateCredentialDialog, type RotationKind, type RotationTarget } from './rotate-credential-dialog';
+import { graceRemaining, rotationBody } from '@/lib/credential-rotation';
+import { formatDateTime } from '@/lib/user-timezone';
 
 /** Shape of the create / rotate / rotate-secret responses (secrets present only once). */
 interface IssuedResponse {
   client_id: string;
   token?: string;
   client_secret?: string;
+  previous_client_secret_expires_at?: string;
+  previous_key_expires_at?: string;
 }
 
 interface IssuedCredentials {
   clientId: string;
   apiKey?: string;
   clientSecret?: string;
+  /** When the credential this one replaced stops working, if it was kept for a grace period. */
+  previousStopsAt?: string;
 }
 
-function toIssued(r: IssuedResponse): IssuedCredentials {
-  return { clientId: r.client_id, apiKey: r.token || undefined, clientSecret: r.client_secret || undefined };
+function toIssued(r: IssuedResponse, kind?: RotationKind): IssuedCredentials {
+  const previousStopsAt = kind === 'secret'
+    ? r.previous_client_secret_expires_at
+    : kind === 'key' ? r.previous_key_expires_at : undefined;
+  return {
+    clientId: r.client_id,
+    apiKey: r.token || undefined,
+    clientSecret: r.client_secret || undefined,
+    previousStopsAt: previousStopsAt || undefined,
+  };
+}
+
+function formatStopTime(iso: string) {
+  return formatDateTime(iso, undefined, { locale: 'en-US', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
 function credentialRows(c: IssuedCredentials) {
@@ -54,6 +73,8 @@ export default function AppsPage() {
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
   const [goLiveRequested, setGoLiveRequested] = useState<Set<string>>(new Set());
   const [tokenBalances, setTokenBalances] = useState<Record<string, number | undefined>>({});
+  const [rotationTarget, setRotationTarget] = useState<RotationTarget | null>(null);
+  const [rotating, setRotating] = useState(false);
 
   const fetchApps = useCallback(async () => {
     try {
@@ -114,28 +135,35 @@ export default function AppsPage() {
     }
   };
 
-  const handleRotate = async (app: App) => {
-    if (!confirm(`Rotate the API key for "${app.name}"? The current key stops working immediately.`)) return;
+  // Rotation asks first whether the old credential keeps working for a while (see
+  // RotateCredentialDialog). An app's first consumer secret has nothing to replace, so it is
+  // issued straight away.
+  const performRotation = async ({ app, kind }: RotationTarget, keepOld: boolean) => {
+    setRotating(true);
     try {
-      const res = await apiClient.post<IssuedResponse>(`/api/v1/admin/apps/${app.id}/rotate`);
-      setIssued(toIssued(res.data));
+      const path = kind === 'secret' ? 'rotate-secret' : 'rotate';
+      const res = await apiClient.post<IssuedResponse>(`/api/v1/admin/apps/${app.id}/${path}`, rotationBody(keepOld));
+      setIssued(toIssued(res.data, kind));
+      setRotationTarget(null);
       fetchApps();
-      toast({ title: 'API key rotated', description: 'Save the new key now. It will not be shown again.' });
+      toast(kind === 'secret'
+        ? { title: 'Consumer secret issued', description: 'Save it now. It will not be shown again.' }
+        : { title: 'API key rotated', description: 'Save the new key now. It will not be shown again.' });
     } catch {
-      toast({ title: 'Rotate failed', variant: 'destructive' });
+      toast({ title: kind === 'secret' ? 'Could not issue a secret' : 'Rotate failed', variant: 'destructive' });
+    } finally {
+      setRotating(false);
     }
   };
 
-  const handleRotateSecret = async (app: App) => {
-    if (app.has_client_secret && !confirm(`Issue a new consumer secret for "${app.name}"? The old secret and every access token made with it stop working immediately.`)) return;
-    try {
-      const res = await apiClient.post<IssuedResponse>(`/api/v1/admin/apps/${app.id}/rotate-secret`);
-      setIssued(toIssued(res.data));
-      fetchApps();
-      toast({ title: 'Consumer secret issued', description: 'Save it now. It will not be shown again.' });
-    } catch {
-      toast({ title: 'Could not issue a secret', variant: 'destructive' });
+  const handleRotate = (app: App) => setRotationTarget({ app, kind: 'key' });
+
+  const handleRotateSecret = (app: App) => {
+    if (!app.has_client_secret) {
+      performRotation({ app, kind: 'secret' }, false);
+      return;
     }
+    setRotationTarget({ app, kind: 'secret' });
   };
 
   const handleRevoke = async (id: string) => {
@@ -275,6 +303,12 @@ export default function AppsPage() {
               </div>
             ))}
           </div>
+          {issued.previousStopsAt && (
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 mt-4">
+              The old {issued.clientSecret ? 'secret' : 'key'} keeps working until {formatStopTime(issued.previousStopsAt)}
+              {graceRemaining(issued.previousStopsAt) ? ` (${graceRemaining(issued.previousStopsAt)})` : ''}. Put the new one in place before then.
+            </p>
+          )}
           {issued.clientSecret && (
             <p className="text-sm text-amber-800 dark:text-amber-300 mt-4">
               Get a 15 minute access token with <code className="font-mono">POST /api/v1/token</code>, sending <code className="font-mono">grant_type=client_credentials</code> and the consumer key and secret as HTTP Basic auth. Then call the API with <code className="font-mono">Authorization: Bearer &lt;access_token&gt;</code>.
@@ -283,6 +317,13 @@ export default function AppsPage() {
           <Button variant="ghost" size="sm" onClick={() => setIssued(null)} className="mt-3 text-amber-600 dark:text-amber-400">I&apos;ve saved them</Button>
         </motion.div>
       )}
+
+      <RotateCredentialDialog
+        target={rotationTarget}
+        busy={rotating}
+        onConfirm={performRotation}
+        onCancel={() => setRotationTarget(null)}
+      />
 
       {showCreate && (
         <CreateAppForm isPlatformOwner={isPlatformOwner} developerOnly={developerOnly} creating={creating} onCreate={handleCreate} onCancel={() => setShowCreate(false)} />
