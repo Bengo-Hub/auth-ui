@@ -63,13 +63,14 @@ function TenantCreateForm({ creating, onCreate, onCancel }: Omit<CreateAppFormPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const scope = `${service}:${readWrite}`;
-    await onCreate({ name, app_type: 'tenant', scopes: [scope] });
+    // Every route needs read; write adds mutations on top, so a write app carries both.
+    const scopes = readWrite === 'write' ? [`${service}:read`, `${service}:write`] : [`${service}:read`];
+    await onCreate({ name, app_type: 'tenant', scopes });
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-      <FormHeader title="Create App Token" subtitle="Generates a bng_app_* token, scoped to one service — never platform-wide." onCancel={onCancel} />
+      <FormHeader title="Create App" subtitle="Issues a consumer key and secret (OAuth client credentials) plus a legacy API key, scoped to one service." onCancel={onCancel} />
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">

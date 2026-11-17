@@ -21,6 +21,9 @@ export interface App {
   expires_at?: string;
   last_used_at?: string;
   created_at: string;
+  /** True once a consumer secret exists for the client_credentials grant. */
+  has_client_secret?: boolean;
+  client_secret_rotated_at?: string;
 }
 
 export const INTERNAL_SERVICE_KEY_SCOPE = 'internal_service_key';
@@ -61,6 +64,8 @@ export interface AppColumnCallbacks {
   tokenBalances: Record<string, number | undefined>;
   onSetRevokeTarget: (id: string | null) => void;
   onRotate: (app: App) => void;
+  /** Issues (or re-issues) the consumer secret for the client_credentials grant. */
+  onRotateSecret: (app: App) => void;
   onRevoke: (id: string) => void;
   onSuspend: (id: string) => void;
   onResume: (id: string) => void;
@@ -205,7 +210,19 @@ export function buildAppColumns(cb: AppColumnCallbacks): DataTableColumn<App>[] 
                 </Button>
               )
             )}
-            <Button variant="ghost" size="icon" title="Rotate token" className="rounded-xl" onClick={() => cb.onRotate(a)}>
+            {a.app_type === 'tenant' && (
+              <Button
+                variant="outline"
+                size="sm"
+                title={a.has_client_secret ? 'Issue a new consumer secret; tokens from the old one stop working' : 'Generate a consumer secret for OAuth client credentials'}
+                className="rounded-xl text-xs font-bold"
+                onClick={() => cb.onRotateSecret(a)}
+              >
+                <KeyRound className="h-3.5 w-3.5 mr-1" />
+                {a.has_client_secret ? 'New secret' : 'Generate consumer secret'}
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" title="Rotate API key" className="rounded-xl" onClick={() => cb.onRotate(a)}>
               <RefreshCw className="h-4 w-4" />
             </Button>
             {cb.isPlatformOwner && (
