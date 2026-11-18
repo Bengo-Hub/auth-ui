@@ -75,6 +75,17 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'bb-auth-storage',
+      // Audit item L6: only the profile and the chosen organisation are kept in the browser.
+      // The session itself is the HttpOnly bb_session cookie; no token is ever stored here.
+      partialize: (state) => ({ user: state.user, activeTenant: state.activeTenant }),
+      // The flags are rebuilt from the stored profile, so a reload behaves as it did when they
+      // were stored too (setUser and logout always left isLoading false).
+      merge: (persisted, current) => {
+        const saved = (persisted ?? {}) as Partial<Pick<AuthState, 'user' | 'activeTenant'>>;
+        if (!persisted) return current;
+        const user = saved.user ?? null;
+        return { ...current, user, activeTenant: saved.activeTenant ?? null, isAuthenticated: !!user, isLoading: false };
+      },
     }
   )
 );
