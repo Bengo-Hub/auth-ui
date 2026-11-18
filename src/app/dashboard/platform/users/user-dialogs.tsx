@@ -264,7 +264,21 @@ export function EditUserDialog({
                 <ShieldCheck className="h-4 w-4 mr-1" /> Enforce 2FA
               </Button>
               <Button variant="outline" size="sm"
-                onClick={() => setMfa.mutate({ id: user.id, enforced: false }, { onSuccess: () => toast({ title: '2FA enforcement removed' }) })}
+                onClick={() => setMfa.mutate({ id: user.id, enforced: false }, {
+                  onSuccess: (res: any) => toast(res?.still_required_by_policy
+                    ? {
+                        title: 'Still required by a 2FA policy',
+                        description: 'Their role is covered by a tenant or platform 2FA policy, so they will still be asked for a code. Change that policy under Security to stop it.',
+                        variant: 'destructive',
+                      }
+                    : {
+                        title: '2FA enforcement removed',
+                        description: res?.authenticator_removed
+                          ? 'Their authenticator app was removed, so they will not be asked for a code at sign-in.'
+                          : 'They will not be asked for a code at sign-in.',
+                      }),
+                  onError: () => toast({ title: 'Failed', variant: 'destructive' }),
+                })}
                 disabled={setMfa.isPending}>
                 <ShieldOff className="h-4 w-4 mr-1" /> Unenforce 2FA
               </Button>
