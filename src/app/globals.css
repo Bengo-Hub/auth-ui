@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Styles the `prose` article of the legal pages, including the HTML published from auth-api. */
+@plugin "@tailwindcss/typography";
 /* @bengo-hub/shared-ui-lib ships raw Tailwind semantic-token classNames with no
    CSS pipeline of its own — without this scan directive, any class it uses that
    this app's own source never happens to use elsewhere is silently purged from

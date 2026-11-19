@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 const EFFECTIVE_DATE = 'April 27, 2026';
-const LAST_UPDATED = 'Oct 06, 2026';
+const LAST_UPDATED = 'Nov 19, 2026';
 
 const TOC = [
   { id: 'overview', label: '1. Overview & Parties' },
@@ -215,7 +215,7 @@ function BuiltInTermsOfService() {
               <p>You are permitted to use our services for lawful business and personal purposes, including:</p>
               <ul>
                 <li>Managing identity and authentication for your organisation across the Codevertex ecosystem.</li>
-                <li>Connecting your own third-party advertising accounts (Google Ads, Meta) via OAuth 2.0 within MarketFlow.</li>
+                <li>Connecting your own third-party advertising and publishing accounts (Google Ads, Meta, YouTube, TikTok) via OAuth 2.0 within MarketFlow.</li>
                 <li>Automating legitimate marketing workflows, including lead capture, email nurture, and ad performance reporting.</li>
                 <li>Developing integrations with our APIs using your assigned credentials for the stated purposes in your developer application.</li>
                 <li>Training staff and stakeholders on the use of Codevertex products within your organisation.</li>
@@ -238,7 +238,7 @@ function BuiltInTermsOfService() {
                 <li>Impersonate another person, entity, or Codevertex employee, or misrepresent your affiliation with any party.</li>
                 <li>Use automated tools (bots, scrapers, crawlers) to access our services in ways that exceed normal usage or circumvent rate limits.</li>
                 <li>Engage in credential stuffing, brute-force attacks, or any other attack against our authentication systems.</li>
-                <li>Connect or use third-party API credentials (Google Ads, Meta, etc.) that you do not own or have explicit authorisation to use.</li>
+                <li>Connect or use third-party API credentials (Google Ads, Meta, YouTube, TikTok, etc.) that you do not own or have explicit authorisation to use.</li>
                 <li>Violate any applicable local, national, or international law or regulation, including data protection and privacy laws.</li>
                 <li>Use our services to send unsolicited bulk communications (spam), or to engage in deceptive advertising practices.</li>
                 <li>Re-sell, sublicense, or white-label our services without an explicit written reseller agreement.</li>
@@ -260,7 +260,7 @@ function BuiltInTermsOfService() {
                 authentication via bearer tokens or API keys issued to your account. You are responsible for
                 the security of your API credentials and for all API usage under your credentials.
               </p>
-              <h3>6.2 Third-Party API Connections (Google Ads, Meta, etc.)</h3>
+              <h3>6.2 Third-Party API Connections (Google Ads, Meta, YouTube, TikTok, etc.)</h3>
               <p>
                 When you connect a third-party advertising or business platform to MarketFlow:
               </p>
@@ -270,7 +270,27 @@ function BuiltInTermsOfService() {
                 <li>You acknowledge that your use of third-party APIs is also subject to those platforms&apos; own Terms of Service (e.g., <a href="https://developers.google.com/google-ads/api/docs/terms" target="_blank" rel="noopener noreferrer" className="text-primary">Google Ads API Terms</a>).</li>
                 <li>You may revoke any third-party integration at any time from your account settings; revocation takes effect immediately.</li>
               </ul>
-              <h3>6.3 Rate Limits &amp; Fair Use</h3>
+              <h3 id="youtube">6.3 YouTube</h3>
+              <p>
+                MarketFlow uses the YouTube API Services to upload the videos you approve to your YouTube channel.
+                By connecting a YouTube channel you agree to be bound by the{' '}
+                <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-primary">YouTube Terms of Service</a>.
+                Google&apos;s handling of your data is described in the{' '}
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary">Google Privacy Policy</a>,
+                and what MarketFlow stores is described in Section 5D of our{' '}
+                <Link href="/privacy#youtube" className="text-primary underline">Privacy Policy</Link>. You can
+                revoke MarketFlow&apos;s access at any time on the{' '}
+                <a href="https://security.google.com/settings/security/permissions" target="_blank" rel="noopener noreferrer" className="text-primary">Google security settings page</a>.
+              </p>
+              <h3 id="tiktok">6.4 TikTok</h3>
+              <p>
+                MarketFlow uses TikTok Login Kit and the TikTok Content Posting API to post the videos you approve
+                to your TikTok account. Your use of TikTok is subject to TikTok&apos;s own Terms of Service and
+                Privacy Policy, and what MarketFlow stores is described in Section 5E of our{' '}
+                <Link href="/privacy#tiktok" className="text-primary underline">Privacy Policy</Link>. TikTok
+                does not let apps delete posts, so you delete a posted video in TikTok itself.
+              </p>
+              <h3>6.5 Rate Limits &amp; Fair Use</h3>
               <p>
                 API usage is subject to per-tenant rate limits and the quotas of the underlying third-party
                 platform. Exceeding limits may result in temporary throttling or, for persistent abuse,
@@ -346,7 +366,7 @@ function BuiltInTermsOfService() {
                 <li>We collect only the data necessary to provide the contracted services.</li>
                 <li>We do not sell your personal data to third parties.</li>
                 <li>Data travels encrypted (TLS 1.2+), and stored credentials and API secrets are encrypted at rest.</li>
-                <li>Third-party API credentials (Google Ads, Meta) are encrypted and never accessible to our staff.</li>
+                <li>Third-party API credentials (Google Ads, Meta, YouTube, TikTok) are encrypted and never accessible to our staff.</li>
                 <li>
                   You may request data deletion at any time; see{' '}
                   <Link href="/data-requests" className="text-primary underline">Your data and your rights</Link>.
@@ -430,7 +450,7 @@ function BuiltInTermsOfService() {
               </p>
               <p>
                 We are not responsible for the availability, accuracy, or policies of third-party services
-                (including Google Ads API, Meta Graph API, or OAuth providers) that you connect to our platform.
+                (including Google Ads API, YouTube API Services, Meta Graph API, TikTok APIs, or OAuth providers) that you connect to our platform.
               </p>
             </section>
 
@@ -496,7 +516,11 @@ function BuiltInTermsOfService() {
                 We reserve the right to suspend or terminate your account, with or without notice, for:
               </p>
               <ul>
-                <li>Violation of these Terms or our Acceptable Use Policy.</li>
+                <li>
+                  Violation of these Terms, including the acceptable use rules in{' '}
+                  <a href="#acceptable-use" className="text-primary underline">section 4</a> and{' '}
+                  <a href="#prohibited" className="text-primary underline">section 5</a>.
+                </li>
                 <li>Non-payment of outstanding fees after the grace period.</li>
                 <li>Conduct that poses a security risk to us or other users.</li>
                 <li>Requirement under applicable law or court order.</li>

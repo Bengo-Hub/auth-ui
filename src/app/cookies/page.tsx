@@ -118,7 +118,17 @@ export const revalidate = 300;
 
 /** The version published from the dashboard, or the text below until one is (owner 2026-11-15). */
 export default function CookiePolicyPage() {
-  return <PolicyPage slug="cookie-policy" fallback={<BuiltInCookiePolicy />} />;
+  return (
+    <PolicyPage
+      slug="cookie-policy"
+      fallback={<BuiltInCookiePolicy />}
+      footer={
+        <div className="mt-8">
+          <CookieSettingsButton />
+        </div>
+      }
+    />
+  );
 }
 
 function BuiltInCookiePolicy() {

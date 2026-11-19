@@ -124,6 +124,39 @@ export function cleanLegalHtml(html: string): string {
     .replace(/(href|src)\s*=\s*("|')\s*javascript:[^"']*\2/gi, '$1="#"');
 }
 
+const HEADING_RE = /<h([23])\b([^>]*)>([\s\S]*?)<\/h\1\s*>/gi;
+const ID_ATTR_RE = /\sid\s*=\s*("([^"]*)"|'([^']*)')/i;
+const SAFE_ID_RE = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
+const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'" };
+
+/** Plain text of a heading's inner HTML: tags dropped, common entities decoded, spaces collapsed. */
+function headingText(inner: string): string {
+  return inner
+    .replace(/<[^>]*>/g, '')
+    .replace(/&(amp|lt|gt|quot|apos|nbsp|#39);/g, (_, e: string) => ENTITIES[e])
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * The Contents list of a published document, from the ids and text of its <h2> headings. A
+ * document with fewer than three <h2> (the MarketFlow Autopilot terms are two parts of numbered
+ * clauses) also lists its <h3> headings, in page order. Headings without a usable id are left
+ * out. Pass HTML that went through cleanLegalHtml.
+ */
+export function legalContents(html: string): { id: string; title: string }[] {
+  const all: { level: string; id: string; title: string }[] = [];
+  for (const m of html.matchAll(HEADING_RE)) {
+    const idMatch = ID_ATTR_RE.exec(m[2]);
+    const id = idMatch ? (idMatch[2] ?? idMatch[3] ?? '') : '';
+    const title = headingText(m[3]);
+    if (SAFE_ID_RE.test(id) && title) all.push({ level: m[1], id, title: title.slice(0, 120) });
+  }
+  const h2 = all.filter((h) => h.level === '2');
+  const shown = h2.length >= 3 ? h2 : all;
+  return shown.map(({ id, title }) => ({ id, title }));
+}
+
 export function formatLegalDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;

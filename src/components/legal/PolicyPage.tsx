@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import Link from 'next/link';
+import { Cookie, CreditCard, FileText, Shield, UserCog } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { LegalDocumentView } from '@/components/legal/LegalDocumentView';
 import {
@@ -12,13 +13,31 @@ import {
 
 const VERSION_RE = /^[A-Za-z0-9._-]{1,32}$/;
 
+/** The badge icon of each policy, as on its built-in page. */
+const POLICY_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  'terms-of-service': FileText,
+  'privacy-policy': Shield,
+  'cookie-policy': Cookie,
+  'refund-policy': CreditCard,
+  'data-requests': UserCog,
+};
+
 /**
  * A platform policy page (owner 2026-11-15): the version published from the dashboard when there
  * is one, else `fallback`, the text built into the page. A version announced for later is named
  * in a notice and linked; when nothing is in force yet but a version is announced, the built-in
  * text stays in place with that notice above it.
  */
-export async function PolicyPage({ slug, fallback }: { slug: string; fallback: ReactNode }) {
+export async function PolicyPage({
+  slug,
+  fallback,
+  footer,
+}: {
+  slug: string;
+  fallback: ReactNode;
+  /** Shown under a published version's body (the cookie policy's settings button). */
+  footer?: ReactNode;
+}) {
   const policy = legalPolicy(slug);
   const state = await getLegalDocument(policy.slug);
   if (state.kind !== 'published') return <>{fallback}</>;
@@ -51,11 +70,13 @@ export async function PolicyPage({ slug, fallback }: { slug: string; fallback: R
   return (
     <LegalDocumentView
       title={current.title || policy.title}
-      badge="Legal"
+      badge={policy.title}
+      badgeIcon={POLICY_ICONS[policy.slug]}
       basePath={policy.path}
       doc={current}
       notice={upcomingNotice}
       versions={versions}
+      footer={footer}
     />
   );
 }
@@ -81,7 +102,8 @@ export async function PolicyVersionPage({ slug, rawVersion }: { slug: string; ra
     return (
       <LegalDocumentView
         title={policy.title}
-        badge="Legal"
+        badge={policy.title}
+        badgeIcon={POLICY_ICONS[policy.slug]}
         basePath={policy.path}
         doc={null}
         versions={[]}
@@ -116,7 +138,8 @@ export async function PolicyVersionPage({ slug, rawVersion }: { slug: string; ra
   return (
     <LegalDocumentView
       title={doc.title || policy.title}
-      badge="Legal"
+      badge={policy.title}
+      badgeIcon={POLICY_ICONS[policy.slug]}
       basePath={policy.path}
       doc={doc}
       notice={notice}

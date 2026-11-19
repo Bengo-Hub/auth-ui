@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: 'How to see, correct, download or delete your personal data, and how to stop marketing messages.',
 };
 
-const UPDATED = '24 October 2026';
+const UPDATED = '19 November 2026';
 
 const RIGHTS = [
   { icon: Eye, title: 'See your data', text: 'Ask what personal data we hold about you and how we use it.' },
@@ -102,6 +102,42 @@ const sections: LegalSection[] = [
             marketflow.codevertexafrica.com/data-deletion
           </a>
           . Leads and messages that people sent to a business stay with that business as its customer records.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'youtube-tiktok',
+    title: 'Data from YouTube and TikTok',
+    icon: FileX,
+    body: (
+      <>
+        <p>
+          If you connected a YouTube channel or a TikTok account to MarketFlow, you can delete what we received for
+          it in any of these ways:
+        </p>
+        <ul>
+          <li>Disconnect the channel or account in MarketFlow, under Settings, Integrations.</li>
+          <li>
+            For YouTube, revoke MarketFlow&apos;s access on the{' '}
+            <a href="https://security.google.com/settings/security/permissions" rel="noopener noreferrer">
+              Google security settings page
+            </a>
+            . For TikTok, remove MarketFlow from the apps that have access to your TikTok account in the TikTok
+            app&apos;s settings.
+          </li>
+          <li>
+            Or email <a href={`mailto:${LEGAL_CONTACT.email}`}>{LEGAL_CONTACT.email}</a> and we do it for you.
+          </li>
+        </ul>
+        <p>
+          We delete the access tokens at once, and the channel or account details and the records of what MarketFlow
+          posted within 7 days. Videos already published stay on YouTube or TikTok until you delete them there. What
+          we store is listed in Sections 5D and 5E of our{' '}
+          <Link href="/privacy#youtube" className="text-primary underline">
+            Privacy Policy
+          </Link>
+          .
         </p>
       </>
     ),
