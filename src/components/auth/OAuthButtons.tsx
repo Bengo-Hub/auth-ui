@@ -97,7 +97,7 @@ export function OAuthButtonGroup({ label = 'Continue with', after }: { label?: s
   if (providers.length === 0) return null;
   return (
     <>
-      <div className={providers.length === 1 ? 'grid gap-3' : providers.length === 2 ? 'grid gap-3 sm:grid-cols-2' : 'grid gap-3 sm:grid-cols-3'}>
+      <div className={providers.length === 1 ? 'grid gap-3' : providers.length === 3 ? 'grid gap-3 sm:grid-cols-3' : 'grid gap-3 sm:grid-cols-2'}>
         {providers.map((p) => <OAuthButton key={p.id} provider={p} label={providers.length === 1 ? label : ''} />)}
       </div>
       {after}

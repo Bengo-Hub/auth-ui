@@ -65,7 +65,7 @@ Service redirects to auth.codevertexafrica.com/login
   v
 Auth-ui login page:
   - Email/password form
-  - Social login buttons (Google, GitHub, Microsoft)
+  - Social login buttons (Google, GitHub, Microsoft, TikTok)
   - MFA prompt (if enabled)
   |
   v

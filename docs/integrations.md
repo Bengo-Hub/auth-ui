@@ -24,7 +24,7 @@
 | OIDC | `/authorize`, `/token`, `/userinfo`, `/.well-known/*` | SSO flows |
 | Admin | `/admin/tenants`, `/admin/clients`, `/admin/api-keys`, `/admin/keys/rotate` | Tenant/client/key management |
 | Platform | `/platform/roles` (gateways → treasury-ui; notifications → notifications-ui) | Platform admin operations |
-| Social | `/auth/oauth/{provider}/start`, `/auth/oauth/{provider}/callback` | Google, GitHub, Microsoft login |
+| Social | `/auth/oauth/{provider}/start`, `/auth/oauth/{provider}/callback` | Google, GitHub, Microsoft, TikTok login |
 
 ### Axios Client Configuration
 
@@ -112,8 +112,11 @@ Auth-ui initiates social login by calling auth-api endpoints which handle the OA
 | Google | `POST /auth/oauth/google/start` | `GET /auth/oauth/google/callback` |
 | GitHub | `POST /auth/oauth/github/start` | `GET /auth/oauth/github/callback` |
 | Microsoft | `POST /auth/oauth/microsoft/start` | `GET /auth/oauth/microsoft/callback` |
+| TikTok | `POST /auth/oauth/tiktok/start` | `GET /auth/oauth/tiktok/callback` |
 
 Auth-ui does not hold provider credentials; all OAuth flows are proxied through auth-api.
+
+Each provider is one entry in `src/lib/oauth/catalog.ts`. The same entry drives the sign-in button (shown only when `GET /auth/integrations/active?category=oauth` lists the provider) and the admin card under Developer, Identity Providers. TikTok's card asks for a Client Key rather than a Client ID, because that is TikTok's name for it.
 
 ---
 

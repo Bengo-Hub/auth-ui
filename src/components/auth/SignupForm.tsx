@@ -80,6 +80,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   google: 'Google',
   github: 'GitHub',
   microsoft: 'Microsoft',
+  tiktok: 'TikTok',
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────

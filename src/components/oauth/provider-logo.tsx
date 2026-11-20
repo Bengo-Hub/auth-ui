@@ -31,7 +31,7 @@ export function ProviderLogo({
 }) {
   const [failed, setFailed] = useState(false);
 
-  if (providerId && ['google', 'microsoft', 'github'].includes(providerId)) {
+  if (providerId && ['google', 'microsoft', 'github', 'tiktok'].includes(providerId)) {
     return (
       <span
         className={`inline-flex items-center justify-center ${className ?? ''}`}

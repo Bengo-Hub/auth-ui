@@ -31,7 +31,7 @@ export default function IntegrationsClient() {
           <h1 className="text-2xl font-bold tracking-tight">Identity Providers</h1>
         </div>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Enable SSO via Google, Microsoft, or GitHub. Credentials are encrypted with
+          Enable SSO via Google, Microsoft, GitHub or TikTok. Credentials are encrypted with
           AES-256-GCM and shared centrally, so downstream services need no <code className="rounded bg-muted px-1 py-0.5 text-xs">.env</code> files. Only enabled providers appear on the login and
           signup pages.
         </p>

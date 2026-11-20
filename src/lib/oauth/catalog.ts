@@ -173,6 +173,45 @@ export const oauthProviders: OAuthProviderDef[] = [
       },
     ],
   },
+  {
+    id: "tiktok",
+    category: "oauth",
+    name: "TikTok",
+    description:
+      "Sign-in with a TikTok account (Login Kit for Web). TikTok shares no email, so new accounts are asked for one after sign-in.",
+    logoSlug: "tiktok",
+    logoColor: "000000",
+    brandColor: "#000000",
+    docsUrl: "https://developers.tiktok.com/apps",
+    setupGuideUrl:
+      "https://github.com/Bengo-Hub/auth-api/blob/main/docs/oauth-setup.md#tiktok-login-kit-setup",
+    fields: [
+      {
+        key: "client_key",
+        label: "Client Key",
+        type: "text",
+        required: true,
+        placeholder: "aw…",
+        help: "From the app's Credentials section in TikTok for Developers. TikTok calls the app id a client key.",
+      },
+      {
+        key: "client_secret",
+        label: "Client Secret",
+        type: "password",
+        required: true,
+        secret: true,
+        placeholder: "Client secret from Credentials",
+      },
+      {
+        key: "redirect_url",
+        label: "Redirect URI",
+        type: "url",
+        required: true,
+        default: PROD_REDIRECT("tiktok"),
+        help: "Must match the Web redirect URI registered under Login Kit exactly.",
+      },
+    ],
+  },
 ];
 
 export function getProviderById(id: string): OAuthProviderDef | undefined {
