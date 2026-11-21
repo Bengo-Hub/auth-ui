@@ -16,6 +16,7 @@ import { VisualBrandSection } from './branding/visual-brand-section';
 import { TypographySection } from './branding/typography-section';
 import { ServiceBrandingSection } from './branding/service-branding-section';
 import { ContactSection } from './branding/contact-section';
+import { OpeningHoursSection } from './branding/opening-hours-section';
 import { TaxComplianceSection } from './branding/tax-compliance-section';
 import { EtimsSection } from './branding/etims-section';
 import { LivePreview } from './branding/live-preview';
@@ -156,6 +157,7 @@ export function BrandingTab() {
           <TypographySection tenantData={tenantData} updateMetadata={updateMetadata} />
           <ServiceBrandingSection tenantData={tenantData} updateMetadata={updateMetadata} />
           <ContactSection tenantData={tenantData} updateField={updateField} />
+          <OpeningHoursSection tenantData={tenantData} updateMetadata={updateMetadata} />
           <TaxComplianceSection tenantData={tenantData} updateField={updateField} />
           <EtimsSection tenantData={tenantData} />
         </div>
