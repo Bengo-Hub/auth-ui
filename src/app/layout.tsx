@@ -70,9 +70,7 @@ export const metadata: Metadata = {
   icons: {
     // /icon.svg matches codevertexafrica.com's own favicon byte-for-byte (the real brand
     // mark) — /svgs/logo.svg is a separate, square white-on-brand-purple crop of the same
-    // mark used for in-app UI (AppSplash) and the raster PWA icons below, which need a
-    // square source; this file's natural 1408x736 aspect ratio would work for a favicon
-    // slot (browsers letterbox it, same as it renders on the live site) but not for those.
+    // mark used for in-app UI (AppSplash) and the raster PWA icons below.
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
