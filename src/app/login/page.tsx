@@ -9,14 +9,19 @@ import { AuthDivider, AuthNotice, AuthShell } from '@/components/auth/AuthShell'
 import { LoginForm } from '@/components/auth/LoginForm';
 import { OAuthButtonGroup } from '@/components/auth/OAuthButtons';
 import { authFlowHref } from '@/lib/auth-context';
+import { socialLinkHint } from '@/lib/oauth/link-hint';
 
 function OAuthErrorBanner() {
   const searchParams = useSearchParams();
   const error = searchParams.get('oauth_error');
   if (!error) return null;
+  const hint = socialLinkHint(error, searchParams.get('oauth_provider'));
   return (
     <div className="mb-5">
-      <AuthNotice>{error === 'access_denied' ? 'Sign-in was cancelled.' : `Sign-in failed: ${decodeURIComponent(error)}`}</AuthNotice>
+      <AuthNotice>
+        {error === 'access_denied' ? 'Sign-in was cancelled.' : `Sign-in failed: ${decodeURIComponent(error)}`}
+        {hint && <span className="mt-1 block">{hint}</span>}
+      </AuthNotice>
     </div>
   );
 }

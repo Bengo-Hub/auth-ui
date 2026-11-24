@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PasskeysSection } from '@/components/settings/PasskeysSection';
+import { SignInMethodsSection } from '@/components/settings/SignInMethodsSection';
 import { useRevokeSession, useSessions } from '@/hooks/use-dashboard-api';
 import { useChangePassword } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +16,7 @@ import {
   Fingerprint,
   History,
   Key,
+  Link2,
   Loader2,
   Monitor,
   Smartphone,
@@ -196,6 +198,14 @@ export function SecurityTab() {
           <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center"><Fingerprint className="h-5 w-5 text-emerald-500" /></div>
         </div>
         <PasskeysSection />
+      </FieldCard>
+
+      {/* Sign-in methods (linked Google, GitHub, Microsoft, TikTok) */}
+      <FieldCard>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center"><Link2 className="h-5 w-5 text-sky-500" /></div>
+        </div>
+        <SignInMethodsSection disabled={demoRestricted} />
       </FieldCard>
 
       {/* Sessions */}
