@@ -12,8 +12,8 @@ importers:
   .:
     dependencies:
       '@bengo-hub/shared-ui-lib':
-        specifier: github:Bengo-Hub/shared-ui-lib#v0.1.146
-        version: https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/7beace934713b31a90e550a4187944c8e2329b66(@floating-ui/dom@1.8.0)(@tanstack/react-query@5.107.1(@types/react@19.3.0)(react@19.3.1))(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(lucide-react@0.468.0(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: github:Bengo-Hub/shared-ui-lib#v0.1.156
+        version: https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/a2c407639285c9287491a34958d8750b4a2dc0e6(@floating-ui/dom@1.8.0)(@tanstack/react-query@5.107.1(@types/react@19.3.0)(react@19.3.1))(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(lucide-react@0.468.0(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.91.0(@types/react@19.3.0)(react@19.3.1))
@@ -254,9 +254,9 @@ packages:
     resolution: {integrity: sha512-WCsemW40Cpc6gouC1SrY6PBaZ+oLRlEVY9XBvZBI7il/HyUrb2nJ505wE1MHEFyDZNnrWDEuy4jL50WVHfTTSQ==}
     engines: {node: '>=6.9.0'}
 
-  '@bengo-hub/shared-ui-lib@https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/7beace934713b31a90e550a4187944c8e2329b66':
-    resolution: {gitHosted: true, integrity: sha512-4PsxUJL58l4qZQowOyAfzHYEJeKxB2olFe2v7dPqSmbZrlj298m4ndQo2XiIYtK8o0lCvSJ+P9O1NXPA1Nyang==, tarball: https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/7beace934713b31a90e550a4187944c8e2329b66}
-    version: 0.1.146
+  '@bengo-hub/shared-ui-lib@https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/a2c407639285c9287491a34958d8750b4a2dc0e6':
+    resolution: {tarball: https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/a2c407639285c9287491a34958d8750b4a2dc0e6}
+    version: 0.1.156
     peerDependencies:
       '@tanstack/react-query': '>=5.0.0'
       lucide-react: '>=0.400.0'
@@ -1504,6 +1504,13 @@ packages:
       '@tiptap/core': 3.33.1
       '@tiptap/pm': 3.33.1
 
+  '@tiptap/extension-mention@3.35.0':
+    resolution: {integrity: sha512-SrNPVnY7cAcAvasvr80TspyATMKkUAm1pJllnXjZAcgcFHyaDhmZ0ThCnhq2iZx3R2d9XMn1nLPKmk/Xdn2lLg==}
+    peerDependencies:
+      '@tiptap/core': 3.35.0
+      '@tiptap/pm': 3.35.0
+      '@tiptap/suggestion': 3.35.0
+
   '@tiptap/extension-ordered-list@3.33.1':
     resolution: {integrity: sha512-xlGidfYHA4CdZIv0AwRJ/V4z4vCP8yu2/r/ndePJf+FR3q5ZkThq2ZfCQwqDr4OcDMcpKPf2VKERBEOvBDrJBw==}
     peerDependencies:
@@ -1550,6 +1557,13 @@ packages:
 
   '@tiptap/starter-kit@3.33.1':
     resolution: {integrity: sha512-kkvRaFZUbDTXe5tlzLzqErhlvuujsoR98nFLEVitPAJO8Zy6kMORrTLIyV3DbmLAaWEJ32MiZXMvPrya5irHsQ==}
+
+  '@tiptap/suggestion@3.35.0':
+    resolution: {integrity: sha512-95GKUwsj7juT0/4xfv+o4uBHxWJAOxmFHGLNxhp/QQKzX1LPm+TweBcfgEK6PVoPP9FtLBJJywE7X4lcnptxbw==}
+    peerDependencies:
+      '@floating-ui/dom': ^1.0.0
+      '@tiptap/core': 3.35.0
+      '@tiptap/pm': 3.35.0
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
@@ -3767,12 +3781,14 @@ snapshots:
       '@babel/helper-string-parser': 7.29.13
       '@babel/helper-validator-identifier': 7.29.7
 
-  '@bengo-hub/shared-ui-lib@https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/7beace934713b31a90e550a4187944c8e2329b66(@floating-ui/dom@1.8.0)(@tanstack/react-query@5.107.1(@types/react@19.3.0)(react@19.3.1))(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(lucide-react@0.468.0(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@bengo-hub/shared-ui-lib@https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/a2c407639285c9287491a34958d8750b4a2dc0e6(@floating-ui/dom@1.8.0)(@tanstack/react-query@5.107.1(@types/react@19.3.0)(react@19.3.1))(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(lucide-react@0.468.0(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@tiptap/extension-link': 3.33.1(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1)
+      '@tiptap/extension-mention': 3.35.0(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1)(@tiptap/suggestion@3.35.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1))
       '@tiptap/pm': 3.33.1
       '@tiptap/react': 3.33.1(@floating-ui/dom@1.8.0)(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@tiptap/starter-kit': 3.33.1
+      '@tiptap/suggestion': 3.35.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
       react-phone-number-input: 3.4.18(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -4906,6 +4922,12 @@ snapshots:
       '@tiptap/core': 3.33.1(@tiptap/pm@3.33.1)
       '@tiptap/pm': 3.33.1
 
+  '@tiptap/extension-mention@3.35.0(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1)(@tiptap/suggestion@3.35.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1))':
+    dependencies:
+      '@tiptap/core': 3.33.1(@tiptap/pm@3.33.1)
+      '@tiptap/pm': 3.33.1
+      '@tiptap/suggestion': 3.35.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1)
+
   '@tiptap/extension-ordered-list@3.33.1(@tiptap/extension-list@3.33.1(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1))':
     dependencies:
       '@tiptap/extension-list': 3.33.1(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1)
@@ -4989,6 +5011,12 @@ snapshots:
       '@tiptap/extension-text': 3.33.1(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))
       '@tiptap/extension-underline': 3.33.1(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))
       '@tiptap/extensions': 3.33.1(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1)
+      '@tiptap/pm': 3.33.1
+
+  '@tiptap/suggestion@3.35.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.33.1(@tiptap/pm@3.33.1))(@tiptap/pm@3.33.1)':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@tiptap/core': 3.33.1(@tiptap/pm@3.33.1)
       '@tiptap/pm': 3.33.1
 
   '@types/chai@5.2.3':
