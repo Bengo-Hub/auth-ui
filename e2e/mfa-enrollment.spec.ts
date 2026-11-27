@@ -51,6 +51,37 @@ test.describe('MFA screens', () => {
     await expect(page.getByRole('link', { name: /back to security/i })).toHaveCount(0);
   });
 
+  // Production bug 2026-11-27 (treasury-ui SSO): after Verify the credentials check found no
+  // passkey and opened the nudge, but the code step never rendered it, so the redirect waited
+  // on a dialog that was not on the page.
+  test('a TOTP sign-in with no passkey offers the nudge and then follows return_to', async ({ page }) => {
+    const authorize = 'https://sso.codevertexafrica.com/api/v1/authorize?response_type=code&client_id=treasury-ui';
+    let logins = 0;
+    await page.route('**/api/v1/auth/login', (r) => {
+      logins += 1;
+      const body = r.request().postDataJSON() as { totp_code?: string };
+      if (!body.totp_code) return r.fulfill(json({ mfa_required: true }));
+      return r.fulfill(json({ access_token: 't', roles: [], permissions: [], user: { id: 'u1', email: 'staff@example.com', terms_accepted: true } }));
+    });
+    await page.route('**/api/v1/auth/webauthn/credentials', (r) => r.fulfill(json({ credentials: [] })));
+    await page.route('https://sso.codevertexafrica.com/api/v1/authorize**', (r) =>
+      r.fulfill({ status: 200, contentType: 'text/html', body: '<h1>authorize reached</h1>' }));
+
+    await page.goto(`/login?return_to=${encodeURIComponent(authorize)}`);
+    await page.evaluate(() => localStorage.removeItem('passkey-nudge-dismissed'));
+    await page.getByRole('textbox', { name: /email/i }).fill('staff@example.com');
+    await page.getByLabel('Password', { exact: true }).fill('correct horse');
+    await page.getByRole('button', { name: /^sign in$/i }).click();
+
+    await page.getByLabel('Verification code').fill('123456');
+    await page.getByRole('button', { name: /^verify$/i }).click();
+
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.getByRole('button', { name: /maybe later/i }).click();
+    await page.waitForURL(/sso\.codevertexafrica\.com\/api\/v1\/authorize/);
+    expect(logins).toBe(2);
+  });
+
   test('a platform owner edits the platform default', async ({ page }) => {
     let sent: unknown = null;
     await page.route('**/api/v1/auth/me', (r) =>

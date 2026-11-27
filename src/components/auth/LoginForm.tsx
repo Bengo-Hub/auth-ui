@@ -369,6 +369,22 @@ export function LoginForm() {
     }
   };
 
+  // The nudge must render on every step that can finish a sign-in. finishLogin opens it and
+  // parks the redirect in pendingRedirect, so a step that leaves it out never redirects. The
+  // TOTP step did exactly that: Verify succeeded, the credentials check found no passkey, and
+  // the page sat on the code form with an unmounted dialog holding the redirect.
+  const passkeyNudge = (
+    <PasskeySetupNudge
+      open={passkeyNudgeOpen}
+      accessToken={passkeyNudgeToken}
+      onClose={() => {
+        setPasskeyNudgeOpen(false);
+        pendingRedirect?.();
+        setPendingRedirect(null);
+      }}
+    />
+  );
+
   if (newPasswordStep) {
     return (
       <form onSubmit={handleNewPassword} className="space-y-5">
@@ -417,6 +433,7 @@ export function LoginForm() {
 
   if (mfaRequired) {
     return (
+      <>
       <form onSubmit={handleMfaSubmit} className="space-y-5">
         <p className="text-center text-sm text-muted-foreground">
           Enter the 6-digit code from your authenticator app.
@@ -453,6 +470,8 @@ export function LoginForm() {
           Back
         </button>
       </form>
+      {passkeyNudge}
+      </>
     );
   }
 
@@ -530,15 +549,7 @@ export function LoginForm() {
         )}
       </form>
 
-      <PasskeySetupNudge
-        open={passkeyNudgeOpen}
-        accessToken={passkeyNudgeToken}
-        onClose={() => {
-          setPasskeyNudgeOpen(false);
-          pendingRedirect?.();
-          setPendingRedirect(null);
-        }}
-      />
+      {passkeyNudge}
     </>
   );
 }
